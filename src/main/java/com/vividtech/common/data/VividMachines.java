@@ -117,7 +117,6 @@ public class VividMachines {
             new SteamModuleType("centrifuge", "Centrifuge", "离心", GTRecipeTypes.CENTRIFUGE_RECIPES),
             new SteamModuleType("thermal_centrifuge", "Thermal Centrifuge", "热力离心",
                     GTRecipeTypes.THERMAL_CENTRIFUGE_RECIPES),
-            new SteamModuleType("electrolyzer", "Electrolyzer", "电解", GTRecipeTypes.ELECTROLYZER_RECIPES),
             new SteamModuleType("ore_washer", "Ore Washer", "洗矿", GTRecipeTypes.ORE_WASHER_RECIPES),
             new SteamModuleType("chemical_bath", "Chemical Bath", "化学浸洗", GTRecipeTypes.CHEMICAL_BATH_RECIPES),
             new SteamModuleType("extractor", "Extractor", "提取", GTRecipeTypes.EXTRACTOR_RECIPES),
