@@ -294,8 +294,9 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         if (currentHost == null) return 1.0D;
         int powerTier = currentHost.getPowerTier();
         if (powerTier <= 0) return 1.0D;
-        // 配方电压等级：ULV/LV = 1，MV = 2，HV = 3……
-        int voltageTier = Math.max(1, recipeVoltageTier);
+        // 配方电压等级：ULV = 0.5，LV = 1，MV = 2，HV = 3……
+        // 机器不会主动超频：这里始终使用配方自身的电压等级，而不是动力模块解锁的上限。
+        double voltageTier = recipeVoltageTier <= 0 ? 0.5D : recipeVoltageTier;
         // (0.8 / 动力模块等级) * 电压等级 + 生产模块等级 / 5
         double multiplier = (0.8D / powerTier) * voltageTier + moduleTier / 5.0D;
         return Math.max(0.05D, Math.min(multiplier, 1000.0D));
@@ -322,7 +323,7 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         }
         GTRecipe modified = parallelRecipe.copy();
         long parallelEUt = RecipeHelper.getInputEUt(parallelRecipe);
-        int recipeVoltageTier = Math.max(1, RecipeHelper.getRecipeEUtTier(recipe));
+        int recipeVoltageTier = RecipeHelper.getRecipeEUtTier(recipe);
         long modifiedEUt = Math.max(1L, Math.round(parallelEUt * module.getSteamMultiplier(recipeVoltageTier)));
         RecipeHelper.setInputEUt(modified, modifiedEUt);
         double speedMultiplier = currentHost.getProductionSpeedMultiplier();
