@@ -194,12 +194,9 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @Override
     public BlockPos[] getModuleScanPositions() {
-        int slots = getModuleSlots();
-        if (slots <= 0) {
-            return new BlockPos[0];
-        }
-        int limit = Math.min(slots, moduleOrderedSlots.size());
-        return moduleOrderedSlots.subList(0, limit).toArray(BlockPos[]::new);
+        // 轨道等级限制的是“已连接模块数量”，而不是固定某几个槽位。
+        // 所有 24 个槽位都要参与扫描，否则玩家放在未解锁方向的外环模块永远无法连接。
+        return moduleOrderedSlots.toArray(BlockPos[]::new);
     }
 
     @Override
@@ -239,7 +236,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         long timer = getOffsetTimer();
         if (timer % HOST_CHECK_INTERVAL_TICKS == 0) {
             pruneParallelReservations();
-            if (modules.size() < getModuleScanPositions().length) {
+            if (modules.size() < getMaxModuleCount()) {
                 scanAndConnectModules();
             }
         }
