@@ -149,7 +149,7 @@ public class VividMachines {
 
     private static TraceabilityPredicate dreamSteamCasing() {
         // PartAbility.STEAM 的 getAllBlocks() 是 memoize 的，GTL 的大型蒸汽输入仓注册较晚，
-        // 可能不在缓存里，因此这里显式补上它的方块。蒸汽仓不限制数量。
+        // 可能不在缓存里，因此这里显式补上它的方块。
         Block[] steamParts = Stream.concat(
                 PartAbility.STEAM.getAllBlocks().stream(),
                 Stream.of(GTLMachines.LARGE_STEAM_HATCH.getBlock()))
@@ -157,8 +157,8 @@ public class VividMachines {
                 .toArray(Block[]::new);
         return blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
                 // 优先用能力匹配，保证 GTL 稍后注册的大型蒸汽输入仓也能被识别。
-                .or(Predicates.abilities(PartAbility.STEAM))
-                .or(Predicates.blocks(steamParts))
+                .or(Predicates.abilities(PartAbility.STEAM).setMaxGlobalLimited(4))
+                .or(Predicates.blocks(steamParts).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(4))
