@@ -131,14 +131,15 @@
   "vividtech.machine.dream_elevator.tooltip.3": "§7The rail tier limits the number of installable modules",
   "vividtech.machine.dream_elevator.tooltip.4": "§7Each module has its own independent input/output space and is supplied with steam centrally",
   "vividtech.machine.dream_elevator.tooltip.5": "§7The controller receives the steam supply and distributes it uniformly",
-  "vividtech.machine.dream_elevator.tooltip.6": "§bDiamond block§7 and above rails raise the recipe tier limit to §bMV",
-  "vividtech.machine.dream_elevator.tooltip.7": "§8Netherite block§7 rails raise the recipe tier limit to §6HV",
+  "vividtech.machine.dream_elevator.tooltip.6": "§7Using §bdiamond block§7 or higher rails raises the recipe tier limit to §bMV",
+  "vividtech.machine.dream_elevator.tooltip.7": "§7Using §8netherite block§7 rails raises the recipe tier limit to §6HV",
   "vividtech.machine.dream_elevator.tooltip.8": "§7§cCopper§7/§1Lapis§7/§bDiamond§7/§aEmerald§7/§8Netherite§7 rails support §c6§7/§112§7/§b15§7/§a18§7/§824§7 modules respectively",
   "vividtech.machine.dream_elevator.tooltip.9": "§7§cCopper§7/§1Lapis§7/§bDiamond§7/§aEmerald§7/§8Netherite§7 rails provide §c256§7/§1384§7/§b512§7/§a768§7/§81200 parallel respectively",
-  "vividtech.machine.dream_elevator.tooltip.10": "§7Each working module consumes its parallel share from the host controller",
-  "vividtech.machine.dream_elevator.tooltip.11": "§7Final working steam consumption multiplier = (§c0.8§7/§arail tier§7)*§brecipe voltage tier§7(ULV counts as 0.5)+§emodule tier§7/5",
-  "vividtech.machine.dream_elevator.tooltip.12": "§7Disabling this controller also pauses all modules",
+  "vividtech.machine.dream_elevator.tooltip.10": "§7§cCopper§7/§1Lapis§7/§bDiamond§7/§aEmerald§7/§8Netherite§7 rails provide §c100%§7/§1150%§7/§b200%§7/§a250%§7/§8400% working speed respectively",
+  "vividtech.machine.dream_elevator.tooltip.11": "§7Each working module consumes its parallel share from the controller; §8netherite block§7 rails grant the §e12§7 inner-ring modules an extra 1x parallel",
+  "vividtech.machine.dream_elevator.tooltip.12": "§7Each working module has an independent steam consumption multiplier: (§c0.8§7/§arail tier§7)*§brecipe voltage tier§7(ULV counts as 0.5)+§emodule tier§7/5",
   "block.gtceu.creative_steam_input_hatch": "Creative Steam Input Hatch",
   "gtceu.creative_steam_input_hatch": "Creative Steam Input Hatch",
-  "vividtech.machine.creative_steam_input_hatch.tooltip.0": "§7§oWhere does §f§o§nits steam§7§o come from?"
+  "vividtech.machine.creative_steam_input_hatch.tooltip.0": "§7§oWhere does §f§o§nits steam§7§o come from?",
+  "vividtech.machine.dream_elevator.tooltip.13": "§7Disabling this controller also pauses all modules"
 }

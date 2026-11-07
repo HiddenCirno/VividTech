@@ -151,7 +151,7 @@ public class VividMachines {
     }
 
     private static Component[] dreamElevatorTooltips() {
-        Component[] tooltips = new Component[13];
+        Component[] tooltips = new Component[14];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.dream_elevator.tooltip." + i);
         }
