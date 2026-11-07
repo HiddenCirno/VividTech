@@ -296,8 +296,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         if (powerTier <= 0) return 1.0D;
         // 配方电压等级：ULV/LV = 1，MV = 2，HV = 3……
         int voltageTier = Math.max(1, recipeVoltageTier);
-        // floor(0.8 * 电压等级 / 动力模块等级) + 生产模块等级 / 5
-        double multiplier = Math.floor(0.8D * voltageTier / powerTier) + moduleTier / 5.0D;
+        // (0.8 / 动力模块等级) * 电压等级 + 生产模块等级 / 5
+        double multiplier = (0.8D / powerTier) * voltageTier + moduleTier / 5.0D;
         return Math.max(0.05D, Math.min(multiplier, 1000.0D));
     }
 
