@@ -445,7 +445,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             long stored = tank.getFluidInTank(0).getAmount();
             if (stored <= 0) continue;
             long toDrain = Math.min(amount - drained, stored);
-            FluidStack stack = tank.drain(toDrain, false);
+            // 蒸汽输入仓的 capabilityIO 是 IN，外部 drain() 会被拒绝，必须走内部接口。
+            FluidStack stack = tank.drainInternal(toDrain, false);
             drained += stack.getAmount();
         }
         return drained;

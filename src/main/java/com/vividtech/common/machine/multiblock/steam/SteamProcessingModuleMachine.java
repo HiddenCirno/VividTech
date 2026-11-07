@@ -286,7 +286,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     public long addSteam(long amount) {
         if (amount <= 0) return 0;
         Fluid steam = GTMaterials.Steam.getFluid();
-        return steamTank.fill(FluidStack.create(steam, amount), false);
+        // capabilityIO 为 NONE，外部 capability 的 fill() 会被拒绝，必须走内部接口。
+        return steamTank.fillInternal(FluidStack.create(steam, amount), false);
     }
 
     public double getSteamMultiplier(int recipeVoltageTier) {
