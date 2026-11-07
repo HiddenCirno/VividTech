@@ -2,9 +2,12 @@ package com.vividtech.common.machine.multiblock.part;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
+
+import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -22,8 +25,37 @@ public class CreativeSteamInputHatchMachine extends FluidHatchPartMachine {
     /** Integer.MAX_VALUE mB。 */
     public static final long CAPACITY = Integer.MAX_VALUE;
 
+    private TickableSubscription fillSubscription;
+
     public CreativeSteamInputHatchMachine(IMachineBlockEntity holder) {
         super(holder, 0, IO.IN, CAPACITY, 1);
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (!isRemote()) {
+            fillSteam();
+            fillSubscription = subscribeServerTick(this::fillSteam);
+        }
+    }
+
+    @Override
+    public void onUnload() {
+        if (fillSubscription != null) {
+            fillSubscription.unsubscribe();
+            fillSubscription = null;
+        }
+        super.onUnload();
+    }
+
+    /** 创造模式仓自行补满蒸汽。 */
+    private void fillSteam() {
+        long capacity = tank.getTankCapacity(0);
+        long stored = tank.getFluidInTank(0).getAmount();
+        if (stored < capacity) {
+            tank.fillInternal(FluidStack.create(GTMaterials.Steam.getFluid(), capacity - stored), false);
+        }
     }
 
     @Override

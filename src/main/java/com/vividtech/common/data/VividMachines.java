@@ -143,8 +143,6 @@ public class VividMachines {
             .abilities(PartAbility.STEAM)
             .renderer(CreativeSteamInputHatchRenderer::new)
             .tooltips(Component.translatable("vividtech.machine.creative_steam_input_hatch.tooltip.0"))
-            .tooltips(Component.translatable("gtceu.universal.tooltip.fluid_storage_capacity",
-                    CreativeSteamInputHatchMachine.CAPACITY))
             .tooltipBuilder(VIVID_ADD)
             .register();
 
