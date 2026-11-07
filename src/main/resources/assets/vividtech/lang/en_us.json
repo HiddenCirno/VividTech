@@ -132,8 +132,5 @@
   "vividtech.machine.dream_elevator.speed": "§7Global Production Speed: §e%s%%",
   "vividtech.machine.dream_elevator.large_steam_hatch.enabled": "§7Large Steam Input Hatch: §aConnected",
   "vividtech.machine.dream_elevator.large_steam_hatch.disabled": "§7Large Steam Input Hatch: §cNot Connected",
-  "vividtech.machine.steam_processing_module.effective_parallel": "§7Effective Parallel: §e%s",
-  "block.gtceu.dream_elevator_large_steam_input_hatch": "Dream Elevator Large Steam Input Hatch",
-  "gtceu.dream_elevator_large_steam_input_hatch": "Dream Elevator Large Steam Input Hatch",
-  "vividtech.machine.large_steam_input_hatch.tooltip.0": "§7A large steam input hatch for the Dream Elevator. Provides no overclocking."
+  "vividtech.machine.steam_processing_module.effective_parallel": "§7Effective Parallel: §e%s"
 }

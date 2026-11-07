@@ -5,15 +5,16 @@ import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.LargeSteamHatchPartMachine;
 import org.gtlcore.gtlcore.common.machine.multiblock.steam.LargeSteamParallelMultiblockMachine;
 
-import com.vividtech.common.machine.multiblock.part.DreamElevatorSteamInputHatchMachine;
-
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.trait.IRecipeHandlerTrait;
+import com.gregtechceu.gtceu.api.machine.steam.SteamEnergyRecipeHandler;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.SteamHatchPartMachine;
 
@@ -22,9 +23,11 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -158,6 +161,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         markDirty();
         notifyBlockUpdate();
         collectSteamTanks();
+        disableLargeSteamOverclock();
         safeClearModules();
         scanAndConnectModules();
         updateHostSubscription();
@@ -309,8 +313,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     private boolean detectLargeSteamHatch() {
         for (IMultiPart part : getParts()) {
-            if (part.self() instanceof DreamElevatorSteamInputHatchMachine ||
-                    part.self() instanceof LargeSteamHatchPartMachine) {
+            if (part.self() instanceof LargeSteamHatchPartMachine) {
                 return true;
             }
         }
@@ -318,9 +321,16 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     }
 
     /**
-     * 本模组的大型蒸汽输入仓只提供容量，不提供任何超频 / 转换率加成。
-     * GTL 的大型蒸汽输入仓也不会被当作 OC 来源（定义不是 GTL 的那个方块）。
+     * 梦想电梯单独禁用 GTL 大型蒸汽输入仓的超频：蒸汽转换率恒定为 0.5。
      */
+    private void disableLargeSteamOverclock() {
+        if (steamTanks.isEmpty()) {
+            return;
+        }
+        capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP,
+                List.of(new SteamEnergyRecipeHandler(steamTanks.get(0), 0.5D)));
+    }
+
     @Override
     public double getSteamConversionRate() {
         return 0.5D;
@@ -380,6 +390,11 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         moduleShellPositions = Set.copyOf(positions);
     }
 
+    private boolean isSteamHatchTank(NotifiableFluidTank tank) {
+        MetaMachine machine = tank.getMachine();
+        return machine instanceof SteamHatchPartMachine || machine instanceof LargeSteamHatchPartMachine;
+    }
+
     private void collectSteamTanks() {
         List<NotifiableFluidTank> tanks = new ArrayList<>();
         for (IMultiPart part : getParts()) {
@@ -387,8 +402,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 if (trait instanceof NotifiableFluidTank tank) {
                     MetaMachine machine = tank.getMachine();
                     if ((machine instanceof SteamHatchPartMachine ||
-                            machine instanceof LargeSteamHatchPartMachine ||
-                            machine instanceof DreamElevatorSteamInputHatchMachine) &&
+                            machine instanceof LargeSteamHatchPartMachine) &&
                             !tanks.contains(tank)) {
                         tanks.add(tank);
                     }
@@ -509,8 +523,39 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @Override
     public void addDisplayText(List<Component> textList) {
-        super.addDisplayText(textList);
+        // 不调用 GTL 父类的显示：它会为大型蒸汽输入仓显示超频按钮，而梦想电梯已禁用该超频。
+        for (IMultiPart part : getParts()) {
+            part.addMultiText(textList);
+        }
         if (!isFormed()) return;
+
+        long steamStored = 0L;
+        long steamCapacity = 0L;
+        for (IMultiPart part : getParts()) {
+            for (IRecipeHandlerTrait<?> trait : part.getRecipeHandlers()) {
+                if (trait instanceof NotifiableFluidTank tank && isSteamHatchTank(tank)) {
+                    steamStored += tank.getFluidInTank(0).getAmount();
+                    steamCapacity += tank.getTankCapacity(0);
+                }
+            }
+        }
+        if (steamCapacity > 0) {
+            textList.add(Component.translatable("gtceu.multiblock.steam.steam_stored", steamStored, steamCapacity));
+        }
+        if (!isWorkingEnabled()) {
+            textList.add(Component.translatable("gtceu.multiblock.work_paused"));
+        } else if (isActive()) {
+            textList.add(Component.translatable("gtceu.multiblock.running"));
+            textList.add(Component.translatable("gtceu.multiblock.progress",
+                    (int) (recipeLogic.getProgressPercent() * 100)));
+        } else {
+            textList.add(Component.translatable("gtceu.multiblock.idling"));
+        }
+        if (recipeLogic.isWaiting()) {
+            textList.add(Component.translatable("gtceu.multiblock.steam.low_steam")
+                    .setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+        }
+
         textList.add(Component.translatable("vividtech.machine.dream_elevator.power_tier", railTier));
         textList.add(Component.translatable("vividtech.machine.dream_elevator.speed",
                 String.format("%.0f", getProductionSpeedMultiplier() * 100.0D)));

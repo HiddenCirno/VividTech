@@ -6,7 +6,6 @@ import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
-import com.vividtech.common.machine.multiblock.part.DreamElevatorSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
 
@@ -17,7 +16,6 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
-import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
@@ -137,17 +135,6 @@ public class VividMachines {
         }
     }
 
-    public static final MachineDefinition DREAM_ELEVATOR_STEAM_INPUT_HATCH = REGISTRATE
-            .machine("dream_elevator_large_steam_input_hatch", DreamElevatorSteamInputHatchMachine::new)
-            .rotationState(RotationState.ALL)
-            .abilities(PartAbility.STEAM)
-            .overlaySteamHullRenderer("steam_hatch")
-            .tooltips(Component.translatable("vividtech.machine.large_steam_input_hatch.tooltip.0"))
-            .tooltips(Component.translatable("gtceu.universal.tooltip.fluid_storage_capacity",
-                    DreamElevatorSteamInputHatchMachine.CAPACITY))
-            .tooltipBuilder(VIVID_ADD)
-            .register();
-
     private static ItemStack steamTabIcon() {
         return EYE_OF_WOOD.asStack();
     }
@@ -162,17 +149,16 @@ public class VividMachines {
 
     private static TraceabilityPredicate dreamSteamCasing() {
         // PartAbility.STEAM 的 getAllBlocks() 是 memoize 的，GTL 的大型蒸汽输入仓注册较晚，
-        // 可能不在缓存里，因此这里显式补上它的方块。
+        // 可能不在缓存里，因此这里显式补上它的方块。蒸汽仓不限制数量。
         Block[] steamParts = Stream.concat(
                 PartAbility.STEAM.getAllBlocks().stream(),
-                Stream.of(GTLMachines.LARGE_STEAM_HATCH.getBlock(),
-                        DREAM_ELEVATOR_STEAM_INPUT_HATCH.getBlock()))
+                Stream.of(GTLMachines.LARGE_STEAM_HATCH.getBlock()))
                 .distinct()
                 .toArray(Block[]::new);
         return blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
                 // 优先用能力匹配，保证 GTL 稍后注册的大型蒸汽输入仓也能被识别。
-                .or(Predicates.abilities(PartAbility.STEAM).setMaxGlobalLimited(4))
-                .or(Predicates.blocks(steamParts).setMaxGlobalLimited(4))
+                .or(Predicates.abilities(PartAbility.STEAM))
+                .or(Predicates.blocks(steamParts))
                 .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(4))

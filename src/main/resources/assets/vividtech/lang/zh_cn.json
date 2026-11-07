@@ -132,8 +132,5 @@
   "vividtech.machine.dream_elevator.speed": "§7全机生产速度：§e%s%%",
   "vividtech.machine.dream_elevator.large_steam_hatch.enabled": "§7大型蒸汽输入仓：§a已连接",
   "vividtech.machine.dream_elevator.large_steam_hatch.disabled": "§7大型蒸汽输入仓：§c未连接",
-  "vividtech.machine.steam_processing_module.effective_parallel": "§7实际并行：§e%s",
-  "block.gtceu.dream_elevator_large_steam_input_hatch": "梦想电梯大型蒸汽输入仓",
-  "gtceu.dream_elevator_large_steam_input_hatch": "梦想电梯大型蒸汽输入仓",
-  "vividtech.machine.large_steam_input_hatch.tooltip.0": "§7梦想电梯专用的大型蒸汽输入仓，不提供超频能力."
+  "vividtech.machine.steam_processing_module.effective_parallel": "§7实际并行：§e%s"
 }
