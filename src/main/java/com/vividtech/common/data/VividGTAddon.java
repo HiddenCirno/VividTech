@@ -35,7 +35,7 @@ public class VividGTAddon implements IGTAddon {
 
     @Override
     public void initializeAddon() {
-        VividMachines.init();
+        // VividMachines is initialised from the mod constructor, before GTCEu freezes its registries.
     }
 
     @Override

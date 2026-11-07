@@ -21,6 +21,7 @@ import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 
 import com.lowdragmc.lowdraglib.side.fluid.FluidHelper;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
@@ -71,6 +72,11 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
     @Setter
     private DreamElevatorMachine host;
 
+    @DescSynced
+    private boolean connectedToHost;
+    @DescSynced
+    private int hostRailTier;
+
     private int reservedParallel;
     private double appliedConversion = -1.0D;
 
@@ -108,6 +114,7 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
 
     @Override
     public void onConnected(@NotNull DreamElevatorMachine host) {
+        setConnectionState(true, host.getRailTier());
         updateConnectionSubscription();
         refreshSteamHandler();
         recipeLogic.updateTickSubscription();
@@ -115,8 +122,18 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
 
     @Override
     public void onDisconnected() {
+        setConnectionState(false, 0);
         releaseReservedParallel();
         refreshSteamHandler();
+    }
+
+    private void setConnectionState(boolean connected, int railTier) {
+        if (isRemote()) return;
+        if (connectedToHost == connected && hostRailTier == railTier) return;
+        connectedToHost = connected;
+        hostRailTier = connected ? railTier : 0;
+        markDirty();
+        notifyBlockUpdate();
     }
 
     @Override
@@ -135,6 +152,9 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
     public void onStructureFormed() {
         super.onStructureFormed();
         findAndConnectToHost();
+        DreamElevatorMachine currentHost = getHost();
+        setConnectionState(currentHost != null && currentHost.isFormed(),
+                currentHost != null ? currentHost.getRailTier() : 0);
         updateConnectionSubscription();
         refreshSteamHandler();
     }
@@ -179,8 +199,14 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
         }
         if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
             DreamElevatorMachine currentHost = getHost();
-            if (currentHost == null || !currentHost.isFormed()) {
+            if (currentHost != null && !currentHost.isFormed()) {
+                removeFromHost(currentHost);
+                currentHost = null;
+            }
+            if (currentHost == null) {
                 findAndConnectToHost();
+            } else {
+                setConnectionState(true, currentHost.getRailTier());
             }
         }
     }
@@ -215,10 +241,14 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
         if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
             DreamElevatorMachine currentHost = getHost();
             if (currentHost == null || !currentHost.isFormed()) {
+                if (currentHost != null) {
+                    removeFromHost(currentHost);
+                }
                 releaseReservedParallel();
                 getRecipeLogic().interruptRecipe();
                 return false;
             }
+            setConnectionState(true, currentHost.getRailTier());
             refreshSteamHandler();
         }
         return super.onWorking();
@@ -306,14 +336,12 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
         textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.tier", moduleTier));
         textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.parallel",
                 getModuleParallel()));
-        DreamElevatorMachine currentHost = getHost();
-        textList.add(Component.translatable(currentHost != null && currentHost.isFormed() ?
+        textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.steam_industrial_processing_plant.connected" :
                 "vividtech.machine.steam_industrial_processing_plant.disconnected"));
-        if (currentHost != null && currentHost.isFormed()) {
+        if (connectedToHost) {
             textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.steam",
-                    getSteamStored() / FluidHelper.getBucket(),
-                    currentHost.getRailTier()));
+                    getSteamStored() / FluidHelper.getBucket(), hostRailTier));
         }
     }
 }

@@ -18,3 +18,4 @@ bin/
 *.bak-*
 _tmp_*
 libs/
+dev/

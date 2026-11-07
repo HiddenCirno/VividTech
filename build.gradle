@@ -13,8 +13,23 @@ java {
     sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 }
 
+def loomCacheRoot = new File(gradle.gradleUserHomeDir, 'caches/fabric-loom/1.20.1')
+def srgMappingFile = loomCacheRoot.listFiles()?.findAll { it.isDirectory() && it.name.startsWith('loom.mappings') }
+        ?.collect { new File(it, 'mappings-srg-named.srg') }
+        ?.find { it.exists() }
+
 loom {
     silentMojangMappingsLicense()
+
+    runs {
+        named("client").configure {
+            println "VIVID CONFIG CLIENT ${srgMappingFile}"
+            if (srgMappingFile != null) {
+                vmArg "-Dmixin.env.remapRefMap=true"
+                vmArg "-Dmixin.env.refMapRemappingFile=${srgMappingFile.absolutePath}"
+            }
+        }
+    }
 }
 
 repositories {
@@ -66,6 +81,12 @@ repositories {
     maven {
         url = "https://maven.teamresourceful.com/repository/maven-public/"
     }
+    maven {
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 dependencies {
@@ -82,7 +103,42 @@ dependencies {
     modImplementation("com.tterrag.registrate:Registrate:$project.registrate_version")
 
     // GTLCore development jar (built by the GTLCore project).
-    modImplementation files("../GTLCore/build/devlibs/gtlcore-${project.gtlcore_dev_version}-dev.jar")
+    // Use the dev-only patched copy when present (see tools/patch-gtlc-dev-jar.py).
+    def patchedGtlcJar = file("dev/gtlcore-${project.gtlcore_dev_version}-dev-patched.jar")
+    def gtlcDevJar = patchedGtlcJar.exists()
+            ? patchedGtlcJar
+            : file("../GTLCore/build/devlibs/gtlcore-${project.gtlcore_dev_version}-dev.jar")
+    modImplementation files(gtlcDevJar)
+    // GTLCore's dev jar manifest references the voxelregion mixin configs; they live in the adapter.
+    modImplementation files("../GTLCore/build/vre-adapter/voxel-region-forge-adapter-1.20.1-0.1.0-dev.jar")
+    modImplementation files("../GTLCore/vre-engine/build/libs/voxel-region-engine-0.1.0.jar")
+
+    // GTLCore's mandatory runtime dependencies.
+    modImplementation("dev.architectury:architectury-forge:9.2.14")
+    modImplementation("dev.toma.configuration:configuration-forge-1.20.1:2.2.0")
+    modImplementation("curse.maven:guideme-1173950:7127447")
+    modImplementation("curse.maven:applied-energistics-2-223794:7148487")
+    modImplementation("curse.maven:applied-energistics-2-wireless-terminals-459929:7251206") { transitive = false }
+    modImplementation("maven.modrinth:cloth-config:11.1.136+forge")
+    modImplementation("maven.modrinth:curios:5.14.1+1.20.1")
+    modImplementation("com.teamresourceful.resourcefullib:resourcefullib-forge-1.20.1:2.1.23")
+    modImplementation("com.teamresourceful.resourcefulconfig:resourcefulconfig-forge-1.20.1:2.1.2")
+    modImplementation("earth.terrarium.botarium:botarium-forge-1.20.1:2.3.3")
+    modImplementation("earth.terrarium.adastra:ad_astra-forge-1.20.1:1.15.18") { transitive = false }
+    modImplementation("dev:gtmthings-1.3.5.b")
+    modImplementation("curse.maven:ftb-ultimine-forge-386134:5363345") { transitive = false }
+    modImplementation("curse.maven:ftb-library-forge-404465:5567591") { transitive = false }
+    modImplementation("curse.maven:ftb-teams-forge-404468:5267190") { transitive = false }
+    modImplementation("curse.maven:ftb-chunks-forge-314906:5378090") { transitive = false }
+    // Local copies of GTLCore's optional/mandatory runtime deps for the dev client.
+    modImplementation fileTree(dir: 'libs', include: '*.jar')
+    implementation files("../GTLCore/cgse-engine/build/libs/cgse-engine-0.3.1.jar")
+
+    forgeRuntimeLibrary("com.teamresourceful:yabn:1.0.3")
+    forgeRuntimeLibrary("com.teamresourceful:bytecodecs:1.0.2")
+
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.0"))
 
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'

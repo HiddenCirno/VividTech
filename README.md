@@ -28,16 +28,23 @@ cd ../GTLCore
 ./gradlew compileJava jar
 ```
 
-然后：
+然后在 VividTech 里生成 dev 用的 GTLCore 补丁 jar（移除与 AE2 15.4.11 不兼容的一个 GTLCore GUI mixin）：
 
 ```bash
 cd ../VividTech
+python tools/patch-gtlc-dev-jar.py   ../GTLCore/build/devlibs/gtlcore-1.2.3.3-fix2-dev.jar   dev/gtlcore-1.2.3.3-fix2-dev-patched.jar
 ./gradlew compileJava
 ./gradlew runClient
 ```
 
-> GTLCore 的 dev runtime 还需要它自己的强制依赖（AE2、Ad Astra、gtmthings、mae2 等）。
-> 如果只做编译检查，当前配置已足够。
+> `build.gradle` 会优先使用 `dev/` 下的补丁 jar，没有时回退到 GTLCore 原始 dev jar。
+>
+> 完整的 dev 客户端还需要一批 GTLCore 运行时依赖。项目已经通过 Maven/Modrinth
+> 配置了 AE2、AE2WTlib、Ad Astra、gtmthings、mae2、FTB 等；其余本地 jar 放在
+> `libs/`（已被 .gitignore 忽略），可按需从 GTL 整合包复制。
+>
+> JEI 暂未加入 dev runtime：GTCEu 1.4.4 的 JEI mixin 与 15.49.x 的
+> `FluidHelper#getTooltip(List, ...)` 签名不兼容，会导致启动崩溃。
 
 ## 注册约定
 

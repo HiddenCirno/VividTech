@@ -9,6 +9,8 @@ import static com.lowdragmc.lowdraglib.gui.texture.ProgressTexture.FillDirection
 
 public class VividRecipeTypes {
 
+    public static void init() {}
+
     public static final GTRecipeType EYE_OF_WOOD_RECIPES = GTRecipeTypes.register("eye_of_wood",
             GTRecipeTypes.MULTIBLOCK)
             .setMaxIOSize(0, 0, 2, 1)
