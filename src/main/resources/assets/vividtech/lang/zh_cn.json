@@ -27,7 +27,7 @@
   "block.gtceu.dream_elevator": "梦想电梯",
   "gtceu.dream_elevator": "梦想电梯",
   "vividtech.machine.dream_elevator.tooltip.0": "§7一座梦想着上太空的蒸汽时代工业中心.",
-  "vividtech.machine.dream_elevator.tooltip.1": "§7动力模块决定全机并行池与生产速度；24 个模块槽位分内外两环.",
+  "vividtech.machine.dream_elevator.tooltip.1": "§7动力模块决定并行池、生产速度、模块槽位与配方等级上限；24 个模块槽位分内外两环.",
   "vividtech.machine.dream_elevator.module_slots": "§7模块槽位：§e%s",
   "vividtech.machine.dream_elevator.animation.enabled": "梦想电梯动画已开启",
   "vividtech.machine.dream_elevator.animation.disabled": "梦想电梯动画已关闭",
@@ -130,7 +130,10 @@
   "vividtech.machine.steam_processing_module.steam": "§7蒸汽缓冲：§e%s§7 桶 / 轨道 T%s",
   "vividtech.machine.dream_elevator.power_tier": "§7动力模块等级：§eT%s",
   "vividtech.machine.dream_elevator.speed": "§7全机生产速度：§e%s%%",
-  "vividtech.machine.dream_elevator.large_steam_hatch.enabled": "§7大型蒸汽输入仓：§a已识别",
-  "vividtech.machine.dream_elevator.large_steam_hatch.disabled": "§7大型蒸汽输入仓：§c未识别",
-  "vividtech.machine.steam_processing_module.effective_parallel": "§7实际并行：§e%s"
+  "vividtech.machine.dream_elevator.large_steam_hatch.enabled": "§7大型蒸汽输入仓：§a已连接",
+  "vividtech.machine.dream_elevator.large_steam_hatch.disabled": "§7大型蒸汽输入仓：§c未连接",
+  "vividtech.machine.steam_processing_module.effective_parallel": "§7实际并行：§e%s",
+  "block.gtceu.dream_elevator_large_steam_input_hatch": "梦想电梯大型蒸汽输入仓",
+  "gtceu.dream_elevator_large_steam_input_hatch": "梦想电梯大型蒸汽输入仓",
+  "vividtech.machine.large_steam_input_hatch.tooltip.0": "§7梦想电梯专用的大型蒸汽输入仓，不提供超频能力."
 }

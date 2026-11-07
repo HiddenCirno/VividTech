@@ -5,6 +5,8 @@ import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.LargeSteamHatchPartMachine;
 import org.gtlcore.gtlcore.common.machine.multiblock.steam.LargeSteamParallelMultiblockMachine;
 
+import com.vividtech.common.machine.multiblock.part.DreamElevatorSteamInputHatchMachine;
+
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
@@ -65,8 +67,10 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     /** 动力模块等级提供的生产速度倍率。 */
     private static final double[] POWER_SPEED = { 1.0D, 1.5D, 2.0D, 2.5D, 4.0D };
 
-    /** 结构固定提供 24 个模块槽位：内环 12 个、外环 12 个。 */
-    private static final int TOTAL_MODULE_SLOTS = 24;
+    /** 动力模块等级解锁的模块槽位数量。 */
+    private static final int[] MODULE_SLOTS = { 6, 12, 15, 18, 24 };
+
+    /** 内环槽位固定 12 个，按到结构中心的距离识别。 */
     private static final int INNER_MODULE_SLOTS = 12;
 
     private static final int HOST_CHECK_INTERVAL_TICKS = 20;
@@ -108,6 +112,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     private final Set<IModularMachineModule<DreamElevatorMachine, ?>> modules = new ReferenceOpenHashSet<>();
     private final Map<SteamProcessingModuleMachine, Integer> parallelReservations = new HashMap<>();
     private List<BlockPos> moduleSlotPositions = List.of();
+    private List<BlockPos> moduleOrderedSlots = List.of();
     private Set<BlockPos> moduleInnerSlots = Set.of();
     private Set<BlockPos> moduleShellPositions = Set.of();
     private List<NotifiableFluidTank> steamTanks = List.of();
@@ -168,6 +173,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         safeClearModules();
         parallelReservations.clear();
         moduleSlotPositions = List.of();
+        moduleOrderedSlots = List.of();
         moduleInnerSlots = Set.of();
         moduleShellPositions = Set.of();
         steamTanks = List.of();
@@ -184,7 +190,12 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @Override
     public BlockPos[] getModuleScanPositions() {
-        return moduleSlotPositions.toArray(BlockPos[]::new);
+        int slots = getModuleSlots();
+        if (slots <= 0) {
+            return new BlockPos[0];
+        }
+        int limit = Math.min(slots, moduleOrderedSlots.size());
+        return moduleOrderedSlots.subList(0, limit).toArray(BlockPos[]::new);
     }
 
     @Override
@@ -237,6 +248,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         Object raw = getMultiblockState().getMatchContext().get(MODULE_SLOT_KEY);
         if (!(raw instanceof LongSet slots)) {
             moduleSlotPositions = List.of();
+            moduleOrderedSlots = List.of();
+            moduleInnerSlots = Set.of();
             return;
         }
         List<BlockPos> positions = new ArrayList<>(slots.size());
@@ -246,6 +259,19 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         positions.sort(Comparator.comparingLong(BlockPos::asLong));
         moduleSlotPositions = List.copyOf(positions);
         moduleInnerSlots = computeInnerSlots(positions);
+        // 内环优先解锁，随后才是外环。
+        List<BlockPos> ordered = new ArrayList<>(positions.size());
+        for (BlockPos pos : positions) {
+            if (moduleInnerSlots.contains(pos)) {
+                ordered.add(pos);
+            }
+        }
+        for (BlockPos pos : positions) {
+            if (!moduleInnerSlots.contains(pos)) {
+                ordered.add(pos);
+            }
+        }
+        moduleOrderedSlots = List.copyOf(ordered);
     }
 
     /**
@@ -283,22 +309,28 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     private boolean detectLargeSteamHatch() {
         for (IMultiPart part : getParts()) {
-            if (part.self() instanceof LargeSteamHatchPartMachine) {
+            if (part.self() instanceof DreamElevatorSteamInputHatchMachine ||
+                    part.self() instanceof LargeSteamHatchPartMachine) {
                 return true;
             }
         }
         return false;
     }
 
+    /**
+     * 本模组的大型蒸汽输入仓只提供容量，不提供任何超频 / 转换率加成。
+     * GTL 的大型蒸汽输入仓也不会被当作 OC 来源（定义不是 GTL 的那个方块）。
+     */
     @Override
     public double getSteamConversionRate() {
-        return 0.5D * (hasLargeSteamHatch ? Math.pow(3, getSteamOCAmount()) : 1);
+        return 0.5D;
     }
 
     @Override
     public long getMaxRecipeEUt() {
         if (railTier >= 5) return 512L;
-        return hasLargeSteamHatch ? 128L : 32L;
+        if (railTier >= 3) return 128L;
+        return 32L;
     }
 
     @Override
@@ -311,10 +343,10 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         return getSteamConversionRate();
     }
 
-    /** 全机允许执行的最高配方电压等级：LV / MV（大型蒸汽仓）/ HV（T5 动力模块）。 */
+    /** 全机允许执行的最高配方电压等级：T1/T2 = LV，T3/T4 = MV，T5 = HV。 */
     public int getMaxRecipeTier() {
         if (railTier >= 5) return GTValues.HV;
-        if (hasLargeSteamHatch) return GTValues.MV;
+        if (railTier >= 3) return GTValues.MV;
         return GTValues.LV;
     }
 
@@ -354,7 +386,9 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             for (IRecipeHandlerTrait<?> trait : part.getRecipeHandlers()) {
                 if (trait instanceof NotifiableFluidTank tank) {
                     MetaMachine machine = tank.getMachine();
-                    if ((machine instanceof SteamHatchPartMachine || machine instanceof LargeSteamHatchPartMachine) &&
+                    if ((machine instanceof SteamHatchPartMachine ||
+                            machine instanceof LargeSteamHatchPartMachine ||
+                            machine instanceof DreamElevatorSteamInputHatchMachine) &&
                             !tanks.contains(tank)) {
                         tanks.add(tank);
                     }
@@ -445,7 +479,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     }
 
     public int getModuleSlots() {
-        return TOTAL_MODULE_SLOTS;
+        return railTier > 0 ? MODULE_SLOTS[railTier - 1] : 0;
     }
 
     public int getPowerTier() {

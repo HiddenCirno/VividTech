@@ -53,6 +53,7 @@ python tools/patch-gtlc-dev-jar.py   ../GTLCore/build/devlibs/gtlcore-1.2.3.3-fi
 - `gtceu:eye_of_wood`
 - `gtceu:dream_elevator`
 - `gtceu:dream_elevator_steam_<type>_module_mk1/mk2/mk3`
+- `gtceu:dream_elevator_large_steam_input_hatch`
 
 创造标签页：**绚乱科技：蒸汽力量**（`gtceu:steam_power`），图标为武德之眼控制器。
 
@@ -68,8 +69,9 @@ python tools/patch-gtlc-dev-jar.py   ../GTLCore/build/devlibs/gtlcore-1.2.3.3-fi
 | T4 | 768 | 250% |
 | T5 | 1200 | 400% |
 
-- 结构固定 24 个模块槽位，分内环 12 个、外环 12 个。
+- 模块槽位随动力模块等级解锁：T1–T5 = 6/12/15/18/24，按内环优先顺序启用。
 - 模块并行：MK1/MK2/MK3 = 8/16/32；T5 时内环 12 个模块并行翻倍（MK3 下额外 384）。
 - 并行池全机共享，超出池容量的模块会等待。
-- T5 动力模块把全机配方电压上限提升到 HV；大型蒸汽输入仓提升到 MV。
+- 配方电压上限：T1/T2 = LV，T3/T4 = MV，T5 = HV。
+- 自带大型蒸汽输入仓 `gtceu:dream_elevator_large_steam_input_hatch`：16,384,000 mB，只提供容量，不提供超频。
 - 蒸汽乘区：`(0.8 / 动力模块等级) × 配方电压等级 + 生产模块等级 / 5`（ULV = 0.5，LV = 1，MV = 2，HV = 3……）。机器不主动超频，始终按配方自身电压等级计算。
