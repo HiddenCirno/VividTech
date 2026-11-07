@@ -217,11 +217,12 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         if (currentHost == null || !currentHost.isFormed()) {
             return false;
         }
-        if (reservedParallel <= 0) {
-            if (!currentHost.tryReserveParallel(this, getModuleParallel())) {
+        int requestedParallel = currentHost.getMaxModuleParallel(this);
+        if (reservedParallel < requestedParallel) {
+            if (!currentHost.tryReserveParallel(this, requestedParallel)) {
                 return false;
             }
-            reservedParallel = getModuleParallel();
+            reservedParallel = requestedParallel;
         }
         boolean result = super.beforeWorking(recipe);
         if (!result) {
@@ -291,11 +292,12 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     public double getSteamMultiplier(int recipeVoltageTier) {
         DreamElevatorMachine currentHost = getHost();
         if (currentHost == null) return 1.0D;
-        int railTier = currentHost.getRailTier();
-        if (railTier <= 0) return 1.0D;
+        int powerTier = currentHost.getPowerTier();
+        if (powerTier <= 0) return 1.0D;
         // 配方电压等级：ULV/LV = 1，MV = 2，HV = 3……
         int voltageTier = Math.max(1, recipeVoltageTier);
-        double multiplier = 0.8D * voltageTier / moduleTier / (railTier / 2.0D);
+        // floor(0.8 * 电压等级 / 动力模块等级) + 生产模块等级 / 5
+        double multiplier = Math.floor(0.8D * voltageTier / powerTier) + moduleTier / 5.0D;
         return Math.max(0.05D, Math.min(multiplier, 1000.0D));
     }
 
@@ -308,11 +310,11 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         if (currentHost == null || !currentHost.isFormed()) {
             return null;
         }
-        long originalEUt = RecipeHelper.getInputEUt(recipe);
-        if (originalEUt > currentHost.getMaxRecipeEUt()) {
+        if (RecipeHelper.getRecipeEUtTier(recipe) > currentHost.getMaxRecipeTier()) {
             return null;
         }
-        var parallelResult = GTRecipeModifiers.accurateParallel(machine, recipe, module.getModuleParallel(), false);
+        var parallelResult = GTRecipeModifiers.accurateParallel(machine, recipe,
+                currentHost.getMaxModuleParallel(module), false);
         int parallel = parallelResult.getSecond();
         GTRecipe parallelRecipe = parallelResult.getFirst();
         if (parallel <= 0 || parallelRecipe == null) {
@@ -323,8 +325,9 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         int recipeVoltageTier = Math.max(1, RecipeHelper.getRecipeEUtTier(recipe));
         long modifiedEUt = Math.max(1L, Math.round(parallelEUt * module.getSteamMultiplier(recipeVoltageTier)));
         RecipeHelper.setInputEUt(modified, modifiedEUt);
-        if (module.moduleTier == 3) {
-            modified.duration = Math.max(1, modified.duration / 2);
+        double speedMultiplier = currentHost.getProductionSpeedMultiplier();
+        if (speedMultiplier != 1.0D) {
+            modified.duration = (int) Math.max(1L, Math.round(modified.duration / speedMultiplier));
         }
         return modified;
     }
@@ -336,6 +339,11 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier", moduleTier));
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.parallel",
                 getModuleParallel()));
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost != null) {
+            textList.add(Component.translatable("vividtech.machine.steam_processing_module.effective_parallel",
+                    currentHost.getMaxModuleParallel(this)));
+        }
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.steam_processing_module.connected" :
                 "vividtech.machine.steam_processing_module.disconnected"));

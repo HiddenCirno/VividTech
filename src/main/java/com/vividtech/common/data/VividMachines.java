@@ -156,6 +156,8 @@ public class VividMachines {
                 .distinct()
                 .toArray(Block[]::new);
         return blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
+                // 优先用能力匹配，保证 GTL 稍后注册的大型蒸汽输入仓也能被识别。
+                .or(Predicates.abilities(PartAbility.STEAM).setMaxGlobalLimited(4))
                 .or(Predicates.blocks(steamParts).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(4))
@@ -244,6 +246,7 @@ public class VividMachines {
             .recipeType(VividRecipeTypes.EYE_OF_WOOD_RECIPES)
             .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
             .tooltips(eyeOfWoodTooltips())
+            .tooltips(Component.translatable("tooltip.gtlcore.structure.source", "Twist Space Technology"))
             .tooltipBuilder(VIVID_ADD)
             .pattern(definition -> EyeOfWoodStructure.EYE_OF_HARMONY
                     .where('~', Predicates.controller(Predicates.blocks(definition.get())))

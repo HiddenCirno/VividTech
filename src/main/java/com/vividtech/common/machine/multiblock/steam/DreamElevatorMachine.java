@@ -5,6 +5,7 @@ import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.LargeSteamHatchPartMachine;
 import org.gtlcore.gtlcore.common.machine.multiblock.steam.LargeSteamParallelMultiblockMachine;
 
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
@@ -58,8 +59,16 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             DreamElevatorMachine.class, LargeSteamParallelMultiblockMachine.MANAGED_FIELD_HOLDER);
 
-    private static final int[] MODULE_SLOTS = { 6, 12, 15, 18, 24 };
-    private static final int[] RAIL_PARALLELS = { 32, 64, 96, 128, 256 };
+    /** 动力模块等级提供的全机并行池。 */
+    private static final int[] POWER_PARALLELS = { 256, 384, 512, 768, 1024 };
+
+    /** 动力模块等级提供的生产速度倍率。 */
+    private static final double[] POWER_SPEED = { 1.0D, 1.5D, 2.0D, 2.5D, 4.0D };
+
+    /** 结构固定提供 24 个模块槽位：内环 12 个、外环 12 个。 */
+    private static final int TOTAL_MODULE_SLOTS = 24;
+    private static final int INNER_MODULE_SLOTS = 12;
+
     private static final int HOST_CHECK_INTERVAL_TICKS = 20;
     private static final int STEAM_DISTRIBUTION_INTERVAL_TICKS = 5;
 
@@ -93,9 +102,13 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     @DescSynced
     private boolean animationEnabled = true;
 
+    @DescSynced
+    private boolean hasLargeSteamHatch;
+
     private final Set<IModularMachineModule<DreamElevatorMachine, ?>> modules = new ReferenceOpenHashSet<>();
     private final Map<SteamProcessingModuleMachine, Integer> parallelReservations = new HashMap<>();
     private List<BlockPos> moduleSlotPositions = List.of();
+    private Set<BlockPos> moduleInnerSlots = Set.of();
     private Set<BlockPos> moduleShellPositions = Set.of();
     private List<NotifiableFluidTank> steamTanks = List.of();
 
@@ -136,6 +149,9 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         super.onStructureFormed();
         Integer tier = getMultiblockState().getMatchContext().get(RAIL_TIER_KEY);
         railTier = tier == null ? 0 : tier;
+        hasLargeSteamHatch = detectLargeSteamHatch();
+        markDirty();
+        notifyBlockUpdate();
         collectSteamTanks();
         safeClearModules();
         scanAndConnectModules();
@@ -152,9 +168,11 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         safeClearModules();
         parallelReservations.clear();
         moduleSlotPositions = List.of();
+        moduleInnerSlots = Set.of();
         moduleShellPositions = Set.of();
         steamTanks = List.of();
         railTier = 0;
+        hasLargeSteamHatch = false;
         stopHostSubscription();
         super.onStructureInvalid();
     }
@@ -227,6 +245,94 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         }
         positions.sort(Comparator.comparingLong(BlockPos::asLong));
         moduleSlotPositions = List.copyOf(positions);
+        moduleInnerSlots = computeInnerSlots(positions);
+    }
+
+    /**
+     * 内环模块离结构中心最近。用全部槽位的质心做距离排序，方向无关，
+     * 取最近的 12 个作为内环槽位。
+     */
+    private Set<BlockPos> computeInnerSlots(List<BlockPos> positions) {
+        if (positions.size() <= INNER_MODULE_SLOTS) {
+            return Set.copyOf(positions);
+        }
+        double centerX = 0.0D;
+        double centerY = 0.0D;
+        double centerZ = 0.0D;
+        for (BlockPos pos : positions) {
+            centerX += pos.getX();
+            centerY += pos.getY();
+            centerZ += pos.getZ();
+        }
+        int count = positions.size();
+        centerX /= count;
+        centerY /= count;
+        centerZ /= count;
+        List<BlockPos> sorted = new ArrayList<>(positions);
+        double fx = centerX;
+        double fy = centerY;
+        double fz = centerZ;
+        sorted.sort(Comparator.comparingDouble(pos -> {
+            double dx = pos.getX() - fx;
+            double dy = pos.getY() - fy;
+            double dz = pos.getZ() - fz;
+            return dx * dx + dy * dy + dz * dz;
+        }));
+        return Set.copyOf(sorted.subList(0, INNER_MODULE_SLOTS));
+    }
+
+    private boolean detectLargeSteamHatch() {
+        for (IMultiPart part : getParts()) {
+            if (part.self() instanceof LargeSteamHatchPartMachine) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public double getSteamConversionRate() {
+        return 0.5D * (hasLargeSteamHatch ? Math.pow(3, getSteamOCAmount()) : 1);
+    }
+
+    @Override
+    public long getMaxRecipeEUt() {
+        if (railTier >= 5) return 512L;
+        return hasLargeSteamHatch ? 128L : 32L;
+    }
+
+    @Override
+    public boolean isUsingLargeSteamHatch() {
+        return hasLargeSteamHatch;
+    }
+
+    @Override
+    public double getConversionRate() {
+        return getSteamConversionRate();
+    }
+
+    /** 全机允许执行的最高配方电压等级：LV / MV（大型蒸汽仓）/ HV（T5 动力模块）。 */
+    public int getMaxRecipeTier() {
+        if (railTier >= 5) return GTValues.HV;
+        if (hasLargeSteamHatch) return GTValues.MV;
+        return GTValues.LV;
+    }
+
+    public double getProductionSpeedMultiplier() {
+        return railTier > 0 ? POWER_SPEED[railTier - 1] : 1.0D;
+    }
+
+    public boolean isInnerModule(BlockPos pos) {
+        return moduleInnerSlots.contains(pos);
+    }
+
+    /** 模块实际可申请的并行：T5 动力模块让内环模块翻倍。 */
+    public int getMaxModuleParallel(SteamProcessingModuleMachine module) {
+        int base = module.getModuleParallel();
+        if (railTier >= 5 && isInnerModule(module.getPos())) {
+            return base * 2;
+        }
+        return base;
     }
 
     private void collectModuleShells() {
@@ -304,12 +410,13 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     public boolean tryReserveParallel(SteamProcessingModuleMachine module, int amount) {
         if (isRemote() || amount <= 0) return false;
-        Integer existing = parallelReservations.get(module);
-        if (existing != null) {
-            return existing >= amount;
-        }
         if (!modules.contains(module)) {
             return false;
+        }
+        Integer existing = parallelReservations.get(module);
+        int current = existing == null ? 0 : existing;
+        if (current >= amount) {
+            return true;
         }
         int used = 0;
         for (Map.Entry<SteamProcessingModuleMachine, Integer> entry : parallelReservations.entrySet()) {
@@ -317,7 +424,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 used += entry.getValue();
             }
         }
-        if (used + amount > getRailParallel()) {
+        if (used + amount > getParallelPool()) {
             return false;
         }
         parallelReservations.put(module, amount);
@@ -328,8 +435,9 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         parallelReservations.remove(module);
     }
 
-    public int getRailParallel() {
-        return railTier > 0 ? RAIL_PARALLELS[railTier - 1] : 0;
+    /** 全机并行池。 */
+    public int getParallelPool() {
+        return railTier > 0 ? POWER_PARALLELS[railTier - 1] : 0;
     }
 
     public int getRailTier() {
@@ -337,7 +445,11 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     }
 
     public int getModuleSlots() {
-        return railTier > 0 ? MODULE_SLOTS[railTier - 1] : 0;
+        return TOTAL_MODULE_SLOTS;
+    }
+
+    public int getPowerTier() {
+        return railTier;
     }
 
     public boolean isAnimationEnabled() {
@@ -365,12 +477,17 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     public void addDisplayText(List<Component> textList) {
         super.addDisplayText(textList);
         if (!isFormed()) return;
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.rail_tier", railTier));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.power_tier", railTier));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.speed",
+                String.format("%.0f", getProductionSpeedMultiplier() * 100.0D)));
         textList.add(Component.translatable("vividtech.machine.dream_elevator.module_slots", getModuleSlots()));
         textList.add(Component.translatable("vividtech.machine.dream_elevator.modules_online", modules.size(),
                 getModuleSlots()));
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.parallel_pool", getRailParallel(),
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.parallel_pool", getParallelPool(),
                 getReservedParallel()));
+        textList.add(Component.translatable(hasLargeSteamHatch ?
+                "vividtech.machine.dream_elevator.large_steam_hatch.enabled" :
+                "vividtech.machine.dream_elevator.large_steam_hatch.disabled"));
         textList.add(Component.translatable(animationEnabled ?
                 "vividtech.machine.dream_elevator.animation.status.enabled" :
                 "vividtech.machine.dream_elevator.animation.status.disabled"));
