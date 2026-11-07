@@ -138,6 +138,14 @@ public class VividMachines {
         return EYE_OF_WOOD.asStack();
     }
 
+    private static Component[] dreamElevatorTooltips() {
+        Component[] tooltips = new Component[13];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.dream_elevator.tooltip." + i);
+        }
+        return tooltips;
+    }
+
     private static Component[] eyeOfWoodTooltips() {
         Component[] tooltips = new Component[19];
         for (int i = 0; i < tooltips.length; i++) {
@@ -271,8 +279,7 @@ public class VividMachines {
             .rotationState(RotationState.ALL)
             .recipeType(VividRecipeTypes.DREAM_ELEVATOR_RECIPES)
             .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
-            .tooltips(Component.translatable("vividtech.machine.dream_elevator.tooltip.0"))
-            .tooltips(Component.translatable("vividtech.machine.dream_elevator.tooltip.1"))
+            .tooltips(dreamElevatorTooltips())
             .tooltipBuilder(VIVID_ADD)
             .pattern(definition -> DreamElevatorStructure.DREAM_ELEVATOR
                     .where("~", Predicates.controller(Predicates.blocks(definition.get())))

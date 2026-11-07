@@ -72,6 +72,13 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Setter
     private DreamElevatorMachine host;
 
+    @Persisted
+    @DescSynced
+    private boolean moduleEnabled = true;
+
+    @DescSynced
+    private boolean hostWorkingEnabled = true;
+
     @DescSynced
     private boolean connectedToHost;
     @DescSynced
@@ -115,6 +122,7 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Override
     public void onConnected(@NotNull DreamElevatorMachine host) {
         setConnectionState(true, host.getRailTier());
+        updateHostWorkingState(host);
         updateConnectionSubscription();
         refreshSteamHandler();
         recipeLogic.updateTickSubscription();
@@ -123,8 +131,38 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Override
     public void onDisconnected() {
         setConnectionState(false, 0);
+        hostWorkingEnabled = true;
+        applyWorkingState();
         releaseReservedParallel();
         refreshSteamHandler();
+    }
+
+    @Override
+    public boolean isWorkingEnabled() {
+        return moduleEnabled;
+    }
+
+    @Override
+    public void setWorkingEnabled(boolean enabled) {
+        moduleEnabled = enabled;
+        markDirty();
+        notifyBlockUpdate();
+        applyWorkingState();
+    }
+
+    /** 主机被软锤禁用时，模块同步暂停；主机恢复后按模块自己的开关恢复。 */
+    private void applyWorkingState() {
+        getRecipeLogic().setWorkingEnabled(moduleEnabled && hostWorkingEnabled);
+    }
+
+    private void updateHostWorkingState(DreamElevatorMachine currentHost) {
+        boolean enabled = currentHost == null || !currentHost.isFormed() || currentHost.isWorkingEnabled();
+        if (hostWorkingEnabled != enabled) {
+            hostWorkingEnabled = enabled;
+            markDirty();
+            notifyBlockUpdate();
+            applyWorkingState();
+        }
     }
 
     private void setConnectionState(boolean connected, int railTier) {
@@ -139,6 +177,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Override
     public void onLoad() {
         super.onLoad();
+        updateHostWorkingState(getHost());
+        applyWorkingState();
         updateConnectionSubscription();
     }
 
@@ -151,6 +191,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Override
     public void onStructureFormed() {
         super.onStructureFormed();
+        updateHostWorkingState(getHost());
+        applyWorkingState();
         findAndConnectToHost();
         DreamElevatorMachine currentHost = getHost();
         setConnectionState(currentHost != null && currentHost.isFormed(),
@@ -197,6 +239,7 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
             stopConnectionSubscription();
             return;
         }
+        updateHostWorkingState(getHost());
         if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
             DreamElevatorMachine currentHost = getHost();
             if (currentHost != null && !currentHost.isFormed()) {

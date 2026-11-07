@@ -26,8 +26,8 @@
   "vividtech.machine.eye_of_wood.no_veins": "No Overworld ore vein data found",
   "block.gtceu.dream_elevator": "Dream Elevator",
   "gtceu.dream_elevator": "Dream Elevator",
-  "vividtech.machine.dream_elevator.tooltip.0": "§7A steam-era industrial center dreaming of space.",
-  "vividtech.machine.dream_elevator.tooltip.1": "§7The power module determines the parallel pool, production speed, module slots and recipe tier cap; the 24 module slots form inner and outer rings.",
+  "vividtech.machine.dream_elevator.tooltip.0": "§oI want to be an astronaut; Grandma and Grandpa were so happy",
+  "vividtech.machine.dream_elevator.tooltip.1": "§dThe eternal dream of all employees",
   "vividtech.machine.dream_elevator.module_slots": "§7Module Slots: §e%s",
   "vividtech.machine.dream_elevator.animation.enabled": "Dream Elevator animation enabled",
   "vividtech.machine.dream_elevator.animation.disabled": "Dream Elevator animation disabled",
@@ -126,5 +126,16 @@
   "vividtech.machine.dream_elevator.speed": "§7Global Production Speed: §e%s%%",
   "vividtech.machine.dream_elevator.large_steam_hatch.enabled": "§7Large Steam Input Hatch: §aConnected",
   "vividtech.machine.dream_elevator.large_steam_hatch.disabled": "§7Large Steam Input Hatch: §cNot Connected",
-  "vividtech.machine.steam_processing_module.effective_parallel": "§7Effective Parallel: §e%s"
+  "vividtech.machine.steam_processing_module.effective_parallel": "§7Effective Parallel: §e%s",
+  "vividtech.machine.dream_elevator.tooltip.2": "Supports up to §e24§r Dream Elevator modules",
+  "vividtech.machine.dream_elevator.tooltip.3": "The acceleration rail tier limits the number of installable modules",
+  "vividtech.machine.dream_elevator.tooltip.4": "Each module has its own independent input/output space and is supplied with steam centrally",
+  "vividtech.machine.dream_elevator.tooltip.5": "The controller receives the steam supply and distributes it uniformly",
+  "vividtech.machine.dream_elevator.tooltip.6": "Diamond block and above acceleration rails raise the recipe tier limit to §bMV",
+  "vividtech.machine.dream_elevator.tooltip.7": "Netherite block acceleration rails raise the recipe tier limit to §6HV",
+  "vividtech.machine.dream_elevator.tooltip.8": "§cCopper§r/§1Lapis§r/§bDiamond§r/§aEmerald§r/§8Netherite§r acceleration rails support §c6§r/§112§r/§b15§r/§a18§r/§824 modules respectively",
+  "vividtech.machine.dream_elevator.tooltip.9": "§cCopper§r/§1Lapis§r/§bDiamond§r/§aEmerald§r/§8Netherite§r acceleration rails provide §c256§r/§1384§r/§b512§r/§a768§r/§81200 parallel respectively",
+  "vividtech.machine.dream_elevator.tooltip.10": "Each working module consumes its parallel share from the controller",
+  "vividtech.machine.dream_elevator.tooltip.11": "Final steam multiplier = (§c0.8 §r/ §aacceleration rail tier§r) * §brecipe voltage tier§r (ULV counts as 0.5) + §emodule tier§r / 5",
+  "vividtech.machine.dream_elevator.tooltip.12": "Disabling this controller also pauses all modules"
 }
