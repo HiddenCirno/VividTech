@@ -16,10 +16,10 @@ import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.trait.IRecipeHandlerTrait;
 import com.gregtechceu.gtceu.api.machine.steam.SteamEnergyRecipeHandler;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
-import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.SteamHatchPartMachine;
 
-import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
+import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
+
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -78,10 +78,6 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     private static final int INNER_MODULE_SLOTS = 12;
 
     private static final int HOST_CHECK_INTERVAL_TICKS = 20;
-    private static final int STEAM_DISTRIBUTION_INTERVAL_TICKS = 5;
-
-    /** 主机蒸汽缓存：6400 桶。输入仓的蒸汽优先进入这里，再由这里分发给模块。 */
-    private static final long STEAM_BUFFER_CAPACITY = 6_400_000L;
 
     /**
      * 加速轨道等级。与 GTL 的 SEPM 外壳检测相同：所有轨道位共用同一个 match context key，
@@ -116,8 +112,6 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     @DescSynced
     private boolean hasLargeSteamHatch;
 
-    private final NotifiableFluidTank steamBuffer;
-
     private final Set<IModularMachineModule<DreamElevatorMachine, ?>> modules = new ReferenceOpenHashSet<>();
     private final Map<SteamProcessingModuleMachine, Integer> parallelReservations = new HashMap<>();
     private List<BlockPos> moduleSlotPositions = List.of();
@@ -130,8 +124,6 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     public DreamElevatorMachine(IMachineBlockEntity holder) {
         super(holder, 8);
-        this.steamBuffer = new NotifiableFluidTank(this, 1, STEAM_BUFFER_CAPACITY, IO.IN, IO.NONE)
-                .setFilter(fluidStack -> fluidStack.getFluid().is(GTMaterials.Steam.getFluidTag()));
     }
 
     @Override
@@ -169,7 +161,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         markDirty();
         notifyBlockUpdate();
         collectSteamTanks();
-        installSteamBufferHandler();
+        installSteamHandler();
         safeClearModules();
         scanAndConnectModules();
         updateHostSubscription();
@@ -251,10 +243,6 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 scanAndConnectModules();
             }
         }
-        if (timer % STEAM_DISTRIBUTION_INTERVAL_TICKS == 0) {
-            fillSteamBuffer();
-            distributeSteam();
-        }
     }
 
     private void collectModuleSlots() {
@@ -330,11 +318,47 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     }
 
     /**
-     * 梦想电梯单独禁用 GTL 大型蒸汽输入仓的超频：主机自己的蒸汽缓存以 0.5 转换率提供 EU。
+     * 梦想电梯单独禁用 GTL 大型蒸汽输入仓的超频：主机和模块都以 0.5 转换率直接抽取结构内的蒸汽仓。
      */
-    private void installSteamBufferHandler() {
+    private void installSteamHandler() {
         capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP,
-                List.of(new SteamEnergyRecipeHandler(steamBuffer, 0.5D)));
+                List.of(new SharedSteamEnergyRecipeHandler(this::getSteamTanks, 0.5D)));
+    }
+
+    /** 供模块的共享蒸汽处理器直接读取。 */
+    public List<NotifiableFluidTank> getSteamTanks() {
+        return steamTanks;
+    }
+
+    private boolean isSteamHatchTank(NotifiableFluidTank tank) {
+        MetaMachine machine = tank.getMachine();
+        return machine instanceof SteamHatchPartMachine ||
+                machine instanceof LargeSteamHatchPartMachine ||
+                machine instanceof CreativeSteamInputHatchMachine;
+    }
+
+    public long getStoredSteam() {
+        long stored = 0L;
+        for (IMultiPart part : getParts()) {
+            for (IRecipeHandlerTrait<?> trait : part.getRecipeHandlers()) {
+                if (trait instanceof NotifiableFluidTank tank && isSteamHatchTank(tank)) {
+                    stored += tank.getFluidInTank(0).getAmount();
+                }
+            }
+        }
+        return stored;
+    }
+
+    public long getSteamCapacity() {
+        long capacity = 0L;
+        for (IMultiPart part : getParts()) {
+            for (IRecipeHandlerTrait<?> trait : part.getRecipeHandlers()) {
+                if (trait instanceof NotifiableFluidTank tank && isSteamHatchTank(tank)) {
+                    capacity += tank.getTankCapacity(0);
+                }
+            }
+        }
+        return capacity;
     }
 
     @Override
@@ -403,7 +427,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 if (trait instanceof NotifiableFluidTank tank) {
                     MetaMachine machine = tank.getMachine();
                     if ((machine instanceof SteamHatchPartMachine ||
-                            machine instanceof LargeSteamHatchPartMachine) &&
+                            machine instanceof LargeSteamHatchPartMachine ||
+                            machine instanceof CreativeSteamInputHatchMachine) &&
                             !tanks.contains(tank)) {
                         tanks.add(tank);
                     }
@@ -411,47 +436,6 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             }
         }
         steamTanks = tanks;
-    }
-
-    /** 输入仓 -> 主机缓存。 */
-    private void fillSteamBuffer() {
-        if (steamTanks.isEmpty()) return;
-        long space = steamBuffer.getTankCapacity(0) - steamBuffer.getFluidInTank(0).getAmount();
-        if (space <= 0) return;
-        for (NotifiableFluidTank tank : steamTanks) {
-            if (space <= 0) break;
-            long stored = tank.getFluidInTank(0).getAmount();
-            if (stored <= 0) continue;
-            long toDrain = Math.min(space, stored);
-            // 蒸汽输入仓的 capabilityIO 是 IN，外部 drain() 会被拒绝，必须走内部接口。
-            FluidStack stack = tank.drainInternal(toDrain, false);
-            if (stack.isEmpty()) continue;
-            long filled = steamBuffer.fillInternal(stack, false);
-            space -= filled;
-        }
-    }
-
-    /** 主机缓存 -> 各模块。 */
-    private void distributeSteam() {
-        Set<SteamProcessingModuleMachine> steamModules = getModulesOfType(
-                SteamProcessingModuleMachine.class);
-        steamModules.removeIf(module -> !module.isFormed());
-        if (steamModules.isEmpty()) return;
-
-        long available = steamBuffer.getFluidInTank(0).getAmount();
-        if (available <= 0) return;
-
-        long share = available / steamModules.size();
-        if (share <= 0) return;
-
-        for (SteamProcessingModuleMachine module : steamModules) {
-            long amount = Math.min(share, module.getSteamSpace());
-            if (amount <= 0) continue;
-            FluidStack stack = steamBuffer.drainInternal(amount, false);
-            if (!stack.isEmpty()) {
-                module.addSteam(stack.getAmount());
-            }
-        }
     }
 
     private void pruneParallelReservations() {
@@ -532,8 +516,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         }
         if (!isFormed()) return;
 
-        long steamStored = steamBuffer.getFluidInTank(0).getAmount();
-        long steamCapacity = steamBuffer.getTankCapacity(0);
+        long steamStored = getStoredSteam();
+        long steamCapacity = getSteamCapacity();
         if (steamCapacity > 0) {
             textList.add(Component.translatable("gtceu.multiblock.steam.steam_stored", steamStored, steamCapacity));
         }

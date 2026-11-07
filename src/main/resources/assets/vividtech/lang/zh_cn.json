@@ -131,11 +131,14 @@
   "vividtech.machine.dream_elevator.tooltip.3": "§7轨道等级限制了可安装的模块数量",
   "vividtech.machine.dream_elevator.tooltip.4": "§7每个模块有各自独立的输入输出空间，统一提供蒸汽",
   "vividtech.machine.dream_elevator.tooltip.5": "§7由控制器接收蒸汽供应，并进行统一分发",
-  "vividtech.machine.dream_elevator.tooltip.6": "§7钻石块及及以上轨道可以将配方等级限制提升至§bMV",
-  "vividtech.machine.dream_elevator.tooltip.7": "§7下界合金块轨道可以将配方等级限制提升至§6HV",
+  "vividtech.machine.dream_elevator.tooltip.6": "§b钻石块§7及及以上轨道可以将配方等级限制提升至§bMV",
+  "vividtech.machine.dream_elevator.tooltip.7": "§8下界合金块§7轨道可以将配方等级限制提升至§6HV",
   "vividtech.machine.dream_elevator.tooltip.8": "§7§c铜块§7/§1青金石块§7/§b钻石块§7/§a绿宝石块§7/§8下界合金块§7轨道的最大支持模块数量分别为§c6§7/§112§7/§b15§7/§a18§7/§824§7个",
   "vividtech.machine.dream_elevator.tooltip.9": "§7§c铜块§7/§1青金石块§7/§b钻石块§7/§a绿宝石块§7/§8下界合金块§7轨道的最大并行数分别为§c256§7/§1384§7/§b512§7/§a768§7/§81200",
   "vividtech.machine.dream_elevator.tooltip.10": "§7每个模块工作时会从主机方块分走相应的并行数",
-  "vividtech.machine.dream_elevator.tooltip.11": "§7模块最终的工作蒸汽乘数消耗为 (§c0.8§7/§a加速轨道等级§7)*§b配方电压等级§7(ULV视作0.5)+§e模块等级§7/5",
-  "vividtech.machine.dream_elevator.tooltip.12": "§7禁用此控制器也会暂停所有模块"
+  "vividtech.machine.dream_elevator.tooltip.11": "§7模块最终的工作蒸汽消耗乘数为 (§c0.8§7/§a加速轨道等级§7)*§b配方电压等级§7(ULV视作0.5)+§e模块等级§7/5",
+  "vividtech.machine.dream_elevator.tooltip.12": "§7禁用此控制器也会暂停所有模块",
+  "block.gtceu.creative_steam_input_hatch": "创造模式蒸汽输入仓",
+  "gtceu.creative_steam_input_hatch": "创造模式蒸汽输入仓",
+  "vividtech.machine.creative_steam_input_hatch.tooltip.0": "§7容量 2,147,483,647 mB 的蒸汽输入仓，无 GUI，不提供超频."
 }

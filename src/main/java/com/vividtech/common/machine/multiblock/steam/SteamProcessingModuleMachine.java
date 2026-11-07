@@ -10,24 +10,18 @@ import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
-import com.gregtechceu.gtceu.api.machine.steam.SteamEnergyRecipeHandler;
-import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.logic.OCParams;
 import com.gregtechceu.gtceu.api.recipe.logic.OCResult;
-import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 
-import com.lowdragmc.lowdraglib.side.fluid.FluidHelper;
-import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.material.Fluid;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +34,7 @@ import java.util.List;
  * 蒸汽加工模块。
  *
  * <p>
- * 模块本身是独立的 1×5×2 蒸汽多方块，拥有自己的物品/流体仓；主机只负责按份额灌入蒸汽。
+ * 模块本身是独立的 1×5×2 蒸汽多方块，拥有自己的物品仓；蒸汽直接从梦想电梯结构内的输入仓抽取。
  * 模块的并行、速度与蒸汽乘区在 {@link #recipeModifier} 中处理。
  * </p>
  */
@@ -53,10 +47,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
 
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
     private static final int[] MODULE_PARALLELS = { 8, 16, 32 };
-    private static final long STEAM_CAPACITY = 1000L * FluidHelper.getBucket();
 
     private final int moduleTier;
-    private final NotifiableFluidTank steamTank;
 
     @Nullable
     private TickableSubscription connectionSubscription;
@@ -90,9 +82,6 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     public SteamProcessingModuleMachine(IMachineBlockEntity holder, int moduleTier) {
         super(holder);
         this.moduleTier = moduleTier;
-        this.steamTank = new NotifiableFluidTank(this, 1, STEAM_CAPACITY, IO.IN, IO.NONE)
-                .setFilter(fluidStack -> fluidStack.getFluid().is(GTMaterials.Steam.getFluidTag()));
-        attachTraits(this.steamTank);
     }
 
     @Override
@@ -315,22 +304,10 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         }
         appliedConversion = conversion;
         capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP,
-                List.of(new SteamEnergyRecipeHandler(steamTank, conversion)));
-    }
-
-    public long getSteamStored() {
-        return steamTank.getFluidInTank(0).getAmount();
-    }
-
-    public long getSteamSpace() {
-        return steamTank.getTankCapacity(0) - getSteamStored();
-    }
-
-    public long addSteam(long amount) {
-        if (amount <= 0) return 0;
-        Fluid steam = GTMaterials.Steam.getFluid();
-        // capabilityIO 为 NONE，外部 capability 的 fill() 会被拒绝，必须走内部接口。
-        return steamTank.fillInternal(FluidStack.create(steam, amount), false);
+                List.of(new SharedSteamEnergyRecipeHandler(() -> {
+                    DreamElevatorMachine host = getHost();
+                    return host != null ? host.getSteamTanks() : List.of();
+                }, conversion)));
     }
 
     public double getSteamMultiplier(int recipeVoltageTier) {
@@ -392,9 +369,9 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.steam_processing_module.connected" :
                 "vividtech.machine.steam_processing_module.disconnected"));
-        if (connectedToHost) {
+        if (connectedToHost && currentHost != null) {
             textList.add(Component.translatable("vividtech.machine.steam_processing_module.steam",
-                    getSteamStored() / FluidHelper.getBucket(), hostRailTier));
+                    currentHost.getStoredSteam() / 1000L, hostRailTier));
         }
     }
 }

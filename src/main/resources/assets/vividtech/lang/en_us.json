@@ -131,11 +131,14 @@
   "vividtech.machine.dream_elevator.tooltip.3": "§7The rail tier limits the number of installable modules",
   "vividtech.machine.dream_elevator.tooltip.4": "§7Each module has its own independent input/output space and is supplied with steam centrally",
   "vividtech.machine.dream_elevator.tooltip.5": "§7The controller receives the steam supply and distributes it uniformly",
-  "vividtech.machine.dream_elevator.tooltip.6": "§7Diamond block and above rails raise the recipe tier limit to §bMV",
-  "vividtech.machine.dream_elevator.tooltip.7": "§7Netherite block rails raise the recipe tier limit to §6HV",
+  "vividtech.machine.dream_elevator.tooltip.6": "§bDiamond block§7 and above rails raise the recipe tier limit to §bMV",
+  "vividtech.machine.dream_elevator.tooltip.7": "§8Netherite block§7 rails raise the recipe tier limit to §6HV",
   "vividtech.machine.dream_elevator.tooltip.8": "§7§cCopper§7/§1Lapis§7/§bDiamond§7/§aEmerald§7/§8Netherite§7 rails support §c6§7/§112§7/§b15§7/§a18§7/§824§7 modules respectively",
   "vividtech.machine.dream_elevator.tooltip.9": "§7§cCopper§7/§1Lapis§7/§bDiamond§7/§aEmerald§7/§8Netherite§7 rails provide §c256§7/§1384§7/§b512§7/§a768§7/§81200 parallel respectively",
   "vividtech.machine.dream_elevator.tooltip.10": "§7Each working module consumes its parallel share from the host controller",
-  "vividtech.machine.dream_elevator.tooltip.11": "§7Final steam multiplier = (§c0.8§7/§arail tier§7)*§brecipe voltage tier§7(ULV counts as 0.5)+§emodule tier§7/5",
-  "vividtech.machine.dream_elevator.tooltip.12": "§7Disabling this controller also pauses all modules"
+  "vividtech.machine.dream_elevator.tooltip.11": "§7Final working steam consumption multiplier = (§c0.8§7/§arail tier§7)*§brecipe voltage tier§7(ULV counts as 0.5)+§emodule tier§7/5",
+  "vividtech.machine.dream_elevator.tooltip.12": "§7Disabling this controller also pauses all modules",
+  "block.gtceu.creative_steam_input_hatch": "Creative Steam Input Hatch",
+  "gtceu.creative_steam_input_hatch": "Creative Steam Input Hatch",
+  "vividtech.machine.creative_steam_input_hatch.tooltip.0": "§7A steam input hatch with 2,147,483,647 mB capacity, no GUI and no overclocking."
 }

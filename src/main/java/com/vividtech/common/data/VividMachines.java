@@ -1,11 +1,13 @@
 package com.vividtech.common.data;
 
 import com.vividtech.VividTech;
+import com.vividtech.client.renderer.machine.CreativeSteamInputHatchRenderer;
 import com.vividtech.client.renderer.machine.DreamElevatorRenderer;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
+import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
 
@@ -16,6 +18,7 @@ import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
@@ -134,6 +137,17 @@ public class VividMachines {
         }
     }
 
+    public static final MachineDefinition CREATIVE_STEAM_INPUT_HATCH = REGISTRATE
+            .machine("creative_steam_input_hatch", CreativeSteamInputHatchMachine::new)
+            .rotationState(RotationState.ALL)
+            .abilities(PartAbility.STEAM)
+            .renderer(CreativeSteamInputHatchRenderer::new)
+            .tooltips(Component.translatable("vividtech.machine.creative_steam_input_hatch.tooltip.0"))
+            .tooltips(Component.translatable("gtceu.universal.tooltip.fluid_storage_capacity",
+                    CreativeSteamInputHatchMachine.CAPACITY))
+            .tooltipBuilder(VIVID_ADD)
+            .register();
+
     private static ItemStack steamTabIcon() {
         return EYE_OF_WOOD.asStack();
     }
@@ -159,7 +173,8 @@ public class VividMachines {
         // 可能不在缓存里，因此这里显式补上它的方块。
         Block[] steamParts = Stream.concat(
                 PartAbility.STEAM.getAllBlocks().stream(),
-                Stream.of(GTLMachines.LARGE_STEAM_HATCH.getBlock()))
+                Stream.of(GTLMachines.LARGE_STEAM_HATCH.getBlock(),
+                        CREATIVE_STEAM_INPUT_HATCH.getBlock()))
                 .distinct()
                 .toArray(Block[]::new);
         return blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
