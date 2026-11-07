@@ -48,7 +48,7 @@ import java.util.function.Supplier;
  * 梦想电梯主机。
  *
  * <p>
- * 主机负责两件事：识别加速轨道等级，以及给已连接的蒸汽工业加工厂模块均分蒸汽。
+ * 主机负责两件事：识别加速轨道等级，以及给已连接的蒸汽加工模块均分蒸汽。
  * 模块本身是独立多方块，仓和配方进度完全隔离。
  * </p>
  */
@@ -94,7 +94,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     private boolean animationEnabled = true;
 
     private final Set<IModularMachineModule<DreamElevatorMachine, ?>> modules = new ReferenceOpenHashSet<>();
-    private final Map<SteamIndustrialProcessingPlantMachine, Integer> parallelReservations = new HashMap<>();
+    private final Map<SteamProcessingModuleMachine, Integer> parallelReservations = new HashMap<>();
     private List<BlockPos> moduleSlotPositions = List.of();
     private Set<BlockPos> moduleShellPositions = Set.of();
     private List<NotifiableFluidTank> steamTanks = List.of();
@@ -260,8 +260,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     private void distributeSteam() {
         if (steamTanks.isEmpty()) return;
-        Set<SteamIndustrialProcessingPlantMachine> steamModules = getModulesOfType(
-                SteamIndustrialProcessingPlantMachine.class);
+        Set<SteamProcessingModuleMachine> steamModules = getModulesOfType(
+                SteamProcessingModuleMachine.class);
         steamModules.removeIf(module -> !module.isFormed());
         if (steamModules.isEmpty()) return;
 
@@ -274,7 +274,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         long share = available / steamModules.size();
         if (share <= 0) return;
 
-        for (SteamIndustrialProcessingPlantMachine module : steamModules) {
+        for (SteamProcessingModuleMachine module : steamModules) {
             long amount = Math.min(share, module.getSteamSpace());
             if (amount <= 0) continue;
             long drained = drainSteam(amount);
@@ -302,7 +302,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 !module.getRecipeLogic().isWorking());
     }
 
-    public boolean tryReserveParallel(SteamIndustrialProcessingPlantMachine module, int amount) {
+    public boolean tryReserveParallel(SteamProcessingModuleMachine module, int amount) {
         if (isRemote() || amount <= 0) return false;
         Integer existing = parallelReservations.get(module);
         if (existing != null) {
@@ -312,7 +312,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             return false;
         }
         int used = 0;
-        for (Map.Entry<SteamIndustrialProcessingPlantMachine, Integer> entry : parallelReservations.entrySet()) {
+        for (Map.Entry<SteamProcessingModuleMachine, Integer> entry : parallelReservations.entrySet()) {
             if (entry.getKey() != module) {
                 used += entry.getValue();
             }
@@ -324,7 +324,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         return true;
     }
 
-    public void releaseParallel(SteamIndustrialProcessingPlantMachine module) {
+    public void releaseParallel(SteamProcessingModuleMachine module) {
         parallelReservations.remove(module);
     }
 

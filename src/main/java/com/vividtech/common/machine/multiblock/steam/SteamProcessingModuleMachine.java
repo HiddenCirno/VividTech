@@ -37,19 +37,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * 蒸汽工业加工厂模块。
+ * 蒸汽加工模块。
  *
  * <p>
  * 模块本身是独立的 1×5×2 蒸汽多方块，拥有自己的物品/流体仓；主机只负责按份额灌入蒸汽。
  * 模块的并行、速度与蒸汽乘区在 {@link #recipeModifier} 中处理。
  * </p>
  */
-public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMachine
-                                                   implements IModularMachineModule<DreamElevatorMachine, SteamIndustrialProcessingPlantMachine>,
+public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
+                                                   implements IModularMachineModule<DreamElevatorMachine, SteamProcessingModuleMachine>,
                                                    IMachineLife, IDisplayUIMachine {
 
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            SteamIndustrialProcessingPlantMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
+            SteamProcessingModuleMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
     private static final int[] MODULE_PARALLELS = { 8, 16, 32 };
@@ -80,7 +80,7 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
     private int reservedParallel;
     private double appliedConversion = -1.0D;
 
-    public SteamIndustrialProcessingPlantMachine(IMachineBlockEntity holder, int moduleTier) {
+    public SteamProcessingModuleMachine(IMachineBlockEntity holder, int moduleTier) {
         super(holder);
         this.moduleTier = moduleTier;
         this.steamTank = new NotifiableFluidTank(this, 1, STEAM_CAPACITY, IO.IN, IO.NONE)
@@ -301,7 +301,7 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
 
     @Nullable
     public static GTRecipe recipeModifier(MetaMachine machine, GTRecipe recipe, OCParams params, OCResult result) {
-        if (!(machine instanceof SteamIndustrialProcessingPlantMachine module)) {
+        if (!(machine instanceof SteamProcessingModuleMachine module)) {
             return null;
         }
         DreamElevatorMachine currentHost = module.getHost();
@@ -333,14 +333,14 @@ public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMac
     public void addDisplayText(List<Component> textList) {
         IDisplayUIMachine.super.addDisplayText(textList);
         if (!isFormed()) return;
-        textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.tier", moduleTier));
-        textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.parallel",
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier", moduleTier));
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.parallel",
                 getModuleParallel()));
         textList.add(Component.translatable(connectedToHost ?
-                "vividtech.machine.steam_industrial_processing_plant.connected" :
-                "vividtech.machine.steam_industrial_processing_plant.disconnected"));
+                "vividtech.machine.steam_processing_module.connected" :
+                "vividtech.machine.steam_processing_module.disconnected"));
         if (connectedToHost) {
-            textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.steam",
+            textList.add(Component.translatable("vividtech.machine.steam_processing_module.steam",
                     getSteamStored() / FluidHelper.getBucket(), hostRailTier));
         }
     }

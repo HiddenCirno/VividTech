@@ -4,7 +4,7 @@ GTCEu / GTLCore 附属模组，当前包含：
 
 - 武德之眼（Eye of Wood）
 - 梦想电梯（Dream Elevator）
-- 蒸汽工业加工厂模块 T1/T2/T3
+- 梦想电梯蒸汽加工模块：每种蒸汽加工类型（电路组装、锻造、压缩、研磨、合金冶炼、混合、离心、热力离心、电解、洗矿、化学浸洗、提取、熔炼、碎岩）各自独立的方块，均有 MK1/MK2/MK3 三档
 
 ## 依赖
 
@@ -52,6 +52,6 @@ python tools/patch-gtlc-dev-jar.py   ../GTLCore/build/devlibs/gtlcore-1.2.3.3-fi
 
 - `gtceu:eye_of_wood`
 - `gtceu:dream_elevator`
-- `gtceu:steam_industrial_processing_plant_t1/t2/t3`
+- `gtceu:dream_elevator_steam_<type>_module_mk1/mk2/mk3`
 
 创造标签页：**绚乱科技：蒸汽力量**（`gtceu:steam_power`），图标为武德之眼控制器。

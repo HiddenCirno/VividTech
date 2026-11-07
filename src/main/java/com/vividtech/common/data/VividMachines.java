@@ -4,10 +4,10 @@ import com.vividtech.VividTech;
 import com.vividtech.client.renderer.machine.DreamElevatorRenderer;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
-import com.vividtech.common.data.machines.structure.SteamIndustrialProcessingPlantStructure;
+import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
-import com.vividtech.common.machine.multiblock.steam.SteamIndustrialProcessingPlantMachine;
+import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
 
 import org.gtlcore.gtlcore.api.pattern.GTLPredicates;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
@@ -24,12 +24,15 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
@@ -50,8 +53,42 @@ public class VividMachines {
 
     public static void init() {}
 
+    /** 添加者 Tooltip 的渐变配色：FF1493 → FF00FF → FF69B4。 */
+    private static final int[] ADDON_GRADIENT_COLORS = { 0xFF1493, 0xFF00FF, 0xFF69B4 };
+
     public static final BiConsumer<ItemStack, List<Component>> VIVID_ADD = (stack, components) -> components
-            .add(Component.translatable("vividtech.registry.add").withStyle(ChatFormatting.AQUA));
+            .add(gradientText("vividtech.registry.add", ADDON_GRADIENT_COLORS));
+
+    /**
+     * 按字符把整行文字映射到一组颜色带上。
+     */
+    private static Component gradientText(String translationKey, int... colors) {
+        String text = Component.translatable(translationKey).getString();
+        MutableComponent result = Component.empty();
+        int length = text.length();
+        for (int i = 0; i < length; i++) {
+            float progress = length <= 1 ? 0.0F : (float) i / (float) (length - 1);
+            result.append(Component.literal(String.valueOf(text.charAt(i)))
+                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(interpolateColor(progress, colors)))));
+        }
+        return result;
+    }
+
+    private static int interpolateColor(float progress, int[] colors) {
+        if (colors.length == 0) return 0xFFFFFF;
+        if (colors.length == 1) return colors[0];
+        float clamped = Math.max(0.0F, Math.min(1.0F, progress));
+        int segments = colors.length - 1;
+        float scaled = clamped * segments;
+        int index = Math.min((int) scaled, segments - 1);
+        float local = scaled - index;
+        int from = colors[index];
+        int to = colors[index + 1];
+        int r = Math.round(((from >> 16) & 0xFF) + (((to >> 16) & 0xFF) - ((from >> 16) & 0xFF)) * local);
+        int g = Math.round(((from >> 8) & 0xFF) + (((to >> 8) & 0xFF) - ((from >> 8) & 0xFF)) * local);
+        int b = Math.round((from & 0xFF) + ((to & 0xFF) - (from & 0xFF)) * local);
+        return (r << 16) | (g << 8) | b;
+    }
 
     public static final RegistryEntry<CreativeModeTab> STEAM_TAB = REGISTRATE.defaultCreativeTab("steam_power",
             builder -> builder
@@ -66,21 +103,37 @@ public class VividMachines {
         REGISTRATE.creativeModeTab(() -> STEAM_TAB);
     }
 
-    private static final GTRecipeType[] STEAM_PROCESSING_RECIPES = {
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.FORGE_HAMMER_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.COMPRESSOR_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.MACERATOR_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.ALLOY_SMELTER_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.MIXER_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.CENTRIFUGE_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.THERMAL_CENTRIFUGE_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.ELECTROLYZER_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.ORE_WASHER_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.CHEMICAL_BATH_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.EXTRACTOR_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.FURNACE_RECIPES,
-            com.gregtechceu.gtceu.common.data.GTRecipeTypes.ROCK_BREAKER_RECIPES
-    };
+    /** 一种蒸汽加工类型对应一组独立的模块方块。 */
+    private record SteamModuleType(String id, String enName, String zhName, GTRecipeType recipeType) {}
+
+    private static final List<SteamModuleType> STEAM_MODULE_TYPES = List.of(
+            new SteamModuleType("circuit_assembly", "Circuit Assembly", "电路组装",
+                    GTRecipeTypes.CIRCUIT_ASSEMBLER_RECIPES),
+            new SteamModuleType("forge_hammer", "Forge Hammer", "锻造", GTRecipeTypes.FORGE_HAMMER_RECIPES),
+            new SteamModuleType("compressor", "Compressor", "压缩", GTRecipeTypes.COMPRESSOR_RECIPES),
+            new SteamModuleType("macerator", "Macerator", "研磨", GTRecipeTypes.MACERATOR_RECIPES),
+            new SteamModuleType("alloy_smelter", "Alloy Smelter", "合金冶炼", GTRecipeTypes.ALLOY_SMELTER_RECIPES),
+            new SteamModuleType("mixer", "Mixer", "混合", GTRecipeTypes.MIXER_RECIPES),
+            new SteamModuleType("centrifuge", "Centrifuge", "离心", GTRecipeTypes.CENTRIFUGE_RECIPES),
+            new SteamModuleType("thermal_centrifuge", "Thermal Centrifuge", "热力离心",
+                    GTRecipeTypes.THERMAL_CENTRIFUGE_RECIPES),
+            new SteamModuleType("electrolyzer", "Electrolyzer", "电解", GTRecipeTypes.ELECTROLYZER_RECIPES),
+            new SteamModuleType("ore_washer", "Ore Washer", "洗矿", GTRecipeTypes.ORE_WASHER_RECIPES),
+            new SteamModuleType("chemical_bath", "Chemical Bath", "化学浸洗", GTRecipeTypes.CHEMICAL_BATH_RECIPES),
+            new SteamModuleType("extractor", "Extractor", "提取", GTRecipeTypes.EXTRACTOR_RECIPES),
+            new SteamModuleType("furnace", "Furnace", "熔炼", GTRecipeTypes.FURNACE_RECIPES),
+            new SteamModuleType("rock_breaker", "Rock Breaker", "碎岩", GTRecipeTypes.ROCK_BREAKER_RECIPES));
+
+    /** 所有已注册的蒸汽模块控制器，供梦想电梯模块槽位识别。 */
+    public static final List<MultiblockMachineDefinition> STEAM_MODULES = new ArrayList<>();
+
+    static {
+        for (SteamModuleType type : STEAM_MODULE_TYPES) {
+            for (int tier = 1; tier <= 3; tier++) {
+                STEAM_MODULES.add(registerSteamProcessingModule(type, tier));
+            }
+        }
+    }
 
     private static ItemStack steamTabIcon() {
         return EYE_OF_WOOD.asStack();
@@ -135,13 +188,13 @@ public class VividMachines {
     }
 
     private static TraceabilityPredicate dreamModuleSlot() {
-        List<Block> allowed = List.of(
-                GTBlocks.CASING_BRONZE_BRICKS.get(),
-                STEAM_INDUSTRIAL_PROCESSING_PLANT_T1.getBlock(),
-                STEAM_INDUSTRIAL_PROCESSING_PLANT_T2.getBlock(),
-                STEAM_INDUSTRIAL_PROCESSING_PLANT_T3.getBlock());
-        Block[] allowedArray = allowed.toArray(Block[]::new);
-        BlockInfo[] candidates = allowed.stream()
+        List<Block> allowed = new ArrayList<>();
+        allowed.add(GTBlocks.CASING_BRONZE_BRICKS.get());
+        for (MultiblockMachineDefinition module : STEAM_MODULES) {
+            allowed.add(module.getBlock());
+        }
+        Block[] allowedArray = allowed.stream().distinct().toArray(Block[]::new);
+        BlockInfo[] candidates = allowed.stream().distinct()
                 .map(block -> BlockInfo.fromBlockState(block.defaultBlockState()))
                 .toArray(BlockInfo[]::new);
         return new TraceabilityPredicate(state -> {
@@ -157,17 +210,19 @@ public class VividMachines {
         }, () -> candidates);
     }
 
-    private static MultiblockMachineDefinition registerSteamProcessingPlant(String name, String langValue, int tier) {
-        return REGISTRATE.multiblock(name, holder -> new SteamIndustrialProcessingPlantMachine(holder, tier))
+    private static MultiblockMachineDefinition registerSteamProcessingModule(SteamModuleType type, int tier) {
+        String id = "dream_elevator_steam_" + type.id() + "_module_mk" + tier;
+        String langValue = "Dream Elevator Steam " + type.enName() + " Module MK " + tier;
+        return REGISTRATE.multiblock(id, holder -> new SteamProcessingModuleMachine(holder, tier))
                 .langValue(langValue)
                 .rotationState(RotationState.ALL)
                 .allowExtendedFacing(false)
-                .recipeTypes(STEAM_PROCESSING_RECIPES)
+                .recipeTypes(type.recipeType())
                 .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
-                .tooltips(Component.translatable("vividtech.machine.steam_industrial_processing_plant.tooltip.0"))
-                .tooltips(Component.translatable("vividtech.machine.steam_industrial_processing_plant.tooltip.1"))
+                .tooltips(Component.translatable("vividtech.machine.steam_processing_module.tooltip.0"))
+                .tooltips(Component.translatable("vividtech.machine.steam_processing_module.tooltip.1"))
                 .tooltipBuilder(VIVID_ADD)
-                .pattern(definition -> SteamIndustrialProcessingPlantStructure.MODULE
+                .pattern(definition -> SteamProcessingModuleStructure.MODULE
                         .where("~", Predicates.controller(Predicates.blocks(definition.get())))
                         .where("H", blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
                                 .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(2))
@@ -175,7 +230,7 @@ public class VividMachines {
                                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(2))
                                 .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(2)))
                         .build())
-                .recipeModifier(SteamIndustrialProcessingPlantMachine::recipeModifier)
+                .recipeModifier(SteamProcessingModuleMachine::recipeModifier)
                 .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
                         GTCEu.id("block/multiblock/fusion_reactor"))
                 .register();
@@ -207,15 +262,6 @@ public class VividMachines {
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
             .register();
-
-    public final static MultiblockMachineDefinition STEAM_INDUSTRIAL_PROCESSING_PLANT_T1 = registerSteamProcessingPlant(
-            "steam_industrial_processing_plant_t1", "Steam Industrial Processing Plant T1", 1);
-
-    public final static MultiblockMachineDefinition STEAM_INDUSTRIAL_PROCESSING_PLANT_T2 = registerSteamProcessingPlant(
-            "steam_industrial_processing_plant_t2", "Steam Industrial Processing Plant T2", 2);
-
-    public final static MultiblockMachineDefinition STEAM_INDUSTRIAL_PROCESSING_PLANT_T3 = registerSteamProcessingPlant(
-            "steam_industrial_processing_plant_t3", "Steam Industrial Processing Plant T3", 3);
 
     public final static MultiblockMachineDefinition DREAM_ELEVATOR = REGISTRATE
             .multiblock("dream_elevator", DreamElevatorMachine::new)

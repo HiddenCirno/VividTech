@@ -5,7 +5,7 @@ import com.gregtechceu.gtceu.api.pattern.FactoryBlockPattern;
 import static com.gregtechceu.gtceu.api.pattern.util.RelativeDirection.*;
 
 /**
- * 蒸汽工业加工厂模块结构：1 宽 × 5 高 × 2 深。
+ * 蒸汽加工模块结构：1 宽 × 5 高 × 2 深。
  *
  * <p>
  * 控制器位于外侧切片的第二层，与 GTNH 太空电梯模块的控制器位置一致；
@@ -13,7 +13,7 @@ import static com.gregtechceu.gtceu.api.pattern.util.RelativeDirection.*;
  * </p>
  */
 @SuppressWarnings("unused")
-public class SteamIndustrialProcessingPlantStructure {
+public class SteamProcessingModuleStructure {
 
     public static final FactoryBlockPattern MODULE = FactoryBlockPattern.start(RIGHT, DOWN, FRONT)
             .aisle("H", "H", "H", "H", "H")
