@@ -1,0 +1,319 @@
+package com.vividtech.common.machine.multiblock.steam;
+
+import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
+
+import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.gregtechceu.gtceu.api.machine.TickableSubscription;
+import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
+import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
+import com.gregtechceu.gtceu.api.machine.steam.SteamEnergyRecipeHandler;
+import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
+import com.gregtechceu.gtceu.api.recipe.logic.OCParams;
+import com.gregtechceu.gtceu.api.recipe.logic.OCResult;
+import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
+
+import com.lowdragmc.lowdraglib.side.fluid.FluidHelper;
+import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
+import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.material.Fluid;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
+/**
+ * 蒸汽工业加工厂模块。
+ *
+ * <p>
+ * 模块本身是独立的 1×5×2 蒸汽多方块，拥有自己的物品/流体仓；主机只负责按份额灌入蒸汽。
+ * 模块的并行、速度与蒸汽乘区在 {@link #recipeModifier} 中处理。
+ * </p>
+ */
+public class SteamIndustrialProcessingPlantMachine extends WorkableMultiblockMachine
+                                                   implements IModularMachineModule<DreamElevatorMachine, SteamIndustrialProcessingPlantMachine>,
+                                                   IMachineLife, IDisplayUIMachine {
+
+    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
+            SteamIndustrialProcessingPlantMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
+
+    private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
+    private static final int[] MODULE_PARALLELS = { 8, 16, 32 };
+    private static final long STEAM_CAPACITY = 1000L * FluidHelper.getBucket();
+
+    private final int moduleTier;
+    private final NotifiableFluidTank steamTank;
+
+    @Nullable
+    private TickableSubscription connectionSubscription;
+
+    @Persisted
+    @Nullable
+    @Getter
+    @Setter
+    private BlockPos hostPosition;
+
+    @Nullable
+    @Getter
+    @Setter
+    private DreamElevatorMachine host;
+
+    private int reservedParallel;
+    private double appliedConversion = -1.0D;
+
+    public SteamIndustrialProcessingPlantMachine(IMachineBlockEntity holder, int moduleTier) {
+        super(holder);
+        this.moduleTier = moduleTier;
+        this.steamTank = new NotifiableFluidTank(this, 1, STEAM_CAPACITY, IO.IN, IO.NONE)
+                .setFilter(fluidStack -> fluidStack.getFluid().is(GTMaterials.Steam.getFluidTag()));
+        attachTraits(this.steamTank);
+    }
+
+    @Override
+    public ManagedFieldHolder getFieldHolder() {
+        return MANAGED_FIELD_HOLDER;
+    }
+
+    @Override
+    public @NotNull Class<DreamElevatorMachine> getHostType() {
+        return DreamElevatorMachine.class;
+    }
+
+    @Override
+    public BlockPos[] getHostScanPositions() {
+        // 主机主动扫描并连接模块，模块侧不需要自己找主机。
+        return new BlockPos[0];
+    }
+
+    public int getModuleTier() {
+        return moduleTier;
+    }
+
+    public int getModuleParallel() {
+        return MODULE_PARALLELS[moduleTier - 1];
+    }
+
+    @Override
+    public void onConnected(@NotNull DreamElevatorMachine host) {
+        updateConnectionSubscription();
+        refreshSteamHandler();
+        recipeLogic.updateTickSubscription();
+    }
+
+    @Override
+    public void onDisconnected() {
+        releaseReservedParallel();
+        refreshSteamHandler();
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        updateConnectionSubscription();
+    }
+
+    @Override
+    public void onUnload() {
+        stopConnectionSubscription();
+        super.onUnload();
+    }
+
+    @Override
+    public void onStructureFormed() {
+        super.onStructureFormed();
+        findAndConnectToHost();
+        updateConnectionSubscription();
+        refreshSteamHandler();
+    }
+
+    @Override
+    public void onStructureInvalid() {
+        removeFromHost(getHost());
+        stopConnectionSubscription();
+        super.onStructureInvalid();
+    }
+
+    @Override
+    public void onPartUnload() {
+        super.onPartUnload();
+        removeFromHost(getHost());
+        stopConnectionSubscription();
+    }
+
+    @Override
+    public void onMachineRemoved() {
+        removeFromHost(getHost());
+        stopConnectionSubscription();
+    }
+
+    private void updateConnectionSubscription() {
+        if (isFormed() && connectionSubscription == null) {
+            connectionSubscription = subscribeServerTick(this::connectionTick);
+        }
+    }
+
+    private void stopConnectionSubscription() {
+        if (connectionSubscription != null) {
+            connectionSubscription.unsubscribe();
+            connectionSubscription = null;
+        }
+    }
+
+    private void connectionTick() {
+        if (!isFormed()) {
+            stopConnectionSubscription();
+            return;
+        }
+        if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
+            DreamElevatorMachine currentHost = getHost();
+            if (currentHost == null || !currentHost.isFormed()) {
+                findAndConnectToHost();
+            }
+        }
+    }
+
+    @Override
+    public boolean beforeWorking(@Nullable GTRecipe recipe) {
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost == null || !currentHost.isFormed()) {
+            return false;
+        }
+        if (reservedParallel <= 0) {
+            if (!currentHost.tryReserveParallel(this, getModuleParallel())) {
+                return false;
+            }
+            reservedParallel = getModuleParallel();
+        }
+        boolean result = super.beforeWorking(recipe);
+        if (!result) {
+            releaseReservedParallel();
+        }
+        return result;
+    }
+
+    @Override
+    public void afterWorking() {
+        super.afterWorking();
+        releaseReservedParallel();
+    }
+
+    @Override
+    public boolean onWorking() {
+        if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
+            DreamElevatorMachine currentHost = getHost();
+            if (currentHost == null || !currentHost.isFormed()) {
+                releaseReservedParallel();
+                getRecipeLogic().interruptRecipe();
+                return false;
+            }
+            refreshSteamHandler();
+        }
+        return super.onWorking();
+    }
+
+    private void releaseReservedParallel() {
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost != null && reservedParallel > 0) {
+            currentHost.releaseParallel(this);
+        }
+        reservedParallel = 0;
+    }
+
+    private void refreshSteamHandler() {
+        DreamElevatorMachine currentHost = getHost();
+        double conversion = currentHost != null ? currentHost.getSteamConversionRate() : 0.5D;
+        if (Math.abs(conversion - appliedConversion) < 1.0e-6D &&
+                capabilitiesProxy.contains(IO.IN, EURecipeCapability.CAP)) {
+            return;
+        }
+        appliedConversion = conversion;
+        capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP,
+                List.of(new SteamEnergyRecipeHandler(steamTank, conversion)));
+    }
+
+    public long getSteamStored() {
+        return steamTank.getFluidInTank(0).getAmount();
+    }
+
+    public long getSteamSpace() {
+        return steamTank.getTankCapacity(0) - getSteamStored();
+    }
+
+    public long addSteam(long amount) {
+        if (amount <= 0) return 0;
+        Fluid steam = GTMaterials.Steam.getFluid();
+        return steamTank.fill(FluidStack.create(steam, amount), false);
+    }
+
+    public double getSteamMultiplier(int recipeVoltageTier) {
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost == null) return 1.0D;
+        int railTier = currentHost.getRailTier();
+        if (railTier <= 0) return 1.0D;
+        // 配方电压等级：ULV/LV = 1，MV = 2，HV = 3……
+        int voltageTier = Math.max(1, recipeVoltageTier);
+        double multiplier = 0.8D * voltageTier / moduleTier / (railTier / 2.0D);
+        return Math.max(0.05D, Math.min(multiplier, 1000.0D));
+    }
+
+    @Nullable
+    public static GTRecipe recipeModifier(MetaMachine machine, GTRecipe recipe, OCParams params, OCResult result) {
+        if (!(machine instanceof SteamIndustrialProcessingPlantMachine module)) {
+            return null;
+        }
+        DreamElevatorMachine currentHost = module.getHost();
+        if (currentHost == null || !currentHost.isFormed()) {
+            return null;
+        }
+        long originalEUt = RecipeHelper.getInputEUt(recipe);
+        if (originalEUt > currentHost.getMaxRecipeEUt()) {
+            return null;
+        }
+        var parallelResult = GTRecipeModifiers.accurateParallel(machine, recipe, module.getModuleParallel(), false);
+        int parallel = parallelResult.getSecond();
+        GTRecipe parallelRecipe = parallelResult.getFirst();
+        if (parallel <= 0 || parallelRecipe == null) {
+            return null;
+        }
+        GTRecipe modified = parallelRecipe.copy();
+        long parallelEUt = RecipeHelper.getInputEUt(parallelRecipe);
+        int recipeVoltageTier = Math.max(1, RecipeHelper.getRecipeEUtTier(recipe));
+        long modifiedEUt = Math.max(1L, Math.round(parallelEUt * module.getSteamMultiplier(recipeVoltageTier)));
+        RecipeHelper.setInputEUt(modified, modifiedEUt);
+        if (module.moduleTier == 3) {
+            modified.duration = Math.max(1, modified.duration / 2);
+        }
+        return modified;
+    }
+
+    @Override
+    public void addDisplayText(List<Component> textList) {
+        IDisplayUIMachine.super.addDisplayText(textList);
+        if (!isFormed()) return;
+        textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.tier", moduleTier));
+        textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.parallel",
+                getModuleParallel()));
+        DreamElevatorMachine currentHost = getHost();
+        textList.add(Component.translatable(currentHost != null && currentHost.isFormed() ?
+                "vividtech.machine.steam_industrial_processing_plant.connected" :
+                "vividtech.machine.steam_industrial_processing_plant.disconnected"));
+        if (currentHost != null && currentHost.isFormed()) {
+            textList.add(Component.translatable("vividtech.machine.steam_industrial_processing_plant.steam",
+                    getSteamStored() / FluidHelper.getBucket(),
+                    currentHost.getRailTier()));
+        }
+    }
+}
