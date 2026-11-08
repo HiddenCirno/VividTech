@@ -218,7 +218,7 @@ public class VividMachines {
             .register();
 
     private static Component[] cleanroomSubsystemTooltips() {
-        Component[] tooltips = new Component[4];
+        Component[] tooltips = new Component[5];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.cleanroom_subsystem.tooltip." + i);
         }
@@ -234,7 +234,7 @@ public class VividMachines {
     }
 
     private static Component[] pressurizationTooltips() {
-        Component[] tooltips = new Component[5];
+        Component[] tooltips = new Component[7];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.pressurization_module.tooltip." + i);
         }
