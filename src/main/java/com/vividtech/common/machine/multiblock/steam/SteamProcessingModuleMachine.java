@@ -46,7 +46,7 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
             SteamProcessingModuleMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
-    private static final int[] MODULE_PARALLELS = { 8, 16, 32 };
+    private static final int[] MODULE_PARALLELS = { 16, 32, 64 };
 
     private final int moduleTier;
 

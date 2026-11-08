@@ -66,7 +66,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             DreamElevatorMachine.class, LargeSteamParallelMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     /** 动力模块等级提供的全机并行池。 */
-    private static final int[] POWER_PARALLELS = { 256, 384, 512, 768, 1200 };
+    private static final int[] POWER_PARALLELS = { 512, 768, 1024, 1536, 2400 };
 
     /** 动力模块等级提供的生产速度倍率。 */
     private static final double[] POWER_SPEED = { 1.0D, 1.5D, 2.0D, 2.5D, 4.0D };

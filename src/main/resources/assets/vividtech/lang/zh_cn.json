@@ -134,7 +134,7 @@
   "vividtech.machine.dream_elevator.tooltip.6": "§7轨道等级限制了可安装的模块数量",
   "vividtech.machine.dream_elevator.tooltip.7": "§7§c铜块§7/§1青金石块§7/§b钻石块§7/§a绿宝石块§7/§8下界合金块§7的轨道等级分别为§cI§7/§1II§7/§bIII§7/§aIV§7/§8V",
   "vividtech.machine.dream_elevator.tooltip.8": "§7§cI§7/§1II§7/§bIII§7/§aIV§7/§8V§7级轨道的最大支持模块数量分别为§c6§7/§112§7/§b15§7/§a18§7/§824§7个",
-  "vividtech.machine.dream_elevator.tooltip.9": "§7§cI§7/§1II§7/§bIII§7/§aIV§7/§8V§7级轨道的最大并行数分别为§c256§7/§1384§7/§b512§7/§a768§7/§81200",
+  "vividtech.machine.dream_elevator.tooltip.9": "§7§cI§7/§1II§7/§bIII§7/§aIV§7/§8V§7级轨道的最大并行数分别为§c512§7/§1768§7/§b1024§7/§a1536§7/§82400",
   "vividtech.machine.dream_elevator.tooltip.10": "§7§cI§7/§1II§7/§bIII§7/§aIV§7/§8V§7级轨道的工作速度分别为§c100%§7/§1150%§7/§b200%§7/§a250%§7/§8400%",
   "vividtech.machine.dream_elevator.tooltip.11": "§7使用§bIII§7级及以上轨道时，配方等级限制提升至§bMV",
   "vividtech.machine.dream_elevator.tooltip.12": "§7使用§8V§7级轨道时，配方等级限制提升至§6HV",
