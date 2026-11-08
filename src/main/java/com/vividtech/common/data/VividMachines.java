@@ -27,7 +27,6 @@ import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
-import com.gregtechceu.gtceu.client.renderer.machine.MachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
@@ -162,14 +161,30 @@ public class VividMachines {
             .tooltipBuilder(VIVID_ADD)
             .register();
 
-    public static final MachineDefinition PRESSURIZATION_MODULE = REGISTRATE
-            .machine("dream_elevator_steam_pressurization_module", PressurizationModuleMachine::new)
-            .rotationState(RotationState.ALL)
+    public static final MultiblockMachineDefinition PRESSURIZATION_MODULE = REGISTRATE
+            .multiblock("dream_elevator_steam_pressurization_module", PressurizationModuleMachine::new)
             .langValue("Dream Elevator Steam Pressurization Module")
-            .renderer(() -> new MachineRenderer(GTCEu.id("block/machine/hull_machine")))
+            .rotationState(RotationState.ALL)
+            .allowExtendedFacing(false)
+            .recipeType(VividRecipeTypes.STEAM_STRATUM_MINING_RECIPES)
+            .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
             .tooltips(pressurizationTooltips())
             .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> SteamProcessingModuleStructure.MODULE
+                    .where("~", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("H", blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
+                            .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(2))
+                            .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(2))
+                            .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(2))
+                            .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(2)))
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
             .register();
+
+    static {
+        STEAM_MODULES.add(PRESSURIZATION_MODULE);
+    }
 
     private static Component[] pressurizationTooltips() {
         Component[] tooltips = new Component[5];
@@ -327,7 +342,6 @@ public class VividMachines {
         for (MultiblockMachineDefinition module : STEAM_MODULES) {
             allowed.add(module.getBlock());
         }
-        allowed.add(PRESSURIZATION_MODULE.getBlock());
         Block[] allowedArray = allowed.stream().distinct().toArray(Block[]::new);
         BlockInfo[] candidates = allowed.stream().distinct()
                 .map(block -> BlockInfo.fromBlockState(block.defaultBlockState()))

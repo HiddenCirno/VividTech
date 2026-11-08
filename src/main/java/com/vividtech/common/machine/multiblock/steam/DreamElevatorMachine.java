@@ -370,7 +370,14 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     /** 已安装并成型的加压模块数量。 */
     public int getPressurizationModuleCount() {
-        return getFormedModuleCount(PressurizationModuleMachine.class);
+        int count = 0;
+        for (IModularMachineModule<DreamElevatorMachine, ?> module : modules) {
+            if (module instanceof PressurizationModuleMachine pressurization &&
+                    pressurization.isFormed() && pressurization.isWorkingEnabled()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /** 4 个加压模块 +1 级，16 个 +2 级（不叠加）。 */

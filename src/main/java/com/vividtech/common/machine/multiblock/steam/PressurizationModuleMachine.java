@@ -3,36 +3,44 @@ package com.vividtech.common.machine.multiblock.steam;
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
+import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
+import net.minecraft.network.chat.Component;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * 梦想电梯蒸汽加压模块。
  *
  * <p>
- * 本身不加工任何配方，只提供全局加压加成：安装 4 个时配方电压上限 +1、工作速度 ×2；
- * 安装 16 个时配方电压上限 +2、工作速度 ×4。数量由梦想电梯实时统计。
+ * 与普通蒸汽模块一样是 2×1×5 的多方块结构，可以被软锤/界面启停，但没有配方、没有输入输出。
+ * 只有已成型、已连接且处于启用状态的加压模块才会计入主机加成：
+ * 4 个时配方电压上限 +1、工作速度 ×2；16 个时 +2、×4。
  * </p>
  */
-public class PressurizationModuleMachine extends MetaMachine
-        implements IModularMachineModule<DreamElevatorMachine, PressurizationModuleMachine>, IMachineLife {
+public class PressurizationModuleMachine extends WorkableMultiblockMachine
+        implements IModularMachineModule<DreamElevatorMachine, PressurizationModuleMachine>,
+        IMachineLife, IDisplayUIMachine {
 
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            PressurizationModuleMachine.class, MetaMachine.MANAGED_FIELD_HOLDER);
+            PressurizationModuleMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
+
+    @Nullable
+    private TickableSubscription connectionSubscription;
 
     @Persisted
     @Nullable
@@ -44,9 +52,6 @@ public class PressurizationModuleMachine extends MetaMachine
     @Getter
     @Setter
     private DreamElevatorMachine host;
-
-    @Nullable
-    private TickableSubscription connectionSubscription;
 
     public PressurizationModuleMachine(IMachineBlockEntity holder) {
         super(holder);
@@ -68,34 +73,73 @@ public class PressurizationModuleMachine extends MetaMachine
     }
 
     @Override
-    public boolean isFormed() {
-        return !isInValid();
+    public void onConnected(@NotNull DreamElevatorMachine host) {
+        updateConnectionSubscription();
+        recipeLogic.updateTickSubscription();
+    }
+
+    @Override
+    public void onDisconnected() {
+        updateConnectionSubscription();
+        recipeLogic.updateTickSubscription();
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
-        if (!isRemote() && connectionSubscription == null) {
-            connectionSubscription = subscribeServerTick(this::connectionTick);
-        }
+        updateConnectionSubscription();
     }
 
     @Override
     public void onUnload() {
-        if (connectionSubscription != null) {
-            connectionSubscription.unsubscribe();
-            connectionSubscription = null;
-        }
+        stopConnectionSubscription();
         super.onUnload();
+    }
+
+    @Override
+    public void onStructureFormed() {
+        super.onStructureFormed();
+        findAndConnectToHost();
+        updateConnectionSubscription();
+        recipeLogic.updateTickSubscription();
+    }
+
+    @Override
+    public void onStructureInvalid() {
+        removeFromHost(getHost());
+        stopConnectionSubscription();
+        super.onStructureInvalid();
+    }
+
+    @Override
+    public void onPartUnload() {
+        super.onPartUnload();
+        removeFromHost(getHost());
+        stopConnectionSubscription();
     }
 
     @Override
     public void onMachineRemoved() {
         removeFromHost(getHost());
+        stopConnectionSubscription();
+    }
+
+    private void updateConnectionSubscription() {
+        if (isFormed() && connectionSubscription == null) {
+            connectionSubscription = subscribeServerTick(this::connectionTick);
+        }
+    }
+
+    private void stopConnectionSubscription() {
+        if (connectionSubscription != null) {
+            connectionSubscription.unsubscribe();
+            connectionSubscription = null;
+        }
     }
 
     private void connectionTick() {
-        if (isRemote()) {
+        if (!isFormed()) {
+            stopConnectionSubscription();
             return;
         }
         if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS != 0) {
@@ -108,6 +152,22 @@ public class PressurizationModuleMachine extends MetaMachine
         }
         if (currentHost == null) {
             findAndConnectToHost();
+        }
+    }
+
+    @Override
+    public void addDisplayText(List<Component> textList) {
+        IDisplayUIMachine.super.addDisplayText(textList);
+        if (!isFormed()) {
+            return;
+        }
+        textList.add(Component.translatable(isWorkingEnabled() ?
+                "vividtech.machine.pressurization_module.enabled" :
+                "vividtech.machine.pressurization_module.disabled"));
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost != null && currentHost.isFormed()) {
+            textList.add(Component.translatable("vividtech.machine.pressurization_module.count",
+                    currentHost.getPressurizationModuleCount()));
         }
     }
 }
