@@ -135,6 +135,17 @@ public class VividMachines {
     /** 所有已注册的蒸汽模块控制器，供梦想电梯模块槽位识别。 */
     public static final List<MultiblockMachineDefinition> STEAM_MODULES = new ArrayList<>();
 
+    /** 按加工类型和模块等级获取已注册的模块方块。 */
+    public static MultiblockMachineDefinition getSteamModule(String typeId, int tier) {
+        String id = "dream_elevator_steam_" + typeId + "_module_mk" + tier;
+        for (MultiblockMachineDefinition module : STEAM_MODULES) {
+            if (module.getId().getPath().equals(id)) {
+                return module;
+            }
+        }
+        throw new IllegalStateException("Unknown steam module: " + id);
+    }
+
     static {
         for (SteamModuleType type : STEAM_MODULE_TYPES) {
             for (int tier = 1; tier <= 3; tier++) {
