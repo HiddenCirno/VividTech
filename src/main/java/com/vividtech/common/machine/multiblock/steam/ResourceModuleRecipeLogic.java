@@ -56,6 +56,7 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
     @Override
     public void onRecipeFinish() {
         getMachine().afterWorking();
+        getMachine().onCycleCompleted();
         if (lastRecipe != null) {
             lastRecipe.postWorking(getMachine());
             boolean handled = handleRecipeIO(lastRecipe, IO.OUT);

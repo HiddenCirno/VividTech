@@ -178,9 +178,9 @@
   "gtceu.dream_elevator_steam_stratum_drilling_module_mk3": "Dream Elevator Steam Stratum Drilling Module MK 3",
   "vividtech.machine.stratum_mining.tooltip.0": "§7Adds stratum mining functionality to the Dream Elevator",
   "vividtech.machine.stratum_mining.tooltip.1": "§cS§6t§ee§am§b'§9s§d Pinnacle",
-  "vividtech.machine.stratum_mining.tooltip.2.mk1": "§7Base cycle §e120§7 s (affected by rail speed); produces §e64§7 raw ores weighted by the current dimension",
-  "vividtech.machine.stratum_mining.tooltip.2.mk2": "§7Base cycle §e60§7 s (affected by rail speed); produces §e64§7 raw ores weighted by the current dimension",
-  "vividtech.machine.stratum_mining.tooltip.2.mk3": "§7Base cycle §e30§7 s (affected by rail speed); produces §e64§7 raw ores weighted by the current dimension",
+  "vividtech.machine.stratum_mining.tooltip.2.mk1": "§7Base cycle §e120§7 s (affected by rail speed); produces §e64§7 ore blocks weighted by the current dimension",
+  "vividtech.machine.stratum_mining.tooltip.2.mk2": "§7Base cycle §e60§7 s (affected by rail speed); produces §e64§7 ore blocks weighted by the current dimension",
+  "vividtech.machine.stratum_mining.tooltip.2.mk3": "§7Base cycle §e30§7 s (affected by rail speed); produces §e64§7 ore blocks weighted by the current dimension",
   "vividtech.machine.stratum_mining.tooltip.3.mk1": "§7Overworld only",
   "vividtech.machine.stratum_mining.tooltip.3.mk2": "§7Overworld / Nether; the current dimension's veins are used",
   "vividtech.machine.stratum_mining.tooltip.3.mk3": "§7Overworld / Nether / End; the current dimension's veins are used",
@@ -203,5 +203,6 @@
   "vividtech.machine.resource_module.wrong_dimension": "§cThis module is not supported in the current dimension",
   "vividtech.machine.resource_module.no_output": "§cNo vein data available",
   "vividtech.machine.resource_module.missing_drilling_fluid": "§cMissing drilling fluid; progress paused",
-  "vividtech.machine.resource_module.output_ports": "§7Output Ports: §e%s§7 item / §e%s§7 fluid"
+  "vividtech.machine.resource_module.output_ports": "§7Output Ports: §e%s§7 item / §e%s§7 fluid",
+  "vividtech.machine.resource_module.completed_cycles": "§7Completed Cycles: §e%s"
 }

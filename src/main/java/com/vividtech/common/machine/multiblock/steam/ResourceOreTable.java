@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 按当前维度构建矿脉权重表，供岩层开采模块抽取原矿。
+ * 按当前维度构建矿脉权重表，供岩层开采模块抽取矿石。
  */
 public final class ResourceOreTable {
 
@@ -51,15 +51,35 @@ public final class ResourceOreTable {
             }
         }
 
-        ItemStack raw = ChemicalHelper.get(TagPrefix.rawOre, material, amount);
-        if (!raw.isEmpty()) {
-            return raw;
+        // 优先输出当前维度对应的矿石方块；没有矿石形态时才退回粗矿/宝石/粉。
+        for (TagPrefix prefix : outputPrefixes(dimension)) {
+            ItemStack stack = ChemicalHelper.get(prefix, material, amount);
+            if (!stack.isEmpty()) {
+                return stack;
+            }
         }
-        ItemStack gem = ChemicalHelper.get(TagPrefix.gem, material, amount);
-        if (!gem.isEmpty()) {
-            return gem;
+        return ItemStack.EMPTY;
+    }
+
+    private static boolean hasAnyOutput(ResourceKey<Level> dimension, Material material) {
+        for (TagPrefix prefix : outputPrefixes(dimension)) {
+            if (!ChemicalHelper.get(prefix, material, 1).isEmpty()) {
+                return true;
+            }
         }
-        return ChemicalHelper.get(TagPrefix.dust, material, amount);
+        return false;
+    }
+
+    private static TagPrefix[] outputPrefixes(ResourceKey<Level> dimension) {
+        if (dimension.equals(Level.NETHER)) {
+            return new TagPrefix[] { TagPrefix.oreNetherrack, TagPrefix.ore, TagPrefix.rawOre,
+                    TagPrefix.gem, TagPrefix.dust };
+        }
+        if (dimension.equals(Level.END)) {
+            return new TagPrefix[] { TagPrefix.oreEndstone, TagPrefix.ore, TagPrefix.rawOre,
+                    TagPrefix.gem, TagPrefix.dust };
+        }
+        return new TagPrefix[] { TagPrefix.ore, TagPrefix.rawOre, TagPrefix.gem, TagPrefix.dust };
     }
 
     private static synchronized void build(Level level) {
@@ -104,9 +124,7 @@ public final class ResourceOreTable {
                 if (material == null || chance <= 0) {
                     continue;
                 }
-                if (ChemicalHelper.get(TagPrefix.rawOre, material, 1).isEmpty() &&
-                        ChemicalHelper.get(TagPrefix.gem, material, 1).isEmpty() &&
-                        ChemicalHelper.get(TagPrefix.dust, material, 1).isEmpty()) {
+                if (!hasAnyOutput(dimension, material)) {
                     continue;
                 }
                 double weight = veinWeight * chance;

@@ -74,6 +74,10 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     @DescSynced
     private boolean resourceAvailable = true;
 
+    @Persisted
+    @DescSynced
+    private int completedCycles;
+
     private boolean steamHandlerAttached;
 
     public AbstractSteamResourceModuleMachine(IMachineBlockEntity holder, int moduleTier) {
@@ -195,6 +199,19 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     public boolean isResourceAvailable() {
         return resourceAvailable;
+    }
+
+    public int getCompletedCycles() {
+        return completedCycles;
+    }
+
+    /** 每个周期完成（产出已尝试进入输出仓）后累加，用于界面诊断。 */
+    public void onCycleCompleted() {
+        if (isRemote()) {
+            return;
+        }
+        completedCycles++;
+        markDirty();
     }
 
     /** 每 tick 由模块自身检查/消耗资源；默认不消耗。 */
@@ -353,6 +370,8 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
                 capabilitiesProxy.get(IO.OUT, FluidRecipeCapability.CAP).size();
         textList.add(Component.translatable("vividtech.machine.resource_module.output_ports",
                 itemOutputs, fluidOutputs));
+        textList.add(Component.translatable("vividtech.machine.resource_module.completed_cycles",
+                completedCycles));
         if (getLevel() != null && !isDimensionAllowed(getLevel())) {
             textList.add(Component.translatable("vividtech.machine.resource_module.wrong_dimension"));
         }

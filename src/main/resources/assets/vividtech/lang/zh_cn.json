@@ -178,9 +178,9 @@
   "gtceu.dream_elevator_steam_stratum_drilling_module_mk3": "梦想电梯蒸汽地层钻探模块MK 3",
   "vividtech.machine.stratum_mining.tooltip.0": "§7将岩层开采功能添加到梦想电梯",
   "vividtech.machine.stratum_mining.tooltip.1": "§c蒸§6汽§e工§a业§b的§9顶§d点",
-  "vividtech.machine.stratum_mining.tooltip.2.mk1": "§7基础周期§e120§7秒（受轨道速度加成），产出§e64§7个原矿，按当前维度矿脉权重抽取",
-  "vividtech.machine.stratum_mining.tooltip.2.mk2": "§7基础周期§e60§7秒（受轨道速度加成），产出§e64§7个原矿，按当前维度矿脉权重抽取",
-  "vividtech.machine.stratum_mining.tooltip.2.mk3": "§7基础周期§e30§7秒（受轨道速度加成），产出§e64§7个原矿，按当前维度矿脉权重抽取",
+  "vividtech.machine.stratum_mining.tooltip.2.mk1": "§7基础周期§e120§7秒（受轨道速度加成），产出§e64§7个矿石，按当前维度矿脉权重抽取",
+  "vividtech.machine.stratum_mining.tooltip.2.mk2": "§7基础周期§e60§7秒（受轨道速度加成），产出§e64§7个矿石，按当前维度矿脉权重抽取",
+  "vividtech.machine.stratum_mining.tooltip.2.mk3": "§7基础周期§e30§7秒（受轨道速度加成），产出§e64§7个矿石，按当前维度矿脉权重抽取",
   "vividtech.machine.stratum_mining.tooltip.3.mk1": "§7仅可在主世界开采",
   "vividtech.machine.stratum_mining.tooltip.3.mk2": "§7可在主世界/下界开采；在哪个维度就抽哪个维度的矿脉",
   "vividtech.machine.stratum_mining.tooltip.3.mk3": "§7可在主世界/下界/末地开采；在哪个维度就抽哪个维度的矿脉",
@@ -203,5 +203,6 @@
   "vividtech.machine.resource_module.wrong_dimension": "§c当前维度不支持此模块",
   "vividtech.machine.resource_module.no_output": "§c没有可抽取的矿脉数据",
   "vividtech.machine.resource_module.missing_drilling_fluid": "§c缺少钻井液，进度已暂停",
-  "vividtech.machine.resource_module.output_ports": "§7输出仓：§e%s§7 物品 / §e%s§7 流体"
+  "vividtech.machine.resource_module.output_ports": "§7输出仓：§e%s§7 物品 / §e%s§7 流体",
+  "vividtech.machine.resource_module.completed_cycles": "§7已完成周期：§e%s"
 }
