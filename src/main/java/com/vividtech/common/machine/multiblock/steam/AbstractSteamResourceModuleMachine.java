@@ -42,6 +42,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
     private static final int[] CYCLE_DURATIONS = { 2400, 1200, 600 };
+    private static final int STRUCTURE_REFRESH_INTERVAL_TICKS = 100;
 
     private final int moduleTier;
 
@@ -78,7 +79,14 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     @DescSynced
     private int completedCycles;
 
-    private boolean steamHandlerAttached;
+    /**
+     * 结构每次重新成型都会清空 capabilitiesProxy，因此这个处理器不能只挂一次。
+     * 它内部通过 lambda 实时读取主机蒸汽仓，所以复用一个实例即可。
+     */
+    private final SharedSteamEnergyRecipeHandler sharedSteamHandler = new SharedSteamEnergyRecipeHandler(() -> {
+        DreamElevatorMachine currentHost = getHost();
+        return currentHost != null ? currentHost.getSteamTanks() : List.of();
+    }, 0.5D);
 
     public AbstractSteamResourceModuleMachine(IMachineBlockEntity holder, int moduleTier) {
         super(holder);
@@ -305,6 +313,11 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         }
         updateHostWorkingState(getHost());
         tickResource();
+        if (getOffsetTimer() % STRUCTURE_REFRESH_INTERVAL_TICKS == 0 && checkPatternWithLock()) {
+            // 成型之后才放置/替换输出总成时，GTCEu 不一定会刷新已成型结构的 capabilitiesProxy。
+            // 定期重新匹配一次，让新增的仓/总线进入代理；失败时不动当前状态，避免误重置进度。
+            refreshStructureParts();
+        }
         if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
             DreamElevatorMachine currentHost = getHost();
             if (currentHost != null && !currentHost.isFormed()) {
@@ -336,16 +349,14 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         return super.onWorking();
     }
 
+    /** 只重建零件与能力代理，不重置采集进度/资源暂停状态。 */
+    private void refreshStructureParts() {
+        super.onStructureFormed();
+        refreshSteamHandler();
+    }
+
     private void refreshSteamHandler() {
-        if (steamHandlerAttached) {
-            return;
-        }
-        steamHandlerAttached = true;
-        capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP,
-                List.of(new SharedSteamEnergyRecipeHandler(() -> {
-                    DreamElevatorMachine currentHost = getHost();
-                    return currentHost != null ? currentHost.getSteamTanks() : List.of();
-                }, 0.5D)));
+        capabilitiesProxy.put(IO.IN, EURecipeCapability.CAP, List.of(sharedSteamHandler));
     }
 
     @Override

@@ -55,13 +55,14 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
 
     @Override
     public void onRecipeFinish() {
-        getMachine().afterWorking();
-        getMachine().onCycleCompleted();
+        AbstractSteamResourceModuleMachine machine = getMachine();
+        machine.afterWorking();
+        machine.onCycleCompleted();
         if (lastRecipe != null) {
-            lastRecipe.postWorking(getMachine());
+            lastRecipe.postWorking(machine);
             boolean handled = handleRecipeIO(lastRecipe, IO.OUT);
             if (!handled) {
-                DreamElevatorMachine host = getMachine().getHost();
+                DreamElevatorMachine host = machine.getHost();
                 if (host != null) {
                     lastRecipe.handleRecipeIO(IO.OUT, host, Map.of());
                 }
