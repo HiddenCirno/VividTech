@@ -151,11 +151,24 @@ public class VividMachines {
     }
 
     private static Component[] dreamElevatorTooltips() {
-        Component[] tooltips = new Component[17];
+        Component[] tooltips = new Component[18];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.dream_elevator.tooltip." + i);
         }
         return tooltips;
+    }
+
+    private static Component[] steamModuleTooltips(SteamModuleType type, int tier) {
+        Component function = Component.translatable(
+                "vividtech.machine.steam_processing_module.function." + type.id());
+        return new Component[] {
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.0", function),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.1"),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.2"),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.3"),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.4",
+                        SteamProcessingModuleMachine.getParallelForTier(tier))
+        };
     }
 
     private static Component[] eyeOfWoodTooltips() {
@@ -241,8 +254,7 @@ public class VividMachines {
                 .allowExtendedFacing(false)
                 .recipeTypes(type.recipeType())
                 .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
-                .tooltips(Component.translatable("vividtech.machine.steam_processing_module.tooltip.0"))
-                .tooltips(Component.translatable("vividtech.machine.steam_processing_module.tooltip.1"))
+                .tooltips(steamModuleTooltips(type, tier))
                 .tooltipBuilder(VIVID_ADD)
                 .pattern(definition -> SteamProcessingModuleStructure.MODULE
                         .where("~", Predicates.controller(Predicates.blocks(definition.get())))

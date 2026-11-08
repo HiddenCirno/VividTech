@@ -108,6 +108,10 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         return MODULE_PARALLELS[moduleTier - 1];
     }
 
+    public static int getParallelForTier(int tier) {
+        return MODULE_PARALLELS[tier - 1];
+    }
+
     @Override
     public void onConnected(@NotNull DreamElevatorMachine host) {
         setConnectionState(true, host.getRailTier());
