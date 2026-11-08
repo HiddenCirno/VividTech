@@ -212,7 +212,7 @@
   "vividtech.machine.pressurization_module.tooltip.2": "§7一台梦想电梯最多可以配备16个§e此模块",
   "vividtech.machine.pressurization_module.tooltip.3": "§7安装§e4§7个§e此模块§7，可以将配方等级限制提升§a1§7级，工作速度和蒸汽消耗§c翻倍",
   "vividtech.machine.pressurization_module.tooltip.4": "§7安装§e16§7个§e此模块§7，可以将配方等级限制提升§a2§7级，工作速度和蒸汽消耗§c§l再次§c翻倍",
-  "vividtech.machine.pressurization_module.tooltip.5": "§7即，§e4§7个此模块会让工作速度和蒸汽消耗变为§e2§7倍，§e16§7个此模块会让工作速度和蒸汽消耗变为§e4§7倍",
+  "vividtech.machine.pressurization_module.tooltip.5": "§7即，§e4§7个§e此模块§7会让工作速度和蒸汽消耗变为§c2§7倍，§e16§7个§e此模块§7会让工作速度和蒸汽消耗变为§c4§7倍",
   "vividtech.machine.pressurization_module.tooltip.6": "§7被软锤关闭的§e此模块§7会停止工作",
   "vividtech.machine.dream_elevator.max_recipe_voltage": "§7最大可执行配方电压：§r%s",
   "vividtech.machine.dream_elevator.pressurization": "§7加压模块：§e%s§7 个（配方电压 §a+%s§7 级，工作速度 §e×%s§7，蒸汽消耗 §e×%s§7）",

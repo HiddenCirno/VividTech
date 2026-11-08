@@ -212,7 +212,7 @@
   "vividtech.machine.pressurization_module.tooltip.2": "§7A Dream Elevator can hold at most 16 of §ethis module",
   "vividtech.machine.pressurization_module.tooltip.3": "§7With §e4§7 §ethis module§7 installed: recipe tier limit §a+1§7, work speed and steam consumption §cdoubled",
   "vividtech.machine.pressurization_module.tooltip.4": "§7With §e16§7 §ethis module§7 installed: recipe tier limit §a+2§7, work speed and steam consumption §c§ldoubled§c again",
-  "vividtech.machine.pressurization_module.tooltip.5": "§7That is, §e4§7 modules make work speed and steam consumption §e2×§7, and §e16§7 modules make them §e4×",
+  "vividtech.machine.pressurization_module.tooltip.5": "§7That is, §e4§7 §ethis module§7 makes work speed and steam consumption §c2×§7, and §e16§7 §ethis module§7 makes them §c4×",
   "vividtech.machine.pressurization_module.tooltip.6": "§7A §ethis module§7 disabled by a soft mallet stops working",
   "vividtech.machine.dream_elevator.max_recipe_voltage": "§7Max recipe voltage: §r%s",
   "vividtech.machine.dream_elevator.pressurization": "§7Pressurization modules: §e%s§7 (voltage §a+%s§7 tier(s), work speed §e×%s§7, steam consumption §e×%s§7)",
