@@ -6,19 +6,35 @@ import com.vividtech.VividTech;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
+import com.gregtechceu.gtceu.api.machine.feature.ICleanroomProvider;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
+import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.logic.OCParams;
 import com.gregtechceu.gtceu.api.recipe.logic.OCResult;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
+import com.gregtechceu.gtceu.common.recipe.condition.RockBreakerCondition;
 
+import org.gtlcore.gtlcore.common.recipe.condition.GravityCondition;
+
+import com.google.gson.JsonObject;
+
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+
+import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -31,6 +47,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -105,6 +122,20 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
 
     public int getModuleTier() {
         return moduleTier;
+    }
+
+    /**
+     * 模块自身没有超净间时，直接使用梦想电梯本体上安装的超净维护子系统。
+     * 这样只需要在电梯本体上装一个子系统，所有连接模块都能执行超净配方。
+     */
+    @Override
+    public @Nullable ICleanroomProvider getCleanroom() {
+        ICleanroomProvider own = super.getCleanroom();
+        if (own != null) {
+            return own;
+        }
+        DreamElevatorMachine currentHost = getHost();
+        return currentHost != null && currentHost.isFormed() ? currentHost.getCleanroom() : null;
     }
 
     public int getModuleParallel() {
@@ -350,15 +381,110 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
             return null;
         }
         GTRecipe modified = parallelRecipe.copy();
+        if (!applyEnvironmentalConditions(module, modified)) {
+            return null;
+        }
         long parallelEUt = RecipeHelper.getInputEUt(parallelRecipe);
         int recipeVoltageTier = RecipeHelper.getRecipeEUtTier(recipe);
-        long modifiedEUt = Math.max(1L, Math.round(parallelEUt * module.getSteamMultiplier(recipeVoltageTier)));
+        long modifiedEUt = Math.max(1L, Math.round(parallelEUt *
+                module.getSteamMultiplier(recipeVoltageTier) *
+                currentHost.getPressurizationConsumptionMultiplier()));
         RecipeHelper.setInputEUt(modified, modifiedEUt);
         double speedMultiplier = currentHost.getProductionSpeedMultiplier();
         if (speedMultiplier != 1.0D) {
             modified.duration = (int) Math.max(1L, Math.round(modified.duration / speedMultiplier));
         }
         return modified;
+    }
+
+    /**
+     * 把模块无法原生满足的环境条件改写成梦想电梯体系可以满足的形式：
+     * <ul>
+     *     <li>碎岩：条件改为检查模块自己的流体输入仓（而不是控制器旁边的流体方块）；</li>
+     *     <li>重力：读取梦想电梯本体上重力控制子系统提供的重力值；</li>
+     *     <li>超净：由模块的 {@link #getCleanroom()} 转发到梦想电梯的超净维护子系统。</li>
+     * </ul>
+     *
+     * @return false 表示当前条件不满足，配方不能开始
+     */
+    private static boolean applyEnvironmentalConditions(SteamProcessingModuleMachine module, GTRecipe recipe) {
+        if (recipe.conditions.isEmpty()) {
+            return true;
+        }
+
+        DreamElevatorMachine currentHost = module.getHost();
+        Integer installedGravity = currentHost != null && currentHost.isFormed() ? currentHost.getInstalledGravity() : null;
+
+        boolean hasRockBreaker = recipe.conditions.stream().anyMatch(RockBreakerCondition.class::isInstance);
+        boolean rockBreakerFluids = hasRockBreaker && module.hasRockBreakerFluids(recipe);
+
+        for (RecipeCondition condition : new ArrayList<>(recipe.conditions)) {
+            if (condition instanceof RockBreakerCondition) {
+                // 只认输入仓，不再使用 GT 默认的“控制器水平邻接流体方块”判定。
+                boolean passes = rockBreakerFluids != condition.isReverse();
+                if (!passes) {
+                    return false;
+                }
+                recipe.conditions.remove(condition);
+            } else if (condition instanceof GravityCondition gravityCondition && installedGravity != null) {
+                JsonObject data = gravityCondition.serialize();
+                if (!data.has("gravity")) {
+                    continue;
+                }
+                boolean zero = data.get("gravity").getAsBoolean();
+                boolean available = installedGravity == (zero ? 0 : 100);
+                boolean passes = available != gravityCondition.isReverse();
+                if (!passes) {
+                    return false;
+                }
+                recipe.conditions.remove(condition);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 检查模块自己的流体输入仓/输入总成中是否同时存在配方要求的两种岩破流体。
+     * 岩破配方把流体写在 data 的 fluidA / fluidB 里，且不消耗它们。
+     */
+    private boolean hasRockBreakerFluids(GTRecipe recipe) {
+        ResourceLocation fluidAId = ResourceLocation.tryParse(recipe.data.getString("fluidA"));
+        ResourceLocation fluidBId = ResourceLocation.tryParse(recipe.data.getString("fluidB"));
+        if (fluidAId == null || fluidBId == null) {
+            return false;
+        }
+        Fluid fluidA = BuiltInRegistries.FLUID.get(fluidAId);
+        Fluid fluidB = BuiltInRegistries.FLUID.get(fluidBId);
+        if (fluidA == Fluids.EMPTY || fluidB == Fluids.EMPTY) {
+            return false;
+        }
+
+        boolean hasA = false;
+        boolean hasB = false;
+        for (IO io : List.of(IO.IN, IO.BOTH)) {
+            List<IRecipeHandler<?>> handlers = getCapabilitiesProxy().get(io, FluidRecipeCapability.CAP);
+            if (handlers == null) {
+                continue;
+            }
+            for (IRecipeHandler<?> handler : handlers) {
+                if (!(handler instanceof NotifiableFluidTank tank)) {
+                    continue;
+                }
+                for (int i = 0; i < tank.getTanks(); i++) {
+                    FluidStack stack = tank.getFluidInTank(i);
+                    if (stack.isEmpty()) {
+                        continue;
+                    }
+                    if (stack.getFluid() == fluidA) {
+                        hasA = true;
+                    }
+                    if (stack.getFluid() == fluidB) {
+                        hasB = true;
+                    }
+                }
+            }
+        }
+        return hasA && hasB;
     }
 
     @Override

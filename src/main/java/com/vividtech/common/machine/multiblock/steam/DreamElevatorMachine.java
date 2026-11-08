@@ -3,6 +3,7 @@ package com.vividtech.common.machine.multiblock.steam;
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineHost;
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.LargeSteamHatchPartMachine;
+import org.gtlcore.gtlcore.common.machine.multiblock.part.maintenance.IGravityPartMachine;
 import org.gtlcore.gtlcore.common.machine.multiblock.steam.LargeSteamParallelMultiblockMachine;
 
 import com.gregtechceu.gtceu.api.GTValues;
@@ -19,6 +20,8 @@ import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.SteamHatchPartMachine;
 
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
+import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
+import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
@@ -41,6 +44,7 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -396,6 +400,18 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         return 1.0D;
     }
 
+    /**
+     * 加压模块带来的蒸汽消耗倍率：4 个 ×2，16 个 ×4（不叠加）。
+     * 与速度倍率同档，因此每 tick 蒸汽消耗随吞吐量同步提高，
+     * 单个配方的总蒸汽消耗不变。
+     */
+    public double getPressurizationConsumptionMultiplier() {
+        int count = getPressurizationModuleCount();
+        if (count >= 16) return 4.0D;
+        if (count >= 4) return 2.0D;
+        return 1.0D;
+    }
+
     @Override
     public boolean isUsingLargeSteamHatch() {
         return hasLargeSteamHatch;
@@ -428,6 +444,38 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     public boolean isInnerModule(BlockPos pos) {
         return moduleInnerSlots.contains(pos);
+    }
+
+    /**
+     * 当前梦想电梯本体上安装的重力控制子系统提供的重力值。
+     * 没有安装（或其它机器没有重力仓）时返回 null，让原版 GravityCondition 自己处理。
+     */
+    @Nullable
+    public Integer getInstalledGravity() {
+        for (IMultiPart part : getParts()) {
+            if (part.self() instanceof IGravityPartMachine gravityPart) {
+                return gravityPart.getCurrentGravity();
+            }
+        }
+        return null;
+    }
+
+    public boolean hasCleanroomSubsystem() {
+        for (IMultiPart part : getParts()) {
+            if (part.self() instanceof DreamElevatorCleanroomSubsystemMachine) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasGravitySubsystem() {
+        for (IMultiPart part : getParts()) {
+            if (part.self() instanceof DreamElevatorGravitySubsystemMachine) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** 模块实际可申请的并行：T5 动力模块让内环模块翻倍。 */
@@ -585,7 +633,18 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 Component.literal(GTValues.VNF[getMaxRecipeTier()])));
         textList.add(Component.translatable("vividtech.machine.dream_elevator.pressurization",
                 getPressurizationModuleCount(), getPressurizationTierBonus(),
-                String.format("%.0f", getPressurizationSpeedMultiplier())));
+                String.format("%.0f", getPressurizationSpeedMultiplier()),
+                String.format("%.0f", getPressurizationConsumptionMultiplier())));
+        textList.add(Component.translatable(hasCleanroomSubsystem() ?
+                "vividtech.machine.dream_elevator.cleanroom_subsystem.installed" :
+                "vividtech.machine.dream_elevator.cleanroom_subsystem.missing"));
+        Integer installedGravity = getInstalledGravity();
+        if (hasGravitySubsystem() && installedGravity != null) {
+            textList.add(Component.translatable("vividtech.machine.dream_elevator.gravity_subsystem.installed",
+                    installedGravity));
+        } else {
+            textList.add(Component.translatable("vividtech.machine.dream_elevator.gravity_subsystem.missing"));
+        }
     }
 
     private int getReservedParallel() {

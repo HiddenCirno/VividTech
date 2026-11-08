@@ -3,11 +3,14 @@ package com.vividtech.common.data;
 import com.vividtech.VividTech;
 import com.vividtech.client.renderer.machine.CreativeSteamInputHatchRenderer;
 import com.vividtech.client.renderer.machine.DreamElevatorRenderer;
+import com.vividtech.client.renderer.machine.SubsystemHatchRenderer;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
+import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
+import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.PressurizationModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
@@ -186,6 +189,50 @@ public class VividMachines {
         STEAM_MODULES.add(PRESSURIZATION_MODULE);
     }
 
+    /**
+     * 梦想电梯超净维护子系统：安装在电梯本体上的非模块仓室。
+     * 正面沿用 GT/GTL 的 cleaning_gravity_configuration_maintenance_hatch 外观。
+     */
+    public static final MachineDefinition CLEANROOM_SUBSYSTEM = REGISTRATE
+            .machine("dream_elevator_cleanroom_subsystem", DreamElevatorCleanroomSubsystemMachine::new)
+            .langValue("Dream Elevator Cleanroom Maintenance Subsystem")
+            .rotationState(RotationState.ALL)
+            .renderer(() -> new SubsystemHatchRenderer(
+                    GTCEu.id("block/machine/part/maintenance.cleaning")))
+            .tooltips(cleanroomSubsystemTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            .register();
+
+    /**
+     * 梦想电梯重力控制子系统：安装在电梯本体上的非模块仓室。
+     * 正面沿用 GT/GTL 的 gravity_hatch 外观。
+     */
+    public static final MachineDefinition GRAVITY_SUBSYSTEM = REGISTRATE
+            .machine("dream_elevator_gravity_subsystem", DreamElevatorGravitySubsystemMachine::new)
+            .langValue("Dream Elevator Gravity Control Subsystem")
+            .rotationState(RotationState.ALL)
+            .renderer(() -> new SubsystemHatchRenderer(
+                    GTCEu.id("block/machine/part/maintenance.full_auto")))
+            .tooltips(gravitySubsystemTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            .register();
+
+    private static Component[] cleanroomSubsystemTooltips() {
+        Component[] tooltips = new Component[4];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.cleanroom_subsystem.tooltip." + i);
+        }
+        return tooltips;
+    }
+
+    private static Component[] gravitySubsystemTooltips() {
+        Component[] tooltips = new Component[4];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.gravity_subsystem.tooltip." + i);
+        }
+        return tooltips;
+    }
+
     private static Component[] pressurizationTooltips() {
         Component[] tooltips = new Component[5];
         for (int i = 0; i < tooltips.length; i++) {
@@ -309,7 +356,10 @@ public class VividMachines {
                 .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(4))
-                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(4));
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(4))
+                // 两个非模块子系统仓室：超净维护 / 重力控制。
+                .or(Predicates.blocks(CLEANROOM_SUBSYSTEM.getBlock(), GRAVITY_SUBSYSTEM.getBlock())
+                        .setMaxGlobalLimited(2));
     }
 
     private static TraceabilityPredicate dreamModuleShell() {

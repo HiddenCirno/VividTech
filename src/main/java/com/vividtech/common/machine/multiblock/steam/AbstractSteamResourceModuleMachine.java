@@ -135,7 +135,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
             return 0.0D;
         }
         double multiplier = (0.8D / currentHost.getRailTier()) * moduleTier + moduleTier / 10.0D;
-        return moduleTier * 200.0D * multiplier;
+        return moduleTier * 200.0D * multiplier * currentHost.getPressurizationConsumptionMultiplier();
     }
 
     public long getRecipeEUt() {
