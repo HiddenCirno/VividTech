@@ -205,5 +205,15 @@
   "vividtech.machine.resource_module.missing_drilling_fluid": "§c缺少钻井液，进度已暂停",
   "vividtech.machine.resource_module.output_ports": "§7输出仓：§e%s§7 物品 / §e%s§7 流体",
   "vividtech.machine.resource_module.completed_cycles": "§7已完成周期：§e%s",
-  "vividtech.machine.resource_module.output_full": "§c输出仓已满，工作已暂停"
+  "vividtech.machine.resource_module.output_full": "§c输出仓已满，工作已暂停",
+  "block.gtceu.dream_elevator_steam_pressurization_module": "梦想电梯蒸汽加压模块",
+  "gtceu.dream_elevator_steam_pressurization_module": "梦想电梯蒸汽加压模块",
+  "vividtech.machine.pressurization_module.tooltip.0": "§7将加压功能添加到梦想电梯",
+  "vividtech.machine.pressurization_module.tooltip.1": "§d压力，就是力量",
+  "vividtech.machine.pressurization_module.tooltip.2": "§7安装§e4§7个加压模块：可执行配方电压上限§e+1§7级，工作速度§e×2",
+  "vividtech.machine.pressurization_module.tooltip.3": "§7安装§e16§7个加压模块：可执行配方电压上限§e+2§7级，工作速度§e×4§7（再次翻倍，不叠加）",
+  "vividtech.machine.pressurization_module.tooltip.4": "§7加压模块本身不参与加工，也不需要蒸汽",
+  "vividtech.machine.dream_elevator.max_recipe_voltage": "§7最大可执行配方电压：§r%s",
+  "vividtech.machine.dream_elevator.pressurization": "§7加压模块：§e%s§7 个（配方电压 §a+%s§7 级，工作速度 §e×%s§7）",
+  "vividtech.machine.steam_processing_module.max_recipe_voltage": "§7可执行配方电压：§r%s"
 }

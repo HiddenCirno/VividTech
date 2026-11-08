@@ -4,6 +4,7 @@ import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 
 import com.vividtech.VividTech;
 
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
@@ -455,6 +456,11 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         }
         textList.add(Component.translatable("vividtech.machine.resource_module.completed_cycles",
                 completedCycles));
+        DreamElevatorMachine voltageHost = getHost();
+        if (voltageHost != null && voltageHost.isFormed()) {
+            textList.add(Component.translatable("vividtech.machine.steam_processing_module.max_recipe_voltage",
+                    Component.literal(GTValues.VNF[voltageHost.getMaxRecipeTier()])));
+        }
         if (getLevel() != null && !isDimensionAllowed(getLevel())) {
             textList.add(Component.translatable("vividtech.machine.resource_module.wrong_dimension"));
         }

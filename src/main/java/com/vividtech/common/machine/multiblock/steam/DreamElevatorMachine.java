@@ -365,10 +365,28 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @Override
     public long getMaxRecipeEUt() {
-        if (railTier >= 5) return 2048L;
-        if (railTier >= 4) return 512L;
-        if (railTier >= 3) return 128L;
-        return 32L;
+        return GTValues.V[getMaxRecipeTier()];
+    }
+
+    /** 已安装并成型的加压模块数量。 */
+    public int getPressurizationModuleCount() {
+        return getFormedModuleCount(PressurizationModuleMachine.class);
+    }
+
+    /** 4 个加压模块 +1 级，16 个 +2 级（不叠加）。 */
+    public int getPressurizationTierBonus() {
+        int count = getPressurizationModuleCount();
+        if (count >= 16) return 2;
+        if (count >= 4) return 1;
+        return 0;
+    }
+
+    /** 4 个加压模块速度 ×2，16 个 ×4（再次翻倍，不叠加）。 */
+    public double getPressurizationSpeedMultiplier() {
+        int count = getPressurizationModuleCount();
+        if (count >= 16) return 4.0D;
+        if (count >= 4) return 2.0D;
+        return 1.0D;
     }
 
     @Override
@@ -383,14 +401,22 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     /** 全机允许执行的最高配方电压等级：T1/T2 = LV，T3 = MV，T4 = HV，T5 = EV。 */
     public int getMaxRecipeTier() {
-        if (railTier >= 5) return GTValues.EV;
-        if (railTier >= 4) return GTValues.HV;
-        if (railTier >= 3) return GTValues.MV;
-        return GTValues.LV;
+        int base;
+        if (railTier >= 5) {
+            base = GTValues.EV;
+        } else if (railTier >= 4) {
+            base = GTValues.HV;
+        } else if (railTier >= 3) {
+            base = GTValues.MV;
+        } else {
+            base = GTValues.LV;
+        }
+        return Math.min(GTValues.MAX, base + getPressurizationTierBonus());
     }
 
     public double getProductionSpeedMultiplier() {
-        return railTier > 0 ? POWER_SPEED[railTier - 1] : 1.0D;
+        double base = railTier > 0 ? POWER_SPEED[railTier - 1] : 1.0D;
+        return base * getPressurizationSpeedMultiplier();
     }
 
     public boolean isInnerModule(BlockPos pos) {
@@ -548,6 +574,11 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         textList.add(Component.translatable(animationEnabled ?
                 "vividtech.machine.dream_elevator.animation.status.enabled" :
                 "vividtech.machine.dream_elevator.animation.status.disabled"));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.max_recipe_voltage",
+                Component.literal(GTValues.VNF[getMaxRecipeTier()])));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.pressurization",
+                getPressurizationModuleCount(), getPressurizationTierBonus(),
+                String.format("%.0f", getPressurizationSpeedMultiplier())));
     }
 
     private int getReservedParallel() {

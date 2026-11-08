@@ -9,6 +9,7 @@ import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructu
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
+import com.vividtech.common.machine.multiblock.steam.PressurizationModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamStratumDrillingModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMachine;
@@ -26,6 +27,7 @@ import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.client.renderer.machine.MachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
@@ -159,6 +161,23 @@ public class VividMachines {
             .tooltips(Component.translatable("vividtech.machine.creative_steam_input_hatch.tooltip.0"))
             .tooltipBuilder(VIVID_ADD)
             .register();
+
+    public static final MachineDefinition PRESSURIZATION_MODULE = REGISTRATE
+            .machine("dream_elevator_steam_pressurization_module", PressurizationModuleMachine::new)
+            .rotationState(RotationState.ALL)
+            .langValue("Dream Elevator Steam Pressurization Module")
+            .renderer(() -> new MachineRenderer(GTCEu.id("block/machine/hull_machine")))
+            .tooltips(pressurizationTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            .register();
+
+    private static Component[] pressurizationTooltips() {
+        Component[] tooltips = new Component[5];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.pressurization_module.tooltip." + i);
+        }
+        return tooltips;
+    }
 
     private static ItemStack steamTabIcon() {
         return EYE_OF_WOOD.asStack();
@@ -308,6 +327,7 @@ public class VividMachines {
         for (MultiblockMachineDefinition module : STEAM_MODULES) {
             allowed.add(module.getBlock());
         }
+        allowed.add(PRESSURIZATION_MODULE.getBlock());
         Block[] allowedArray = allowed.stream().distinct().toArray(Block[]::new);
         BlockInfo[] candidates = allowed.stream().distinct()
                 .map(block -> BlockInfo.fromBlockState(block.defaultBlockState()))

@@ -4,6 +4,7 @@ import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 
 import com.vividtech.VividTech;
 
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
@@ -365,6 +366,11 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         IDisplayUIMachine.super.addDisplayText(textList);
         if (!isFormed()) return;
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier", VividTech.toRoman(moduleTier)));
+        DreamElevatorMachine voltageHost = getHost();
+        if (voltageHost != null && voltageHost.isFormed()) {
+            textList.add(Component.translatable("vividtech.machine.steam_processing_module.max_recipe_voltage",
+                    Component.literal(GTValues.VNF[voltageHost.getMaxRecipeTier()])));
+        }
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.parallel",
                 getModuleParallel()));
         DreamElevatorMachine currentHost = getHost();
