@@ -83,9 +83,11 @@ public final class ResourceOreTable {
             IWorldGenLayer layer = definition.layer();
             if (layer != null) {
                 var levels = layer.getLevels();
-                boolean layerOk = layer == WorldGenLayers.STONE || layer == WorldGenLayers.DEEPSLATE ||
-                        levels == null || levels.isEmpty() || levels.contains(dimension.location());
-                if (!layerOk) {
+                boolean overworldStoneLayer = dimension.equals(Level.OVERWORLD) &&
+                        (layer == WorldGenLayers.STONE || layer == WorldGenLayers.DEEPSLATE);
+                boolean levelMatches = levels == null || levels.isEmpty() ||
+                        levels.contains(dimension.location());
+                if (!overworldStoneLayer && !levelMatches) {
                     continue;
                 }
             }
