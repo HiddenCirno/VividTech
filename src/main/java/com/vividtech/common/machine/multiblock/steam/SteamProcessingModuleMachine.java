@@ -34,6 +34,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
+import com.lowdragmc.lowdraglib.gui.util.ClickData;
+import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
@@ -41,6 +43,7 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -67,6 +70,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
 
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
     private static final int[] MODULE_PARALLELS = { 16, 32, 64 };
+    /** LuV 上限 - ULV 配方 = 最多 6 次超频。 */
+    private static final int MAX_OVERCLOCK = 6;
 
     private final int moduleTier;
 
@@ -87,6 +92,11 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Persisted
     @DescSynced
     private boolean moduleEnabled = true;
+
+    /** 玩家为这个模块单独设置的超频等级；默认 0，不自动超频。 */
+    @Persisted
+    @DescSynced
+    private int overclockLevel = 0;
 
     @DescSynced
     private boolean hostWorkingEnabled = true;
@@ -122,6 +132,65 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
 
     public int getModuleTier() {
         return moduleTier;
+    }
+
+    public int getOverclockLevel() {
+        return Mth.clamp(overclockLevel, 0, MAX_OVERCLOCK);
+    }
+
+    /** 每个模块单独设置；需要玩家在模块 GUI 里手动加减。 */
+    public void setOverclockLevel(int level) {
+        int clamped = Mth.clamp(level, 0, MAX_OVERCLOCK);
+        if (overclockLevel == clamped) {
+            return;
+        }
+        overclockLevel = clamped;
+        markDirty();
+        notifyBlockUpdate();
+        getRecipeLogic().markLastRecipeDirty();
+    }
+
+    /** 当前配方最多能吃到几次超频：上限等级 - 配方等级。 */
+    public int getAvailableOverclock(@Nullable GTRecipe recipe) {
+        if (recipe == null) {
+            return 0;
+        }
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost == null || !currentHost.isFormed()) {
+            return 0;
+        }
+        return Math.max(0, currentHost.getMaxRecipeTier() - RecipeHelper.getRecipeEUtTier(recipe));
+    }
+
+    /** 基础并行 × 2^实际超频等级；超频部分不占用控制器并行池。 */
+    public int getEffectiveParallel(@Nullable GTRecipe recipe) {
+        DreamElevatorMachine currentHost = getHost();
+        int base = currentHost != null ? currentHost.getMaxModuleParallel(this) : getModuleParallel();
+        if (recipe == null) {
+            return base;
+        }
+        int overclock = Math.min(getOverclockLevel(), getAvailableOverclock(recipe));
+        return doubleParallel(base, overclock);
+    }
+
+    private static int doubleParallel(int base, int overclock) {
+        if (overclock <= 0) {
+            return base;
+        }
+        long boosted = (long) base << Math.min(overclock, 30);
+        return (int) Math.min(Integer.MAX_VALUE, boosted);
+    }
+
+    @Override
+    public void handleDisplayClick(String componentData, ClickData clickData) {
+        if (clickData.isRemote) {
+            return;
+        }
+        if ("overclock_add".equals(componentData)) {
+            setOverclockLevel(getOverclockLevel() + 1);
+        } else if ("overclock_sub".equals(componentData)) {
+            setOverclockLevel(getOverclockLevel() - 1);
+        }
     }
 
     /**
@@ -370,11 +439,12 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         if (currentHost == null || !currentHost.isFormed()) {
             return null;
         }
-        if (RecipeHelper.getRecipeEUtTier(recipe) > currentHost.getMaxRecipeTier()) {
+        int recipeVoltageTier = RecipeHelper.getRecipeEUtTier(recipe);
+        if (recipeVoltageTier > currentHost.getMaxRecipeTier()) {
             return null;
         }
         var parallelResult = GTRecipeModifiers.accurateParallel(machine, recipe,
-                currentHost.getMaxModuleParallel(module), false);
+                module.getEffectiveParallel(recipe), false);
         int parallel = parallelResult.getSecond();
         GTRecipe parallelRecipe = parallelResult.getFirst();
         if (parallel <= 0 || parallelRecipe == null) {
@@ -385,7 +455,6 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
             return null;
         }
         long parallelEUt = RecipeHelper.getInputEUt(parallelRecipe);
-        int recipeVoltageTier = RecipeHelper.getRecipeEUtTier(recipe);
         long modifiedEUt = Math.max(1L, Math.round(parallelEUt *
                 module.getSteamMultiplier(recipeVoltageTier) *
                 currentHost.getPressurizationConsumptionMultiplier()));
@@ -500,9 +569,17 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.parallel",
                 getModuleParallel()));
         DreamElevatorMachine currentHost = getHost();
+        GTRecipe displayRecipe = getRecipeLogic().getLastOriginRecipe();
         if (currentHost != null) {
+            int availableOverclock = getAvailableOverclock(displayRecipe);
+            textList.add(Component.translatable("vividtech.machine.steam_processing_module.overclock",
+                            getOverclockLevel(), availableOverclock)
+                    .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "overclock_sub"))
+                    .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "overclock_add")));
+            textList.add(Component.translatable(
+                    "vividtech.machine.steam_processing_module.overclock_hint"));
             textList.add(Component.translatable("vividtech.machine.steam_processing_module.effective_parallel",
-                    currentHost.getMaxModuleParallel(this)));
+                    getEffectiveParallel(displayRecipe)));
         }
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.steam_processing_module.connected" :

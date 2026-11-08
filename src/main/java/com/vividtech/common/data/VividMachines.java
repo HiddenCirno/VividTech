@@ -246,7 +246,7 @@ public class VividMachines {
     }
 
     private static Component[] dreamElevatorTooltips() {
-        Component[] tooltips = new Component[19];
+        Component[] tooltips = new Component[20];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.dream_elevator.tooltip." + i);
         }
@@ -259,7 +259,10 @@ public class VividMachines {
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.1"),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.2"),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.3"),
-                Component.translatable("vividtech.machine.steam_processing_module.tooltip.4.mk" + tier)
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.4"),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.5"),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.6"),
+                Component.translatable("vividtech.machine.steam_processing_module.tooltip.7.mk" + tier)
         };
     }
 
