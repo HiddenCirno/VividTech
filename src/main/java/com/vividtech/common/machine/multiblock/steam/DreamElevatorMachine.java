@@ -384,6 +384,11 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         return count;
     }
 
+    /** 已安装并成型的加压模块总数，不含启停状态。 */
+    public int getPressurizationModuleTotalCount() {
+        return getFormedModuleCount(PressurizationModuleMachine.class);
+    }
+
     /** 4 个加压模块 +1 级，16 个 +2 级（不叠加）。 */
     public int getPressurizationTierBonus() {
         int count = getPressurizationModuleCount();
@@ -590,61 +595,65 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @Override
     public void addDisplayText(List<Component> textList) {
-        // 不调用 GTL 父类的显示：它会为大型蒸汽输入仓显示超频按钮，而梦想电梯已禁用该超频。
-        for (IMultiPart part : getParts()) {
-            part.addMultiText(textList);
-        }
         if (!isFormed()) return;
 
-        long steamStored = getStoredSteam();
-        long steamCapacity = getSteamCapacity();
-        if (steamCapacity > 0) {
-            textList.add(Component.translatable("gtceu.multiblock.steam.steam_stored", steamStored, steamCapacity));
-        }
-        if (!isWorkingEnabled()) {
-            textList.add(Component.translatable("gtceu.multiblock.work_paused"));
-        } else if (isActive()) {
-            textList.add(Component.translatable("gtceu.multiblock.running"));
-            textList.add(Component.translatable("gtceu.multiblock.progress",
-                    (int) (recipeLogic.getProgressPercent() * 100)));
-        } else {
-            textList.add(Component.translatable("gtceu.multiblock.idling"));
-        }
-        if (recipeLogic.isWaiting()) {
-            textList.add(Component.translatable("gtceu.multiblock.steam.low_steam")
-                    .setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
-        }
+        int rail = getRailTier();
+        ChatFormatting railColor = railColor(rail);
 
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.power_tier", railTier));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.steam_buffer",
+                String.format("%,d", getStoredSteam()), String.format("%,d", getSteamCapacity())));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.rail_tier",
+                Component.literal(railRoman(rail)).withStyle(railColor)));
         textList.add(Component.translatable("vividtech.machine.dream_elevator.speed",
                 String.format("%.0f", getProductionSpeedMultiplier() * 100.0D)));
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.module_slots", getModuleSlots()));
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.modules_online", modules.size(),
-                getModuleSlots()));
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.parallel_pool", getParallelPool(),
-                getReservedParallel()));
-        textList.add(Component.translatable(hasLargeSteamHatch ?
-                "vividtech.machine.dream_elevator.large_steam_hatch.enabled" :
-                "vividtech.machine.dream_elevator.large_steam_hatch.disabled"));
-        textList.add(Component.translatable(animationEnabled ?
-                "vividtech.machine.dream_elevator.animation.status.enabled" :
-                "vividtech.machine.dream_elevator.animation.status.disabled"));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.module_slots",
+                Component.literal(Integer.toString(getModuleSlots())).withStyle(railColor)));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.modules_online",
+                modules.size(), getModuleSlots()));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.parallel_pool", getParallelPool()));
         textList.add(Component.translatable("vividtech.machine.dream_elevator.max_recipe_voltage",
                 Component.literal(GTValues.VNF[getMaxRecipeTier()])));
-        textList.add(Component.translatable("vividtech.machine.dream_elevator.pressurization",
-                getPressurizationModuleCount(), getPressurizationTierBonus(),
-                String.format("%.0f", getPressurizationSpeedMultiplier()),
-                String.format("%.0f", getPressurizationConsumptionMultiplier())));
-        textList.add(Component.translatable(hasCleanroomSubsystem() ?
-                "vividtech.machine.dream_elevator.cleanroom_subsystem.installed" :
-                "vividtech.machine.dream_elevator.cleanroom_subsystem.missing"));
-        Integer installedGravity = getInstalledGravity();
-        if (hasGravitySubsystem() && installedGravity != null) {
-            textList.add(Component.translatable("vividtech.machine.dream_elevator.gravity_subsystem.installed",
-                    installedGravity));
-        } else {
-            textList.add(Component.translatable("vividtech.machine.dream_elevator.gravity_subsystem.missing"));
-        }
+
+        int pressurizationLevel = getPressurizationTierBonus();
+        ChatFormatting pressurizationColor = pressurizationLevel >= 2 ? ChatFormatting.RED :
+                pressurizationLevel == 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY;
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.pressurization_level",
+                Component.literal(Integer.toString(pressurizationLevel)).withStyle(pressurizationColor)));
+
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.cleanroom_subsystem",
+                Component.translatable(hasCleanroomSubsystem() ?
+                        "vividtech.machine.dream_elevator.online" :
+                        "vividtech.machine.dream_elevator.offline")));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.gravity_subsystem",
+                Component.translatable(hasGravitySubsystem() ?
+                        "vividtech.machine.dream_elevator.online" :
+                        "vividtech.machine.dream_elevator.offline")));
+        textList.add(Component.translatable("vividtech.machine.dream_elevator.rail_elevator",
+                Component.translatable(isAnimationEnabled() ?
+                        "vividtech.machine.dream_elevator.online" :
+                        "vividtech.machine.dream_elevator.offline")));
+    }
+
+    private static ChatFormatting railColor(int tier) {
+        return switch (tier) {
+            case 1 -> ChatFormatting.RED;
+            case 2 -> ChatFormatting.DARK_BLUE;
+            case 3 -> ChatFormatting.AQUA;
+            case 4 -> ChatFormatting.GREEN;
+            case 5 -> ChatFormatting.DARK_GRAY;
+            default -> ChatFormatting.GRAY;
+        };
+    }
+
+    private static String railRoman(int tier) {
+        return switch (tier) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            default -> "0";
+        };
     }
 
     private int getReservedParallel() {

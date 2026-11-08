@@ -24,6 +24,7 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
@@ -431,38 +432,25 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     @Override
     public void addDisplayText(List<Component> textList) {
-        IDisplayUIMachine.super.addDisplayText(textList);
         if (!isFormed()) {
             return;
         }
-        textList.add(Component.translatable("vividtech.machine.resource_module.tier", VividTech.toRoman(moduleTier)));
-        textList.add(Component.translatable("vividtech.machine.resource_module.cycle",
-                getEffectiveCycleDuration() / 20));
+        textList.add(Component.translatable("vividtech.machine.resource_module.tier",
+                Component.literal("MK-" + VividTech.toRoman(moduleTier))
+                        .withStyle(moduleTierColor(moduleTier))));
+        textList.add(Component.translatable("vividtech.machine.resource_module.steam_tick",
+                String.format("%.1f", getSteamPerTick())));
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.resource_module.connected" :
                 "vividtech.machine.resource_module.disconnected"));
-        if (connectedToHost) {
-            textList.add(Component.translatable("vividtech.machine.resource_module.steam_tick",
-                    String.format("%.1f", getSteamPerTick())));
-        }
-        int itemOutputs = capabilitiesProxy.get(IO.OUT, ItemRecipeCapability.CAP) == null ? 0 :
-                capabilitiesProxy.get(IO.OUT, ItemRecipeCapability.CAP).size();
-        int fluidOutputs = capabilitiesProxy.get(IO.OUT, FluidRecipeCapability.CAP) == null ? 0 :
-                capabilitiesProxy.get(IO.OUT, FluidRecipeCapability.CAP).size();
-        textList.add(Component.translatable("vividtech.machine.resource_module.output_ports",
-                itemOutputs, fluidOutputs));
-        if (!outputSpaceAvailable) {
-            textList.add(Component.translatable("vividtech.machine.resource_module.output_full"));
-        }
-        textList.add(Component.translatable("vividtech.machine.resource_module.completed_cycles",
-                completedCycles));
-        DreamElevatorMachine voltageHost = getHost();
-        if (voltageHost != null && voltageHost.isFormed()) {
-            textList.add(Component.translatable("vividtech.machine.steam_processing_module.max_recipe_voltage",
-                    Component.literal(GTValues.VNF[voltageHost.getMaxRecipeTier()])));
-        }
-        if (getLevel() != null && !isDimensionAllowed(getLevel())) {
-            textList.add(Component.translatable("vividtech.machine.resource_module.wrong_dimension"));
-        }
+    }
+
+    private static ChatFormatting moduleTierColor(int tier) {
+        return switch (tier) {
+            case 1 -> ChatFormatting.GREEN;
+            case 2 -> ChatFormatting.BLUE;
+            case 3 -> ChatFormatting.LIGHT_PURPLE;
+            default -> ChatFormatting.GRAY;
+        };
     }
 }

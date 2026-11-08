@@ -41,6 +41,7 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -558,35 +559,63 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
 
     @Override
     public void addDisplayText(List<Component> textList) {
-        IDisplayUIMachine.super.addDisplayText(textList);
         if (!isFormed()) return;
-        textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier", VividTech.toRoman(moduleTier)));
-        DreamElevatorMachine voltageHost = getHost();
-        if (voltageHost != null && voltageHost.isFormed()) {
-            textList.add(Component.translatable("vividtech.machine.steam_processing_module.max_recipe_voltage",
-                    Component.literal(GTValues.VNF[voltageHost.getMaxRecipeTier()])));
-        }
-        textList.add(Component.translatable("vividtech.machine.steam_processing_module.parallel",
-                getModuleParallel()));
+
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier",
+                Component.literal("MK-" + VividTech.toRoman(moduleTier))
+                        .withStyle(moduleTierColor(moduleTier))));
+
         DreamElevatorMachine currentHost = getHost();
+        int baseParallel = currentHost != null ? currentHost.getMaxModuleParallel(this) : getModuleParallel();
         GTRecipe displayRecipe = getRecipeLogic().getLastOriginRecipe();
-        if (currentHost != null) {
-            int availableOverclock = getAvailableOverclock(displayRecipe);
-            textList.add(Component.translatable("vividtech.machine.steam_processing_module.overclock",
-                            getOverclockLevel(), availableOverclock)
-                    .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "overclock_sub"))
-                    .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "overclock_add")));
-            textList.add(Component.translatable(
-                    "vividtech.machine.steam_processing_module.overclock_hint"));
-            textList.add(Component.translatable("vividtech.machine.steam_processing_module.effective_parallel",
-                    getEffectiveParallel(displayRecipe)));
+        boolean working = getRecipeLogic().isWorking();
+        int displayedOverclock = 0;
+        if (working && displayRecipe != null) {
+            displayedOverclock = Math.min(getOverclockLevel(), getAvailableOverclock(displayRecipe));
         }
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.effective_parallel",
+                doubleParallel(baseParallel, displayedOverclock)));
+
+        Component maxRecipeTier = currentHost != null && currentHost.isFormed() ?
+                Component.literal(GTValues.VNF[currentHost.getMaxRecipeTier()]) :
+                Component.literal("-");
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.max_recipe_voltage",
+                maxRecipeTier));
+
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.steam_processing_module.connected" :
                 "vividtech.machine.steam_processing_module.disconnected"));
-        if (connectedToHost && currentHost != null) {
-            textList.add(Component.translatable("vividtech.machine.steam_processing_module.steam",
-                    currentHost.getStoredSteam() / 1000L, hostRailTier));
-        }
+
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.overclock",
+                Component.literal(Integer.toString(displayedOverclock))
+                        .withStyle(overclockColor(displayedOverclock))));
+
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.overclock_limit",
+                        Component.literal(Integer.toString(getOverclockLevel()))
+                                .withStyle(overclockColor(getOverclockLevel())))
+                .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "overclock_sub"))
+                .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "overclock_add")));
+    }
+
+    private static ChatFormatting moduleTierColor(int tier) {
+        return switch (tier) {
+            case 1 -> ChatFormatting.GREEN;
+            case 2 -> ChatFormatting.BLUE;
+            case 3 -> ChatFormatting.LIGHT_PURPLE;
+            default -> ChatFormatting.GRAY;
+        };
+    }
+
+    private static ChatFormatting overclockColor(int level) {
+        return switch (level) {
+            case 0 -> ChatFormatting.GRAY;
+            case 1 -> ChatFormatting.WHITE;
+            case 2 -> ChatFormatting.GREEN;
+            case 3 -> ChatFormatting.BLUE;
+            case 4 -> ChatFormatting.LIGHT_PURPLE;
+            case 5 -> ChatFormatting.YELLOW;
+            case 6 -> ChatFormatting.RED;
+            default -> ChatFormatting.GRAY;
+        };
     }
 }

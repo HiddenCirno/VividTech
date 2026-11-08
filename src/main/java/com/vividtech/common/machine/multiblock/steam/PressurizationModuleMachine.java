@@ -157,17 +157,17 @@ public class PressurizationModuleMachine extends WorkableMultiblockMachine
 
     @Override
     public void addDisplayText(List<Component> textList) {
-        IDisplayUIMachine.super.addDisplayText(textList);
         if (!isFormed()) {
             return;
         }
-        textList.add(Component.translatable(isWorkingEnabled() ?
-                "vividtech.machine.pressurization_module.enabled" :
-                "vividtech.machine.pressurization_module.disabled"));
         DreamElevatorMachine currentHost = getHost();
-        if (currentHost != null && currentHost.isFormed()) {
-            textList.add(Component.translatable("vividtech.machine.pressurization_module.count",
-                    currentHost.getPressurizationModuleCount()));
-        }
+        boolean connected = currentHost != null && currentHost.isFormed();
+        int active = connected ? currentHost.getPressurizationModuleCount() : 0;
+        int total = connected ? currentHost.getPressurizationModuleTotalCount() : 0;
+        textList.add(Component.translatable("vividtech.machine.pressurization_module.active_count",
+                active, total));
+        textList.add(Component.translatable(connected ?
+                "vividtech.machine.pressurization_module.connected" :
+                "vividtech.machine.pressurization_module.disconnected"));
     }
 }

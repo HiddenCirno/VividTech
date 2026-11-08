@@ -8,6 +8,7 @@ import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.data.recipe.CustomTags;
 
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +49,7 @@ public class VividGTAddon implements IGTAddon {
                 .inputItems(new ItemStack(Blocks.CHISELED_STONE_BRICKS, 8))
                 .inputItems(GTItems.EMITTER_LV, 64)
                 .inputItems(GTItems.FIELD_GENERATOR_LV, 64)
-                .inputItems(GTItems.MICROPROCESSOR_LV, 64)
+                .inputItems(CustomTags.LV_CIRCUITS, 64)
                 .inputItems(new ItemStack(Items.ENCHANTED_GOLDEN_APPLE))
                 .circuitMeta(17)
                 .outputItems(VividMachines.EYE_OF_WOOD.asStack())
