@@ -55,6 +55,12 @@ public class EyeOfWoodMachine extends NoEnergyMultiblockMachine {
         return MANAGED_FIELD_HOLDER;
     }
 
+    @Override
+    public boolean keepSubscribing() {
+        // 与资源模块相同：WorkableMultiblockMachine 默认 false，空闲时会被取消订阅。
+        return true;
+    }
+
     public int getStoredWater() {
         return storedWater;
     }
