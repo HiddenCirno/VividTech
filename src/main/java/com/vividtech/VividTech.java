@@ -34,4 +34,14 @@ public class VividTech {
     public static ResourceLocation id(String path) {
         return new ResourceLocation(MOD_ID, path);
     }
+
+    /** 模块等级显示用罗马数字：1 -> I，2 -> II，3 -> III。 */
+    public static String toRoman(int tier) {
+        return switch (tier) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            default -> Integer.toString(tier);
+        };
+    }
 }

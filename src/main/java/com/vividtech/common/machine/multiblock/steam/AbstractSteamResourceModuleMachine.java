@@ -2,6 +2,8 @@ package com.vividtech.common.machine.multiblock.steam;
 
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 
+import com.vividtech.VividTech;
+
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
@@ -365,7 +367,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         if (!isFormed()) {
             return;
         }
-        textList.add(Component.translatable("vividtech.machine.resource_module.tier", moduleTier));
+        textList.add(Component.translatable("vividtech.machine.resource_module.tier", VividTech.toRoman(moduleTier)));
         textList.add(Component.translatable("vividtech.machine.resource_module.cycle",
                 getEffectiveCycleDuration() / 20));
         textList.add(Component.translatable(connectedToHost ?

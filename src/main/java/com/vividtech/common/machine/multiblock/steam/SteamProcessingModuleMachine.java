@@ -2,6 +2,8 @@ package com.vividtech.common.machine.multiblock.steam;
 
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 
+import com.vividtech.VividTech;
+
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
@@ -362,7 +364,7 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     public void addDisplayText(List<Component> textList) {
         IDisplayUIMachine.super.addDisplayText(textList);
         if (!isFormed()) return;
-        textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier", moduleTier));
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.tier", VividTech.toRoman(moduleTier)));
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.parallel",
                 getModuleParallel()));
         DreamElevatorMachine currentHost = getHost();

@@ -208,7 +208,7 @@ public class VividMachines {
     private static MultiblockMachineDefinition registerStratumMiningModule(int tier) {
         String id = "dream_elevator_steam_stratum_mining_module_mk" + tier;
         return REGISTRATE.multiblock(id, holder -> new SteamStratumMiningModuleMachine(holder, tier))
-                .langValue("Dream Elevator Steam Stratum Mining Module MK " + tier)
+                .langValue("Dream Elevator Steam Stratum Mining Module MK-" + VividTech.toRoman(tier))
                 .rotationState(RotationState.ALL)
                 .allowExtendedFacing(false)
                 .recipeType(VividRecipeTypes.STEAM_STRATUM_MINING_RECIPES)
@@ -231,7 +231,7 @@ public class VividMachines {
     private static MultiblockMachineDefinition registerStratumDrillingModule(int tier) {
         String id = "dream_elevator_steam_stratum_drilling_module_mk" + tier;
         return REGISTRATE.multiblock(id, holder -> new SteamStratumDrillingModuleMachine(holder, tier))
-                .langValue("Dream Elevator Steam Stratum Drilling Module MK " + tier)
+                .langValue("Dream Elevator Steam Stratum Drilling Module MK-" + VividTech.toRoman(tier))
                 .rotationState(RotationState.ALL)
                 .allowExtendedFacing(false)
                 .recipeType(VividRecipeTypes.STEAM_STRATUM_DRILLING_RECIPES)
@@ -327,7 +327,7 @@ public class VividMachines {
 
     private static MultiblockMachineDefinition registerSteamProcessingModule(SteamModuleType type, int tier) {
         String id = "dream_elevator_steam_" + type.id() + "_module_mk" + tier;
-        String langValue = "Dream Elevator Steam " + type.enName() + " Module MK " + tier;
+        String langValue = "Dream Elevator Steam " + type.enName() + " Module MK-" + VividTech.toRoman(tier);
         return REGISTRATE.multiblock(id, holder -> new SteamProcessingModuleMachine(holder, tier))
                 .langValue(langValue)
                 .rotationState(RotationState.ALL)
