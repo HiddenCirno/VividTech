@@ -36,7 +36,7 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
         if (!working && !waitingForDrillingFluid) {
             return;
         }
-        boolean drained = drainDrillingFluid(1L);
+        boolean drained = drainDrillingFluid(getModuleTier());
         waitingForDrillingFluid = !drained;
         setResourceAvailable(drained);
     }
