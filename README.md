@@ -5,6 +5,8 @@ GTCEu / GTLCore 附属模组，当前包含：
 - 武德之眼（Eye of Wood）
 - 梦想电梯（Dream Elevator）
 - 梦想电梯蒸汽加工模块：每种蒸汽加工类型（电路组装、锻造、压缩、研磨、合金冶炼、混合、离心、热力离心、洗矿、化学浸洗、提取、熔炼、碎岩）各自独立的方块，均有 MK1/MK2/MK3 三档
+- 梦想电梯蒸汽岩层开采模块：每 120/60/30 秒产出 64 个原矿，按当前维度矿脉权重抽取，无并行
+- 梦想电梯蒸汽地层钻探模块：每 120/60/30 秒产出 64 桶石油/天然气，持续消耗 1 mB/t 钻井液，无并行
 
 ## 依赖
 
@@ -53,8 +55,28 @@ python tools/patch-gtlc-dev-jar.py   ../GTLCore/build/devlibs/gtlcore-1.2.3.3-fi
 - `gtceu:eye_of_wood`
 - `gtceu:dream_elevator`
 - `gtceu:dream_elevator_steam_<type>_module_mk1/mk2/mk3`
+- `gtceu:dream_elevator_steam_stratum_mining_module_mk1/mk2/mk3`
+- `gtceu:dream_elevator_steam_stratum_drilling_module_mk1/mk2/mk3`
 
 创造标签页：**绚乱科技：蒸汽力量**（`gtceu:steam_power`），图标为武德之眼控制器。
+
+## 资源采集模块
+
+### 蒸汽岩层开采模块
+
+- 每 120 / 60 / 30 秒产出 64 个原矿（MK1/2/3），按当前维度矿脉权重抽取
+- MK1：仅主世界；MK2：主世界/下界；MK3：主世界/下界/末地
+- 在哪个维度就只抽哪个维度的矿脉，不会跨维度产出
+- 无并行
+- 蒸汽消耗：`模块等级 × 200 mB/t × [(0.8/轨道等级)×模块等级 + 模块等级/10]`
+
+### 蒸汽地层钻探模块
+
+- 每 120 / 60 / 30 秒产出 64 桶流体（MK1/2/3）
+- 主世界：石油；下界：天然气（MK2 起可在下界工作）
+- 持续消耗 1 mB/t 钻井液（按周期一次性计入配方输入）
+- 无并行
+- 蒸汽消耗同上
 
 ## 梦想电梯机制
 

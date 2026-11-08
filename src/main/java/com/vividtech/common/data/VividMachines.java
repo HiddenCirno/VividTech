@@ -10,6 +10,8 @@ import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
+import com.vividtech.common.machine.multiblock.steam.SteamStratumDrillingModuleMachine;
+import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMachine;
 
 import org.gtlcore.gtlcore.api.pattern.GTLPredicates;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
@@ -137,6 +139,18 @@ public class VividMachines {
         }
     }
 
+    public static final List<MultiblockMachineDefinition> RESOURCE_MODULES = new ArrayList<>();
+
+    static {
+        for (int tier = 1; tier <= 3; tier++) {
+            MultiblockMachineDefinition mining = registerStratumMiningModule(tier);
+            MultiblockMachineDefinition drilling = registerStratumDrillingModule(tier);
+            RESOURCE_MODULES.add(mining);
+            RESOURCE_MODULES.add(drilling);
+        }
+        STEAM_MODULES.addAll(RESOURCE_MODULES);
+    }
+
     public static final MachineDefinition CREATIVE_STEAM_INPUT_HATCH = REGISTRATE
             .machine("creative_steam_input_hatch", CreativeSteamInputHatchMachine::new)
             .rotationState(RotationState.ALL)
@@ -166,6 +180,75 @@ public class VividMachines {
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.3"),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.4.mk" + tier)
         };
+    }
+
+    private static Component[] stratumMiningTooltips(int tier) {
+        return new Component[] {
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.0"),
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.1"),
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.2.mk" + tier),
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.3.mk" + tier),
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.4"),
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.5")
+        };
+    }
+
+    private static Component[] stratumDrillingTooltips(int tier) {
+        return new Component[] {
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.0"),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.1"),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.2.mk" + tier),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.3"),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.4"),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.5"),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.6")
+        };
+    }
+
+    private static MultiblockMachineDefinition registerStratumMiningModule(int tier) {
+        String id = "dream_elevator_steam_stratum_mining_module_mk" + tier;
+        return REGISTRATE.multiblock(id, holder -> new SteamStratumMiningModuleMachine(holder, tier))
+                .langValue("Dream Elevator Steam Stratum Mining Module MK " + tier)
+                .rotationState(RotationState.ALL)
+                .allowExtendedFacing(false)
+                .recipeType(VividRecipeTypes.STEAM_STRATUM_MINING_RECIPES)
+                .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
+                .tooltips(stratumMiningTooltips(tier))
+                .tooltipBuilder(VIVID_ADD)
+                .pattern(definition -> SteamProcessingModuleStructure.MODULE
+                        .where("~", Predicates.controller(Predicates.blocks(definition.get())))
+                        .where("H", blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
+                                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(2))
+                                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(2))
+                                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(2))
+                                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(2)))
+                        .build())
+                .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
+                        GTCEu.id("block/multiblock/fusion_reactor"))
+                .register();
+    }
+
+    private static MultiblockMachineDefinition registerStratumDrillingModule(int tier) {
+        String id = "dream_elevator_steam_stratum_drilling_module_mk" + tier;
+        return REGISTRATE.multiblock(id, holder -> new SteamStratumDrillingModuleMachine(holder, tier))
+                .langValue("Dream Elevator Steam Stratum Drilling Module MK " + tier)
+                .rotationState(RotationState.ALL)
+                .allowExtendedFacing(false)
+                .recipeType(VividRecipeTypes.STEAM_STRATUM_DRILLING_RECIPES)
+                .appearanceBlock(GTBlocks.CASING_BRONZE_BRICKS)
+                .tooltips(stratumDrillingTooltips(tier))
+                .tooltipBuilder(VIVID_ADD)
+                .pattern(definition -> SteamProcessingModuleStructure.MODULE
+                        .where("~", Predicates.controller(Predicates.blocks(definition.get())))
+                        .where("H", blocks(GTBlocks.CASING_BRONZE_BRICKS.get())
+                                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(2))
+                                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(2))
+                                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(2))
+                                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(2)))
+                        .build())
+                .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
+                        GTCEu.id("block/multiblock/fusion_reactor"))
+                .register();
     }
 
     private static Component[] eyeOfWoodTooltips() {
