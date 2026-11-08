@@ -322,8 +322,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         // 配方电压等级：ULV = 0.5，LV = 1，MV = 2，HV = 3……
         // 机器不会主动超频：这里始终使用配方自身的电压等级，而不是动力模块解锁的上限。
         double voltageTier = recipeVoltageTier <= 0 ? 0.5D : recipeVoltageTier;
-        // (0.8 / 动力模块等级) * 电压等级 + 生产模块等级 / 5
-        double multiplier = (0.8D / powerTier) * voltageTier + moduleTier / 5.0D;
+        // (0.8 / 动力模块等级) * 电压等级 + 生产模块等级 / 10
+        double multiplier = (0.8D / powerTier) * voltageTier + moduleTier / 10.0D;
         return Math.max(0.05D, Math.min(multiplier, 1000.0D));
     }
 

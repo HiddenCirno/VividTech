@@ -365,7 +365,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @Override
     public long getMaxRecipeEUt() {
-        if (railTier >= 5) return 512L;
+        if (railTier >= 5) return 2048L;
+        if (railTier >= 4) return 512L;
         if (railTier >= 3) return 128L;
         return 32L;
     }
@@ -380,9 +381,10 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         return getSteamConversionRate();
     }
 
-    /** 全机允许执行的最高配方电压等级：T1/T2 = LV，T3/T4 = MV，T5 = HV。 */
+    /** 全机允许执行的最高配方电压等级：T1/T2 = LV，T3 = MV，T4 = HV，T5 = EV。 */
     public int getMaxRecipeTier() {
-        if (railTier >= 5) return GTValues.HV;
+        if (railTier >= 5) return GTValues.EV;
+        if (railTier >= 4) return GTValues.HV;
         if (railTier >= 3) return GTValues.MV;
         return GTValues.LV;
     }
