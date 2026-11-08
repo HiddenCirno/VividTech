@@ -8,6 +8,8 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 
+import java.util.Map;
+
 /**
  * 资源采集模块的周期逻辑：不查找静态配方，而是每次周期开始时生成一个采集配方。
  */
@@ -56,7 +58,13 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
         getMachine().afterWorking();
         if (lastRecipe != null) {
             lastRecipe.postWorking(getMachine());
-            handleRecipeIO(lastRecipe, IO.OUT);
+            boolean handled = handleRecipeIO(lastRecipe, IO.OUT);
+            if (!handled) {
+                DreamElevatorMachine host = getMachine().getHost();
+                if (host != null) {
+                    lastRecipe.handleRecipeIO(IO.OUT, host, Map.of());
+                }
+            }
         }
         setStatus(Status.IDLE);
         progress = 0;

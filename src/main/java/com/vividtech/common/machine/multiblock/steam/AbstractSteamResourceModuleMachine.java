@@ -3,7 +3,9 @@ package com.vividtech.common.machine.multiblock.steam;
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
 
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
@@ -97,6 +99,13 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         return CYCLE_DURATIONS[moduleTier - 1];
     }
 
+    /** 受梦想电梯轨道速度加成后的实际周期。 */
+    public int getEffectiveCycleDuration() {
+        DreamElevatorMachine currentHost = getHost();
+        double speed = currentHost != null ? currentHost.getProductionSpeedMultiplier() : 1.0D;
+        return Math.max(1, (int) Math.round(getCycleDuration() / speed));
+    }
+
     /** 模块等级 × 200 mB/t × [(0.8/轨道等级)×模块等级 + 模块等级/10]。 */
     public double getSteamPerTick() {
         DreamElevatorMachine currentHost = getHost();
@@ -117,7 +126,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     protected GTRecipeBuilder baseRecipe() {
         return GTRecipeBuilder.ofRaw()
-                .duration(getCycleDuration())
+                .duration(getEffectiveCycleDuration())
                 .EUt(getRecipeEUt());
     }
 
@@ -329,7 +338,8 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
             return;
         }
         textList.add(Component.translatable("vividtech.machine.resource_module.tier", moduleTier));
-        textList.add(Component.translatable("vividtech.machine.resource_module.cycle", getCycleDuration() / 20));
+        textList.add(Component.translatable("vividtech.machine.resource_module.cycle",
+                getEffectiveCycleDuration() / 20));
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.resource_module.connected" :
                 "vividtech.machine.resource_module.disconnected"));
@@ -337,6 +347,12 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
             textList.add(Component.translatable("vividtech.machine.resource_module.steam_tick",
                     String.format("%.1f", getSteamPerTick())));
         }
+        int itemOutputs = capabilitiesProxy.get(IO.OUT, ItemRecipeCapability.CAP) == null ? 0 :
+                capabilitiesProxy.get(IO.OUT, ItemRecipeCapability.CAP).size();
+        int fluidOutputs = capabilitiesProxy.get(IO.OUT, FluidRecipeCapability.CAP) == null ? 0 :
+                capabilitiesProxy.get(IO.OUT, FluidRecipeCapability.CAP).size();
+        textList.add(Component.translatable("vividtech.machine.resource_module.output_ports",
+                itemOutputs, fluidOutputs));
         if (getLevel() != null && !isDimensionAllowed(getLevel())) {
             textList.add(Component.translatable("vividtech.machine.resource_module.wrong_dimension"));
         }
