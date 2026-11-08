@@ -69,6 +69,9 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     @DescSynced
     private int hostRailTier;
 
+    @DescSynced
+    private boolean resourceAvailable = true;
+
     private boolean steamHandlerAttached;
 
     public AbstractSteamResourceModuleMachine(IMachineBlockEntity holder, int moduleTier) {
@@ -159,8 +162,27 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     }
 
     private void applyWorkingState() {
-        getRecipeLogic().setWorkingEnabled(moduleEnabled && hostWorkingEnabled);
+        getRecipeLogic().setWorkingEnabled(moduleEnabled && hostWorkingEnabled && resourceAvailable);
     }
+
+    protected void setResourceAvailable(boolean available) {
+        if (resourceAvailable == available) {
+            return;
+        }
+        resourceAvailable = available;
+        if (!isRemote()) {
+            markDirty();
+            notifyBlockUpdate();
+            applyWorkingState();
+        }
+    }
+
+    public boolean isResourceAvailable() {
+        return resourceAvailable;
+    }
+
+    /** 每 tick 由模块自身检查/消耗资源；默认不消耗。 */
+    protected void tickResource() {}
 
     private void updateHostWorkingState(DreamElevatorMachine currentHost) {
         boolean enabled = currentHost == null || !currentHost.isFormed() || currentHost.isWorkingEnabled();
@@ -184,6 +206,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     @Override
     public void onLoad() {
         super.onLoad();
+        resourceAvailable = true;
         updateHostWorkingState(getHost());
         applyWorkingState();
         updateConnectionSubscription();
@@ -198,6 +221,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     @Override
     public void onStructureFormed() {
         super.onStructureFormed();
+        resourceAvailable = true;
         updateHostWorkingState(getHost());
         applyWorkingState();
         findAndConnectToHost();
@@ -247,6 +271,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
             return;
         }
         updateHostWorkingState(getHost());
+        tickResource();
         if (getOffsetTimer() % CONNECTION_CHECK_INTERVAL_TICKS == 0) {
             DreamElevatorMachine currentHost = getHost();
             if (currentHost != null && !currentHost.isFormed()) {

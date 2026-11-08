@@ -192,7 +192,7 @@
   "vividtech.machine.stratum_drilling.tooltip.2.mk2": "§7每§e60§7秒产出§e64§7桶石油/天然气",
   "vividtech.machine.stratum_drilling.tooltip.2.mk3": "§7每§e30§7秒产出§e64§7桶石油/天然气",
   "vividtech.machine.stratum_drilling.tooltip.3": "§7主世界：石油 / 下界：天然气",
-  "vividtech.machine.stratum_drilling.tooltip.4": "§7需要持续输入§e1 mB/t§7钻井液",
+  "vividtech.machine.stratum_drilling.tooltip.4": "§7需要持续输入§e1 mB/t§7钻井液，供给不足时会暂停进度",
   "vividtech.machine.stratum_drilling.tooltip.5": "§7蒸汽消耗：模块等级 × 200 mB/t × [(0.8/轨道等级)×模块等级 + 模块等级/10]",
   "vividtech.machine.stratum_drilling.tooltip.6": "§7无并行",
   "vividtech.machine.resource_module.tier": "§7模块等级：§eMK%s",
@@ -201,5 +201,6 @@
   "vividtech.machine.resource_module.disconnected": "§7主机连接：§c未连接",
   "vividtech.machine.resource_module.steam_tick": "§7蒸汽消耗：§e%s§7 mB/t",
   "vividtech.machine.resource_module.wrong_dimension": "§c当前维度不支持此模块",
-  "vividtech.machine.resource_module.no_output": "§c没有可抽取的矿脉数据"
+  "vividtech.machine.resource_module.no_output": "§c没有可抽取的矿脉数据",
+  "vividtech.machine.resource_module.missing_drilling_fluid": "§c缺少钻井液，进度已暂停"
 }
