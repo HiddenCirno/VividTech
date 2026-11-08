@@ -32,6 +32,7 @@ import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -160,14 +161,16 @@ public class VividMachines {
 
     private static Component[] steamModuleTooltips(SteamModuleType type, int tier) {
         Component function = Component.translatable(
-                "vividtech.machine.steam_processing_module.function." + type.id());
+                "vividtech.machine.steam_processing_module.function." + type.id())
+                .withStyle(ChatFormatting.YELLOW);
         return new Component[] {
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.0", function),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.1"),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.2"),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.3"),
                 Component.translatable("vividtech.machine.steam_processing_module.tooltip.4",
-                        SteamProcessingModuleMachine.getParallelForTier(tier))
+                        Component.literal(Integer.toString(SteamProcessingModuleMachine.getParallelForTier(tier)))
+                                .withStyle(ChatFormatting.YELLOW))
         };
     }
 
