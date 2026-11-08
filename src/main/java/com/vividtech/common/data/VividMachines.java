@@ -199,7 +199,7 @@ public class VividMachines {
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.1"),
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.2.mk" + tier),
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.3"),
-                Component.translatable("vividtech.machine.stratum_drilling.tooltip.4.mk" + tier),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.4"),
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.5"),
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.6")
         };
