@@ -192,7 +192,9 @@
   "vividtech.machine.stratum_drilling.tooltip.2.mk2": "§7Every §e60§7 s, produces §e64§7 buckets of fluid",
   "vividtech.machine.stratum_drilling.tooltip.2.mk3": "§7Every §e30§7 s, produces §e64§7 buckets of fluid",
   "vividtech.machine.stratum_drilling.tooltip.3": "§7Deployed in the §aOverworld§7, produces §0Oil§7; deployed in the §cNether§7, produces §fNatural Gas",
-  "vividtech.machine.stratum_drilling.tooltip.4": "§7While working, requires a continuous input of §eDrilling Fluid§7 for lubrication and cooling, at §eThis module tier§7 * §c1§7 mB/t",
+  "vividtech.machine.stratum_drilling.tooltip.4.mk1": "§7While working, requires a continuous input of §eDrilling Fluid§7 for lubrication and cooling; §eMK-I§7 consumes §c1§7 mB/t",
+  "vividtech.machine.stratum_drilling.tooltip.4.mk2": "§7While working, requires a continuous input of §eDrilling Fluid§7 for lubrication and cooling; §eMK-II§7 consumes §c2§7 mB/t",
+  "vividtech.machine.stratum_drilling.tooltip.4.mk3": "§7While working, requires a continuous input of §eDrilling Fluid§7 for lubrication and cooling; §eMK-III§7 consumes §c3§7 mB/t",
   "vividtech.machine.stratum_drilling.tooltip.5": "§7While working, steam consumption is §eThis module tier§7 * §c200§7 mB/t; the rail tier's speed bonus adds no extra consumption",
   "vividtech.machine.stratum_drilling.tooltip.6": "§7While working, steam consumption goes through a separate multiplier: (§c0.8§7/§aRail tier§7)*§eThis module tier§7 + §eThis module tier§7/10",
   "vividtech.machine.resource_module.tier": "§7Module Tier: §eMK-%s",
@@ -204,5 +206,6 @@
   "vividtech.machine.resource_module.no_output": "§cNo vein data available",
   "vividtech.machine.resource_module.missing_drilling_fluid": "§cMissing drilling fluid; progress paused",
   "vividtech.machine.resource_module.output_ports": "§7Output Ports: §e%s§7 item / §e%s§7 fluid",
-  "vividtech.machine.resource_module.completed_cycles": "§7Completed Cycles: §e%s"
+  "vividtech.machine.resource_module.completed_cycles": "§7Completed Cycles: §e%s",
+  "vividtech.machine.resource_module.output_full": "§cOutput is full; work paused"
 }

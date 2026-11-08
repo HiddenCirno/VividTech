@@ -20,6 +20,10 @@ import java.util.List;
  */
 public class ResourceModuleRecipeLogic extends RecipeLogic {
 
+    public GTRecipe getCurrentRecipe() {
+        return lastRecipe;
+    }
+
     public ResourceModuleRecipeLogic(IRecipeLogicMachine machine) {
         super(machine);
     }
@@ -61,6 +65,10 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
     @Override
     public void onRecipeFinish() {
         AbstractSteamResourceModuleMachine machine = getMachine();
+        if (lastRecipe != null && !machine.canFitOutputs(lastRecipe)) {
+            setWaiting(Component.translatable("vividtech.machine.resource_module.output_full"));
+            return;
+        }
         machine.afterWorking();
         machine.onCycleCompleted();
         if (lastRecipe != null) {

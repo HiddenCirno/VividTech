@@ -7,7 +7,9 @@ import com.vividtech.VividTech;
 import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
 import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
@@ -30,6 +32,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,6 +48,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     private static final int CONNECTION_CHECK_INTERVAL_TICKS = 20;
     private static final int[] CYCLE_DURATIONS = { 2400, 1200, 600 };
     private static final int STRUCTURE_REFRESH_INTERVAL_TICKS = 100;
+    private static final int OUTPUT_CHECK_INTERVAL_TICKS = 10;
 
     private final int moduleTier;
 
@@ -76,6 +80,9 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     @DescSynced
     private boolean resourceAvailable = true;
+
+    @DescSynced
+    private boolean outputSpaceAvailable = true;
 
     @Persisted
     @DescSynced
@@ -192,7 +199,8 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     }
 
     private void applyWorkingState() {
-        getRecipeLogic().setWorkingEnabled(moduleEnabled && hostWorkingEnabled && resourceAvailable);
+        getRecipeLogic().setWorkingEnabled(moduleEnabled && hostWorkingEnabled && resourceAvailable &&
+                outputSpaceAvailable);
     }
 
     protected void setResourceAvailable(boolean available) {
@@ -209,6 +217,59 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     public boolean isResourceAvailable() {
         return resourceAvailable;
+    }
+
+    public boolean isOutputSpaceAvailable() {
+        return outputSpaceAvailable;
+    }
+
+    private void setOutputSpaceAvailable(boolean available) {
+        if (outputSpaceAvailable == available) {
+            return;
+        }
+        outputSpaceAvailable = available;
+        if (!isRemote()) {
+            markDirty();
+            notifyBlockUpdate();
+            applyWorkingState();
+        }
+    }
+
+    /** 模拟一次输出；只要当前输出仓/总线/总成装不下，就不让周期继续跑，避免产物被吞。 */
+    public boolean canFitOutputs(GTRecipe recipe) {
+        if (recipe == null) {
+            return true;
+        }
+        for (var entry : recipe.outputs.entrySet()) {
+            RecipeCapability<?> capability = entry.getKey();
+            List<Object> outputs = new ArrayList<>(entry.getValue().size());
+            for (var content : entry.getValue()) {
+                outputs.add(content.content);
+            }
+            if (outputs.isEmpty()) {
+                continue;
+            }
+            List<IRecipeHandler<?>> handlers = new ArrayList<>();
+            var out = capabilitiesProxy.get(IO.OUT, capability);
+            if (out != null) {
+                handlers.addAll(out);
+            }
+            var both = capabilitiesProxy.get(IO.BOTH, capability);
+            if (both != null) {
+                handlers.addAll(both);
+            }
+            List<?> left = outputs;
+            for (IRecipeHandler<?> handler : handlers) {
+                if (left == null || left.isEmpty()) {
+                    break;
+                }
+                left = handler.handleRecipe(IO.OUT, recipe, left, null, true);
+            }
+            if (left != null && !left.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public int getCompletedCycles() {
@@ -250,6 +311,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     public void onLoad() {
         super.onLoad();
         resourceAvailable = true;
+        outputSpaceAvailable = true;
         updateHostWorkingState(getHost());
         applyWorkingState();
         updateConnectionSubscription();
@@ -265,6 +327,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     public void onStructureFormed() {
         super.onStructureFormed();
         resourceAvailable = true;
+        outputSpaceAvailable = true;
         updateHostWorkingState(getHost());
         applyWorkingState();
         findAndConnectToHost();
@@ -315,6 +378,10 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         }
         updateHostWorkingState(getHost());
         tickResource();
+        if (getOffsetTimer() % OUTPUT_CHECK_INTERVAL_TICKS == 0 && getRecipeLogic() instanceof ResourceModuleRecipeLogic logic) {
+            GTRecipe current = logic.getCurrentRecipe();
+            setOutputSpaceAvailable(current == null || canFitOutputs(current));
+        }
         if (getOffsetTimer() % STRUCTURE_REFRESH_INTERVAL_TICKS == 0 && checkPatternWithLock()) {
             // 成型之后才放置/替换输出总成时，GTCEu 不一定会刷新已成型结构的 capabilitiesProxy。
             // 定期重新匹配一次，让新增的仓/总线进入代理；失败时不动当前状态，避免误重置进度。
@@ -383,6 +450,9 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
                 capabilitiesProxy.get(IO.OUT, FluidRecipeCapability.CAP).size();
         textList.add(Component.translatable("vividtech.machine.resource_module.output_ports",
                 itemOutputs, fluidOutputs));
+        if (!outputSpaceAvailable) {
+            textList.add(Component.translatable("vividtech.machine.resource_module.output_full"));
+        }
         textList.add(Component.translatable("vividtech.machine.resource_module.completed_cycles",
                 completedCycles));
         if (getLevel() != null && !isDimensionAllowed(getLevel())) {
