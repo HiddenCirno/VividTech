@@ -132,6 +132,13 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     }
 
     @Override
+    public boolean keepSubscribing() {
+        // WorkableMultiblockMachine 默认返回 false，资源模块没有静态配方，
+        // 空闲时会被 RecipeLogic 取消订阅，导致 findAndHandleRecipe 不再被调用。
+        return true;
+    }
+
+    @Override
     public void onConnected(@NotNull DreamElevatorMachine host) {
         setConnectionState(true, host.getRailTier());
         updateHostWorkingState(host);
