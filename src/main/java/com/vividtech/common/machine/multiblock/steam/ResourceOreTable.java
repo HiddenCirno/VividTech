@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 按当前维度构建矿脉权重表，供岩层开采模块抽取矿石。
@@ -25,25 +26,40 @@ import java.util.Map;
 public final class ResourceOreTable {
 
     private static final Map<ResourceKey<Level>, List<WeightedOre>> CACHE = new HashMap<>();
-    private static final Map<ResourceKey<Level>, Double> TOTAL = new HashMap<>();
 
     private ResourceOreTable() {}
 
     public static ItemStack roll(Level level, int amount, RandomSource random) {
+        return roll(level, amount, random, Set.of());
+    }
+
+    /**
+     * @param filtered 需要屏蔽的材料；命中这些材料的矿脉不会进入抽取池。
+     */
+    public static ItemStack roll(Level level, int amount, RandomSource random, Set<Material> filtered) {
         ResourceKey<Level> dimension = level.dimension();
         List<WeightedOre> table = CACHE.get(dimension);
         if (table == null) {
             build(level);
             table = CACHE.getOrDefault(dimension, List.of());
         }
-        double total = TOTAL.getOrDefault(dimension, 0.0D);
-        if (table.isEmpty() || total <= 0.0D) {
+
+        List<WeightedOre> candidates = new ArrayList<>(table.size());
+        double total = 0.0D;
+        for (WeightedOre ore : table) {
+            if (filtered != null && filtered.contains(ore.material())) {
+                continue;
+            }
+            candidates.add(ore);
+            total += ore.weight();
+        }
+        if (candidates.isEmpty() || total <= 0.0D) {
             return ItemStack.EMPTY;
         }
 
         double value = random.nextDouble() * total;
-        Material material = table.get(table.size() - 1).material();
-        for (WeightedOre ore : table) {
+        Material material = candidates.get(candidates.size() - 1).material();
+        for (WeightedOre ore : candidates) {
             value -= ore.weight();
             if (value <= 0.0D) {
                 material = ore.material();
@@ -89,7 +105,6 @@ public final class ResourceOreTable {
         }
 
         List<WeightedOre> table = new ArrayList<>();
-        double total = 0.0D;
         for (GTOreDefinition definition : GTRegistries.ORE_VEINS.values()) {
             if (definition == null) {
                 continue;
@@ -129,12 +144,10 @@ public final class ResourceOreTable {
                 }
                 double weight = veinWeight * chance;
                 table.add(new WeightedOre(material, weight));
-                total += weight;
             }
         }
 
         CACHE.put(dimension, List.copyOf(table));
-        TOTAL.put(dimension, total);
     }
 
     private record WeightedOre(Material material, double weight) {}

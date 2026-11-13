@@ -284,7 +284,8 @@ public class VividMachines {
                 Component.translatable("vividtech.machine.stratum_mining.tooltip.2.mk" + tier),
                 Component.translatable("vividtech.machine.stratum_mining.tooltip.3.mk" + tier),
                 Component.translatable("vividtech.machine.stratum_mining.tooltip.4"),
-                Component.translatable("vividtech.machine.stratum_mining.tooltip.5")
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.5"),
+                Component.translatable("vividtech.machine.stratum_mining.tooltip.6")
         };
     }
 

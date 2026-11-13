@@ -185,6 +185,7 @@
   "vividtech.machine.stratum_mining.tooltip.3.mk3": "§7在§c下界§7开采矿物需要模块等级至少为§9II§7，在§e末地§7开采矿物需要模块等级至少为§dIII",
   "vividtech.machine.stratum_mining.tooltip.4": "§7工作时，蒸汽消耗为§e此模块等级§7*§c200§7mB/t，轨道等级提供的工作速度加成不会产生额外消耗",
   "vividtech.machine.stratum_mining.tooltip.5": "§7工作时，蒸汽消耗会经过独立乘区，计算公式为(§c0.8§7/§a轨道等级§7)*§e此模块等级§7+§e此模块等级§7/10",
+  "vividtech.machine.stratum_mining.tooltip.6": "§7在输入总线中放入矿物，可以屏蔽指定产出",
   "vividtech.machine.stratum_drilling.tooltip.0": "§7将流体钻探功能添加到梦想电梯",
   "vividtech.machine.stratum_drilling.tooltip.1": "§c抽取大地之血",
   "vividtech.machine.stratum_drilling.tooltip.2.mk1": "§7每§e120§7秒，产出§e64§7桶流体",
