@@ -163,15 +163,25 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         return Math.max(0, currentHost.getMaxRecipeTier() - RecipeHelper.getRecipeEUtTier(recipe));
     }
 
+    /** 当前配方实际生效的超频次数。 */
+    public int getEffectiveOverclock(@Nullable GTRecipe recipe) {
+        if (recipe == null) {
+            return 0;
+        }
+        return Math.min(getOverclockLevel(), getAvailableOverclock(recipe));
+    }
+
     /** 基础并行 × 2^实际超频等级；超频部分不占用控制器并行池。 */
     public int getEffectiveParallel(@Nullable GTRecipe recipe) {
         DreamElevatorMachine currentHost = getHost();
         int base = currentHost != null ? currentHost.getMaxModuleParallel(this) : getModuleParallel();
-        if (recipe == null) {
-            return base;
-        }
-        int overclock = Math.min(getOverclockLevel(), getAvailableOverclock(recipe));
-        return doubleParallel(base, overclock);
+        return doubleParallel(base, getEffectiveOverclock(recipe));
+    }
+
+    /** 每次超频同时让工作速度翻倍。 */
+    public double getOverclockSpeedMultiplier(@Nullable GTRecipe recipe) {
+        int overclock = getEffectiveOverclock(recipe);
+        return overclock <= 0 ? 1.0D : Math.pow(2.0D, overclock);
     }
 
     private static int doubleParallel(int base, int overclock) {
@@ -460,7 +470,8 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
                 module.getSteamMultiplier(recipeVoltageTier) *
                 currentHost.getPressurizationConsumptionMultiplier()));
         RecipeHelper.setInputEUt(modified, modifiedEUt);
-        double speedMultiplier = currentHost.getProductionSpeedMultiplier();
+        double speedMultiplier = currentHost.getProductionSpeedMultiplier() *
+                module.getOverclockSpeedMultiplier(recipe);
         if (speedMultiplier != 1.0D) {
             modified.duration = (int) Math.max(1L, Math.round(modified.duration / speedMultiplier));
         }

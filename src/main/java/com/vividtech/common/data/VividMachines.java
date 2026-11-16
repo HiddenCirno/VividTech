@@ -125,7 +125,7 @@ public class VividMachines {
             "primitive_magic_energy",
             MagicEnergyMachine::new,
             (tier, builder) -> builder
-                    .langValue("%s Primitive Magic Energy %s".formatted(GTValues.VLVH[tier], GTValues.VLVT[tier]))
+                    .langValue(magicEnergyName(tier))
                     .rotationState(RotationState.NON_Y_AXIS)
                     .renderer(() -> new SimpleGeneratorMachineRenderer(tier,
                             GTCEu.id("block/generators/primitive_magic_energy")))
@@ -139,6 +139,17 @@ public class VividMachines {
                     .tooltipBuilder(VIVID_ADD)
                     .register(),
             GTValues.MV, GTValues.HV, GTValues.EV, GTValues.IV, GTValues.LuV);
+
+    private static String magicEnergyName(int tier) {
+        return switch (tier) {
+            case GTValues.MV -> "Novice Magic Energy Absorber";
+            case GTValues.HV -> "Apprentice Magic Energy Absorber";
+            case GTValues.EV -> "Master Magic Energy Absorber";
+            case GTValues.IV -> "Grandmaster Magic Energy Absorber";
+            case GTValues.LuV -> "Legendary Magic Energy Absorber";
+            default -> "Magic Energy Absorber";
+        };
+    }
 
     /** 一种蒸汽加工类型对应一组独立的模块方块。 */
     private record SteamModuleType(String id, String enName, String zhName, GTRecipeType recipeType) {}
@@ -326,7 +337,8 @@ public class VividMachines {
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.3"),
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.4"),
                 Component.translatable("vividtech.machine.stratum_drilling.tooltip.5"),
-                Component.translatable("vividtech.machine.stratum_drilling.tooltip.6")
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.6"),
+                Component.translatable("vividtech.machine.stratum_drilling.tooltip.7")
         };
     }
 

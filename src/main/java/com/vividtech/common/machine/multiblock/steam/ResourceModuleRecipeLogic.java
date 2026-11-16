@@ -33,6 +33,20 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
         return (AbstractSteamResourceModuleMachine) super.getMachine();
     }
 
+    /** 超频等级变化后，按当前进度比例把工作速度立即应用到正在执行的周期。 */
+    public void refreshDuration() {
+        if (!isWorking() || lastRecipe == null || duration <= 0) {
+            return;
+        }
+        int newDuration = getMachine().getEffectiveCycleDuration();
+        if (duration == newDuration) {
+            return;
+        }
+        double progressRatio = (double) progress / duration;
+        duration = newDuration;
+        progress = Math.min(newDuration, (int) Math.round(progressRatio * newDuration));
+    }
+
     @Override
     public void findAndHandleRecipe() {
         AbstractSteamResourceModuleMachine machine = getMachine();

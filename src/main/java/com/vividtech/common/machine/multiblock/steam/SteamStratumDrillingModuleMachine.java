@@ -9,10 +9,18 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.List;
 
@@ -21,12 +29,25 @@ import java.util.List;
  */
 public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModuleMachine {
 
+    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
+            SteamStratumDrillingModuleMachine.class, AbstractSteamResourceModuleMachine.MANAGED_FIELD_HOLDER);
+
     private static final long OIL_OUTPUT = 64_000L;
+
+    /** false = 石油；true = 盐水。仅主世界有效。 */
+    @Persisted
+    @DescSynced
+    private boolean saltWaterMode;
 
     private boolean waitingForDrillingFluid;
 
     public SteamStratumDrillingModuleMachine(IMachineBlockEntity holder, int moduleTier) {
         super(holder, moduleTier);
+    }
+
+    @Override
+    public ManagedFieldHolder getFieldHolder() {
+        return MANAGED_FIELD_HOLDER;
     }
 
     @Override
@@ -71,6 +92,34 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
     }
 
     @Override
+    protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
+                                                   BlockHitResult hitResult) {
+        if (playerIn.isShiftKeyDown()) {
+            if (!isRemote()) {
+                Level level = getLevel();
+                if (level != null && level.dimension().equals(Level.OVERWORLD)) {
+                    saltWaterMode = !saltWaterMode;
+                    markDirty();
+                    notifyBlockUpdate();
+                    playerIn.displayClientMessage(outputModeText(), true);
+                } else {
+                    playerIn.displayClientMessage(
+                            Component.translatable("vividtech.machine.stratum_drilling.mode_overworld_only"), true);
+                }
+            }
+            return InteractionResult.SUCCESS;
+        }
+        return super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+    }
+
+    private Component outputModeText() {
+        return Component.translatable("vividtech.machine.stratum_drilling.output_mode",
+                Component.translatable(saltWaterMode ?
+                        "vividtech.machine.stratum_drilling.output_mode.salt_water" :
+                        "vividtech.machine.stratum_drilling.output_mode.oil"));
+    }
+
+    @Override
     public void addDisplayText(List<Component> textList) {
         super.addDisplayText(textList);
         if (!isResourceAvailable()) {
@@ -85,7 +134,8 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
 
     private FluidStack getOutputFluid(Level level) {
         if (level.dimension().equals(Level.OVERWORLD)) {
-            return FluidStack.create(GTMaterials.Oil.getFluid(), OIL_OUTPUT);
+            Fluid output = saltWaterMode ? GTMaterials.SaltWater.getFluid() : GTMaterials.Oil.getFluid();
+            return FluidStack.create(output, OIL_OUTPUT);
         }
         if (level.dimension().equals(Level.NETHER) && getModuleTier() >= 2) {
             return FluidStack.create(GTMaterials.NaturalGas.getFluid(), OIL_OUTPUT);

@@ -20,6 +20,8 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 
+import com.lowdragmc.lowdraglib.gui.util.ClickData;
+import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -27,6 +29,7 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 
 import lombok.Getter;
@@ -51,6 +54,8 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     private static final int[] CYCLE_DURATIONS = { 2400, 1200, 600 };
     private static final int STRUCTURE_REFRESH_INTERVAL_TICKS = 100;
     private static final int OUTPUT_CHECK_INTERVAL_TICKS = 10;
+    /** 基础工作速度为 LV，最高超频到 LuV，共 6 次。 */
+    private static final int MAX_OVERCLOCK = 6;
 
     private final int moduleTier;
 
@@ -71,6 +76,11 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     @Persisted
     @DescSynced
     private boolean moduleEnabled = true;
+
+    /** 玩家为资源模块单独设置的超频等级；每级让工作速度翻倍。 */
+    @Persisted
+    @DescSynced
+    private int overclockLevel = 0;
 
     @DescSynced
     private boolean hostWorkingEnabled = true;
@@ -122,10 +132,33 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         return CYCLE_DURATIONS[moduleTier - 1];
     }
 
-    /** 受梦想电梯轨道速度加成后的实际周期。 */
+    public int getOverclockLevel() {
+        return Mth.clamp(overclockLevel, 0, MAX_OVERCLOCK);
+    }
+
+    public void setOverclockLevel(int level) {
+        int clamped = Mth.clamp(level, 0, MAX_OVERCLOCK);
+        if (overclockLevel == clamped) {
+            return;
+        }
+        overclockLevel = clamped;
+        markDirty();
+        notifyBlockUpdate();
+        if (getRecipeLogic() instanceof ResourceModuleRecipeLogic logic) {
+            logic.refreshDuration();
+        }
+    }
+
+    /** 每级超频让工作速度翻倍。 */
+    public double getOverclockSpeedMultiplier() {
+        return 1L << getOverclockLevel();
+    }
+
+    /** 受轨道速度与超频加成后的实际周期。 */
     public int getEffectiveCycleDuration() {
         DreamElevatorMachine currentHost = getHost();
         double speed = currentHost != null ? currentHost.getProductionSpeedMultiplier() : 1.0D;
+        speed *= getOverclockSpeedMultiplier();
         return Math.max(1, (int) Math.round(getCycleDuration() / speed));
     }
 
@@ -431,6 +464,18 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
     }
 
     @Override
+    public void handleDisplayClick(String componentData, ClickData clickData) {
+        if (clickData.isRemote) {
+            return;
+        }
+        if ("overclock_add".equals(componentData)) {
+            setOverclockLevel(getOverclockLevel() + 1);
+        } else if ("overclock_sub".equals(componentData)) {
+            setOverclockLevel(getOverclockLevel() - 1);
+        }
+    }
+
+    @Override
     public void addDisplayText(List<Component> textList) {
         if (!isFormed()) {
             return;
@@ -443,6 +488,29 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.resource_module.connected" :
                 "vividtech.machine.resource_module.disconnected"));
+        if (getRecipeLogic().isWorking()) {
+            textList.add(Component.translatable("vividtech.machine.resource_module.overclock",
+                    Component.literal(Integer.toString(getOverclockLevel()))
+                            .withStyle(overclockColor(getOverclockLevel()))));
+        }
+        textList.add(Component.translatable("vividtech.machine.resource_module.overclock_limit",
+                        Component.literal(Integer.toString(getOverclockLevel()))
+                                .withStyle(overclockColor(getOverclockLevel())))
+                .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "overclock_sub"))
+                .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "overclock_add")));
+    }
+
+    private static ChatFormatting overclockColor(int level) {
+        return switch (level) {
+            case 0 -> ChatFormatting.GRAY;
+            case 1 -> ChatFormatting.WHITE;
+            case 2 -> ChatFormatting.GREEN;
+            case 3 -> ChatFormatting.BLUE;
+            case 4 -> ChatFormatting.LIGHT_PURPLE;
+            case 5 -> ChatFormatting.YELLOW;
+            case 6 -> ChatFormatting.RED;
+            default -> ChatFormatting.GRAY;
+        };
     }
 
     private static ChatFormatting moduleTierColor(int tier) {
