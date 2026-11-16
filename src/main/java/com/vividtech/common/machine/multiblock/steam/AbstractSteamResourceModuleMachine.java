@@ -488,11 +488,9 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.resource_module.connected" :
                 "vividtech.machine.resource_module.disconnected"));
-        if (getRecipeLogic().isWorking()) {
-            textList.add(Component.translatable("vividtech.machine.resource_module.overclock",
-                    Component.literal(Integer.toString(getOverclockLevel()))
-                            .withStyle(overclockColor(getOverclockLevel()))));
-        }
+        textList.add(Component.translatable("vividtech.machine.resource_module.overclock",
+                Component.literal(Integer.toString(getOverclockLevel()))
+                        .withStyle(overclockColor(getOverclockLevel()))));
         textList.add(Component.translatable("vividtech.machine.resource_module.overclock_limit",
                         Component.literal(Integer.toString(getOverclockLevel()))
                                 .withStyle(overclockColor(getOverclockLevel())))
