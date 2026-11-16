@@ -37,6 +37,15 @@ public final class ResourceOreTable {
      * @param filtered 需要屏蔽的材料；命中这些材料的矿脉不会进入抽取池。
      */
     public static ItemStack roll(Level level, int amount, RandomSource random, Set<Material> filtered) {
+        return roll(level, amount, random, filtered, false);
+    }
+
+    /**
+     * @param filtered  筛选材料；null 表示不做筛选。白名单模式下传入空集合表示没有可产出的材料。
+     * @param whitelist true 时只保留 {@code filtered} 中的材料，false 时排除这些材料。
+     */
+    public static ItemStack roll(Level level, int amount, RandomSource random, Set<Material> filtered,
+                                 boolean whitelist) {
         ResourceKey<Level> dimension = level.dimension();
         List<WeightedOre> table = CACHE.get(dimension);
         if (table == null) {
@@ -44,11 +53,15 @@ public final class ResourceOreTable {
             table = CACHE.getOrDefault(dimension, List.of());
         }
 
+        boolean applyFilter = filtered != null && (whitelist || !filtered.isEmpty());
         List<WeightedOre> candidates = new ArrayList<>(table.size());
         double total = 0.0D;
         for (WeightedOre ore : table) {
-            if (filtered != null && filtered.contains(ore.material())) {
-                continue;
+            if (applyFilter) {
+                boolean inFilter = filtered.contains(ore.material());
+                if (whitelist ? !inFilter : inFilter) {
+                    continue;
+                }
             }
             candidates.add(ore);
             total += ore.weight();
