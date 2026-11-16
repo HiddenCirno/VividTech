@@ -260,5 +260,15 @@
   "vividtech.machine.steam_processing_module.overclock_limit": "§7Overclock Cap: %s",
   "vividtech.machine.pressurization_module.active_count": "§7Active: §a%s§7 / %s",
   "vividtech.machine.pressurization_module.connected": "§7Host Communication: §aConnected",
-  "vividtech.machine.pressurization_module.disconnected": "§7Host Communication: §cDisconnected"
+  "vividtech.machine.pressurization_module.disconnected": "§7Host Communication: §cDisconnected",
+  "block.gtceu.mv_primitive_magic_energy": "Medium Voltage Primitive Magic Energy Absorber",
+  "gtceu.mv_primitive_magic_energy": "Medium Voltage Primitive Magic Energy Absorber",
+  "block.gtceu.hv_primitive_magic_energy": "High Voltage Primitive Magic Energy Absorber",
+  "gtceu.hv_primitive_magic_energy": "High Voltage Primitive Magic Energy Absorber",
+  "block.gtceu.ev_primitive_magic_energy": "Extreme Voltage Primitive Magic Energy Absorber",
+  "gtceu.ev_primitive_magic_energy": "Extreme Voltage Primitive Magic Energy Absorber",
+  "block.gtceu.iv_primitive_magic_energy": "Insane Voltage Primitive Magic Energy Absorber",
+  "gtceu.iv_primitive_magic_energy": "Insane Voltage Primitive Magic Energy Absorber",
+  "block.gtceu.luv_primitive_magic_energy": "Ludicrous Voltage Primitive Magic Energy Absorber",
+  "gtceu.luv_primitive_magic_energy": "Ludicrous Voltage Primitive Magic Energy Absorber"
 }

@@ -19,8 +19,10 @@ import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMac
 
 import org.gtlcore.gtlcore.api.pattern.GTLPredicates;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
+import org.gtlcore.gtlcore.common.machine.generator.MagicEnergyMachine;
 
 import com.gregtechceu.gtceu.GTCEu;
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
@@ -30,10 +32,13 @@ import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.client.renderer.machine.SimpleGeneratorMachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
+import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
 
@@ -111,6 +116,29 @@ public class VividMachines {
         // 让之后注册的内容进入绚乱科技的创造标签页。
         REGISTRATE.creativeModeTab(() -> STEAM_TAB);
     }
+
+    /**
+     * 魔法能源吸收器的 MV ~ LuV 版本。ULV/LV 由 GTLCore 注册，这里只补后续等级。
+     * 发电量、容量和 16A 输出逻辑与 GTLCore 的版本保持一致。
+     */
+    public static final MachineDefinition[] PRIMITIVE_MAGIC_ENERGY = GTMachines.registerTieredMachines(
+            "primitive_magic_energy",
+            MagicEnergyMachine::new,
+            (tier, builder) -> builder
+                    .langValue("%s Primitive Magic Energy %s".formatted(GTValues.VLVH[tier], GTValues.VLVT[tier]))
+                    .rotationState(RotationState.NON_Y_AXIS)
+                    .renderer(() -> new SimpleGeneratorMachineRenderer(tier,
+                            GTCEu.id("block/generators/primitive_magic_energy")))
+                    .tooltips(Component.translatable("gtceu.machine.primitive_magic_energy.tooltip.0"))
+                    .tooltips(Component.translatable("gtceu.machine.primitive_magic_energy.tooltip.1"))
+                    .tooltips(Component.translatable("gtceu.universal.tooltip.ampere_out", 16))
+                    .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                            FormattingUtil.formatNumbers(GTValues.V[tier]), GTValues.VNF[tier]))
+                    .tooltips(Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
+                            FormattingUtil.formatNumbers(GTValues.V[tier] * 512L)))
+                    .tooltipBuilder(VIVID_ADD)
+                    .register(),
+            GTValues.MV, GTValues.HV, GTValues.EV, GTValues.IV, GTValues.LuV);
 
     /** 一种蒸汽加工类型对应一组独立的模块方块。 */
     private record SteamModuleType(String id, String enName, String zhName, GTRecipeType recipeType) {}
