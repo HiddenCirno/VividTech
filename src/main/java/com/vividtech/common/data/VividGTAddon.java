@@ -87,6 +87,21 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(30).duration(20 * 600)
                 .save(provider);
 
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("basic_integrated_ore_processor")
+                .inputItems(GTMachines.MACERATOR[GTValues.LV], 1)
+                .inputItems(GTMachines.CENTRIFUGE[GTValues.LV], 1)
+                .inputItems(GTMachines.SIFTER[GTValues.LV], 1)
+                .inputItems(GTMachines.CHEMICAL_BATH[GTValues.LV], 1)
+                .inputItems(GTItems.ROBOT_ARM_LV, 8)
+                .inputItems(GTItems.ELECTRIC_PUMP_LV, 8)
+                .inputItems(GTItems.CONVEYOR_MODULE_LV, 8)
+                .inputItems(CustomTags.LV_CIRCUITS, 4)
+                .inputItems(TagPrefix.plateDouble, GTMaterials.WroughtIron, 16)
+                .inputFluids(GTMaterials.TinAlloy.getFluid(2880))
+                .outputItems(VividMachines.BASIC_INTEGRATED_ORE_PROCESSOR.asStack())
+                .EUt(30).duration(20 * 120)
+                .save(provider);
+
         GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("dream_elevator_steam_pressurization_module")
                 .inputItems(TagPrefix.frameGt, GTMaterials.StainlessSteel, 8)
                 .inputItems(TagPrefix.plateDouble, GTMaterials.StainlessSteel, 32)
