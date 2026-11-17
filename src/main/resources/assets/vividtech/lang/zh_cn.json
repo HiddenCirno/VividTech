@@ -458,5 +458,10 @@
   "block.gtceu.dream_elevator_steam_lightning_processor_module_mk2": "梦想电梯蒸汽闪电处理机模块MK-II",
   "gtceu.dream_elevator_steam_lightning_processor_module_mk2": "梦想电梯蒸汽闪电处理机模块MK-II",
   "block.gtceu.dream_elevator_steam_lightning_processor_module_mk3": "梦想电梯蒸汽闪电处理机模块MK-III",
-  "gtceu.dream_elevator_steam_lightning_processor_module_mk3": "梦想电梯蒸汽闪电处理机模块MK-III"
+  "gtceu.dream_elevator_steam_lightning_processor_module_mk3": "梦想电梯蒸汽闪电处理机模块MK-III",
+  "block.gtceu.basic_integrated_ore_processor": "基础集成矿物处理厂",
+  "gtceu.basic_integrated_ore_processor": "基础集成矿物处理厂",
+  "vividtech.machine.basic_integrated_ore_processor.tooltip.0": "§7不支持并行控制仓",
+  "itemGroup.vividtech.infinite_potential": "绚乱科技：潜能无限",
+  "vividtech.jade.steam_per_tick": "§7蒸汽消耗：§e%s§7 mB/t"
 }

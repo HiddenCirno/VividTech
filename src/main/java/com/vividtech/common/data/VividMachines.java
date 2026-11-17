@@ -20,6 +20,7 @@ import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMac
 import org.gtlcore.gtlcore.api.pattern.GTLPredicates;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLRecipeTypes;
+import org.gtlcore.gtlcore.common.data.machines.structure.MultiBlockMachineAStructureA;
 import org.gtlcore.gtlcore.common.machine.generator.MagicEnergyMachine;
 
 import com.gregtechceu.gtceu.GTCEu;
@@ -30,14 +31,17 @@ import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
+import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.client.renderer.machine.SimpleGeneratorMachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
+import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
@@ -117,6 +121,14 @@ public class VividMachines {
         // 让之后注册的内容进入绚乱科技的创造标签页。
         REGISTRATE.creativeModeTab(() -> STEAM_TAB);
     }
+
+    public static final RegistryEntry<CreativeModeTab> POTENTIAL_TAB = REGISTRATE.defaultCreativeTab("infinite_potential",
+            builder -> builder
+                    .displayItems(new GTCreativeModeTabs.RegistrateDisplayItemsGenerator("infinite_potential", REGISTRATE))
+                    .icon(VividMachines::potentialTabIcon)
+                    .title(Component.translatable("itemGroup.vividtech.infinite_potential"))
+                    .build())
+            .register();
 
     /**
      * 魔法能源吸收器的 MV ~ LuV 版本。ULV/LV 由 GTLCore 注册，这里只补后续等级。
@@ -317,6 +329,10 @@ public class VividMachines {
 
     private static ItemStack steamTabIcon() {
         return EYE_OF_WOOD.asStack();
+    }
+
+    private static ItemStack potentialTabIcon() {
+        return BASIC_INTEGRATED_ORE_PROCESSOR.asStack();
     }
 
     private static Component[] dreamElevatorTooltips() {
@@ -541,6 +557,50 @@ public class VividMachines {
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
             .register();
+
+    static {
+        REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+    }
+
+    public final static MultiblockMachineDefinition BASIC_INTEGRATED_ORE_PROCESSOR = REGISTRATE
+            .multiblock("basic_integrated_ore_processor", WorkableElectricMultiblockMachine::new)
+            .langValue("Basic Integrated Ore Processing Plant")
+            .rotationState(RotationState.NON_Y_AXIS)
+            .allowExtendedFacing(false)
+            .recipeType(GTLRecipeTypes.INTEGRATED_ORE_PROCESSOR)
+            .recipeModifier(GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
+            .appearanceBlock(GTBlocks.CASING_STEEL_SOLID)
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.0"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.1"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.2"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.3"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.4"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.5"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.6"))
+            .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.7"))
+            .tooltips(Component.translatable("vividtech.machine.basic_integrated_ore_processor.tooltip.0"))
+            .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> MultiBlockMachineAStructureA.INTEGRATED_ORE_PROCESSOR
+                    .where("~", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("a", Predicates.blocks(GTBlocks.CASING_INVAR_HEATPROOF.get()))
+                    .where("c", Predicates.blocks(GTBlocks.CASING_STEEL_SOLID.get())
+                            .setMinGlobalLimited(60)
+                            .or(Predicates.autoAbilities(definition.getRecipeTypes()))
+                            .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1)))
+                    .where("b", Predicates.blocks(GTBlocks.CASING_TEMPERED_GLASS.get()))
+                    .where("d", Predicates.blocks(ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.Steel)))
+                    .where("e", Predicates.blocks(GTBlocks.CASING_STEEL_GEARBOX.get()))
+                    .where("f", Predicates.blocks(GTBlocks.CASING_STEEL_PIPE.get()))
+                    .where("g", Predicates.abilities(PartAbility.MUFFLER))
+                    .where(" ", Predicates.any())
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_solid_steel"),
+                    GTCEu.id("block/multiblock/gcym/large_maceration_tower"))
+            .register();
+
+    static {
+        REGISTRATE.creativeModeTab(() -> STEAM_TAB);
+    }
 
     public final static MultiblockMachineDefinition DREAM_ELEVATOR = REGISTRATE
             .multiblock("dream_elevator", DreamElevatorMachine::new)

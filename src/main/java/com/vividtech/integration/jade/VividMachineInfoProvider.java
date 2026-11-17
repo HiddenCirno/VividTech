@@ -9,6 +9,8 @@ import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMac
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.integration.jade.provider.CapabilityBlockProvider;
 
 import net.minecraft.ChatFormatting;
@@ -68,11 +70,16 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
             data.putInt("effective_parallel",
                     module.getEffectiveParallel(module.getRecipeLogic().getLastOriginRecipe()));
             data.putBoolean("connected", module.getHost() != null);
+            GTRecipe currentRecipe = module.getRecipeLogic().getLastRecipe();
+            double steamPerTick = currentRecipe == null ? 0.0D :
+                    Math.ceil(RecipeHelper.getInputEUt(currentRecipe) * 0.5D);
+            data.putDouble("steam_per_tick", steamPerTick);
         } else if (machine instanceof AbstractSteamResourceModuleMachine module) {
             data.putString(KIND, "resource_module");
             data.putInt("module_tier", module.getModuleTier());
             data.putInt("overclock", module.getOverclockLevel());
             data.putBoolean("connected", module.getHost() != null);
+            data.putDouble("steam_per_tick", module.getSteamPerTick());
             if (module instanceof SteamStratumMiningModuleMachine mining) {
                 data.putBoolean("whitelist", mining.isWhitelistMode());
             } else if (module instanceof SteamStratumDrillingModuleMachine drilling) {
@@ -125,6 +132,7 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
                 coloredOverclock(data.getInt("effective_overclock"))));
         tooltip.add(Component.translatable("vividtech.jade.overclock_limit",
                 coloredOverclock(data.getInt("overclock"))));
+        addSteamLine(data, tooltip);
     }
 
     private static void addResourceModuleTooltip(CompoundTag data, ITooltip tooltip) {
@@ -133,6 +141,7 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
         tooltip.add(connectedLine(data.getBoolean("connected")));
         tooltip.add(Component.translatable("vividtech.jade.overclock",
                 coloredOverclock(data.getInt("overclock"))));
+        addSteamLine(data, tooltip);
         if (data.contains("whitelist")) {
             tooltip.add(Component.translatable("vividtech.jade.work_mode",
                     Component.translatable(data.getBoolean("whitelist") ?
@@ -143,6 +152,11 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
             tooltip.add(Component.translatable("vividtech.jade.output_mode",
                     Component.translatable("vividtech.jade.output." + data.getString("output"))));
         }
+    }
+
+    private static void addSteamLine(CompoundTag data, ITooltip tooltip) {
+        tooltip.add(Component.translatable("vividtech.jade.steam_per_tick",
+                String.format("%.1f", data.getDouble("steam_per_tick"))));
     }
 
     private static Component connectedLine(boolean connected) {

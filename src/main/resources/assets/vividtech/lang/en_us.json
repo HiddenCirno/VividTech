@@ -458,5 +458,10 @@
   "block.gtceu.dream_elevator_steam_lightning_processor_module_mk2": "Dream Elevator Steam Lightning Processor Module MK-II",
   "gtceu.dream_elevator_steam_lightning_processor_module_mk2": "Dream Elevator Steam Lightning Processor Module MK-II",
   "block.gtceu.dream_elevator_steam_lightning_processor_module_mk3": "Dream Elevator Steam Lightning Processor Module MK-III",
-  "gtceu.dream_elevator_steam_lightning_processor_module_mk3": "Dream Elevator Steam Lightning Processor Module MK-III"
+  "gtceu.dream_elevator_steam_lightning_processor_module_mk3": "Dream Elevator Steam Lightning Processor Module MK-III",
+  "block.gtceu.basic_integrated_ore_processor": "Basic Integrated Ore Processing Plant",
+  "gtceu.basic_integrated_ore_processor": "Basic Integrated Ore Processing Plant",
+  "vividtech.machine.basic_integrated_ore_processor.tooltip.0": "§7Does not support parallel control hatches",
+  "itemGroup.vividtech.infinite_potential": "VividTech: Infinite Potential",
+  "vividtech.jade.steam_per_tick": "§7Steam Usage: §e%s§7 mB/t"
 }
