@@ -3,11 +3,13 @@ package com.vividtech.common.data;
 import com.vividtech.VividTech;
 
 import org.gtlcore.gtlcore.common.data.GTLMachines;
+import org.gtlcore.gtlcore.common.data.GTLMaterials;
 import org.gtlcore.gtlcore.common.data.machines.MultiBlockMachineA;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.addon.GTAddon;
 import com.gregtechceu.gtceu.api.addon.IGTAddon;
+import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
@@ -29,6 +31,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -128,6 +131,7 @@ public class VividGTAddon implements IGTAddon {
 
         addSteamModuleRecipes(provider);
         addPrimitiveMagicEnergyRecipes(provider);
+        addCompressedMagicEnergyRecipes(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -137,7 +141,7 @@ public class VividGTAddon implements IGTAddon {
                 'A', GTItems.EMITTER_LV,
                 'B', Blocks.EMERALD_BLOCK,
                 'C', GTItems.SENSOR_LV,
-                'D', GTItems.FIELD_GENERATOR_LV,
+                'D', Items.ENDER_PEARL,
                 'E', GTMachines.HULL[GTValues.LV].asStack(),
                 'F', Blocks.DIAMOND_BLOCK);
 
@@ -147,7 +151,7 @@ public class VividGTAddon implements IGTAddon {
                 'A', GTItems.EMITTER_MV,
                 'B', Blocks.AMETHYST_CLUSTER,
                 'C', GTItems.SENSOR_MV,
-                'D', GTItems.FIELD_GENERATOR_MV,
+                'D', GTItems.FIELD_GENERATOR_LV,
                 'E', GTMachines.HULL[GTValues.MV].asStack(),
                 'F', GTLMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.LV].asStack());
 
@@ -157,7 +161,7 @@ public class VividGTAddon implements IGTAddon {
                 'A', GTItems.EMITTER_HV,
                 'B', Items.END_CRYSTAL,
                 'C', GTItems.SENSOR_HV,
-                'D', GTItems.FIELD_GENERATOR_HV,
+                'D', GTItems.FIELD_GENERATOR_MV,
                 'E', GTMachines.HULL[GTValues.HV].asStack(),
                 'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.MV].asStack());
 
@@ -167,7 +171,7 @@ public class VividGTAddon implements IGTAddon {
                 'A', GTItems.EMITTER_EV,
                 'B', Items.HEART_OF_THE_SEA,
                 'C', GTItems.SENSOR_EV,
-                'D', GTItems.FIELD_GENERATOR_EV,
+                'D', GTItems.FIELD_GENERATOR_HV,
                 'E', GTMachines.HULL[GTValues.EV].asStack(),
                 'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.HV].asStack());
 
@@ -177,7 +181,7 @@ public class VividGTAddon implements IGTAddon {
                 'A', GTItems.EMITTER_IV,
                 'B', Items.NETHER_STAR,
                 'C', GTItems.SENSOR_IV,
-                'D', GTItems.FIELD_GENERATOR_IV,
+                'D', GTItems.FIELD_GENERATOR_EV,
                 'E', GTMachines.HULL[GTValues.IV].asStack(),
                 'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.EV].asStack());
 
@@ -187,9 +191,75 @@ public class VividGTAddon implements IGTAddon {
                 'A', GTItems.EMITTER_LuV,
                 'B', Blocks.NETHERITE_BLOCK,
                 'C', GTItems.SENSOR_LuV,
-                'D', GTItems.FIELD_GENERATOR_LuV,
+                'D', GTItems.FIELD_GENERATOR_IV,
                 'E', GTMachines.HULL[GTValues.LuV].asStack(),
                 'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.IV].asStack());
+
+        VanillaRecipeHelper.addShapedRecipe(provider, true, "primitive_magic_energy_zpm",
+                VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.ZPM].asStack(),
+                "ABC", "DED", "CFA",
+                'A', GTItems.EMITTER_ZPM,
+                'B', ChemicalHelper.getBlock(TagPrefix.block, GTMaterials.Naquadria),
+                'C', GTItems.SENSOR_ZPM,
+                'D', GTItems.FIELD_GENERATOR_LuV,
+                'E', GTMachines.HULL[GTValues.ZPM].asStack(),
+                'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.LuV].asStack());
+
+        VanillaRecipeHelper.addShapedRecipe(provider, true, "primitive_magic_energy_uv",
+                VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UV].asStack(),
+                "ABC", "DED", "CFA",
+                'A', GTItems.EMITTER_UV,
+                'B', ChemicalHelper.getBlock(TagPrefix.block, GTLMaterials.Mithril),
+                'C', GTItems.SENSOR_UV,
+                'D', GTItems.FIELD_GENERATOR_ZPM,
+                'E', GTMachines.HULL[GTValues.UV].asStack(),
+                'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.ZPM].asStack());
+
+        VanillaRecipeHelper.addShapedRecipe(provider, true, "primitive_magic_energy_uhv",
+                VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UHV].asStack(),
+                "ABC", "DED", "CFA",
+                'A', GTItems.EMITTER_UHV,
+                'B', ChemicalHelper.getBlock(TagPrefix.block, GTLMaterials.Quantanium),
+                'C', GTItems.SENSOR_UHV,
+                'D', GTItems.FIELD_GENERATOR_UV,
+                'E', GTMachines.HULL[GTValues.UHV].asStack(),
+                'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UV].asStack());
+
+        VanillaRecipeHelper.addShapedRecipe(provider, true, "primitive_magic_energy_uev",
+                VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UEV].asStack(),
+                "ABC", "DED", "CFA",
+                'A', GTItems.EMITTER_UEV,
+                'B', ChemicalHelper.getBlock(TagPrefix.block, GTLMaterials.Adamantium),
+                'C', GTItems.SENSOR_UEV,
+                'D', GTItems.FIELD_GENERATOR_UHV,
+                'E', GTMachines.HULL[GTValues.UEV].asStack(),
+                'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UHV].asStack());
+
+        VanillaRecipeHelper.addShapedRecipe(provider, true, "primitive_magic_energy_uiv",
+                VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UIV].asStack(),
+                "ABC", "DED", "CFA",
+                'A', GTItems.EMITTER_UIV,
+                'B', ChemicalHelper.getBlock(TagPrefix.block, GTLMaterials.HeavyQuarkDegenerateMatter),
+                'C', GTItems.SENSOR_UIV,
+                'D', GTItems.FIELD_GENERATOR_UEV,
+                'E', GTMachines.HULL[GTValues.UIV].asStack(),
+                'F', VividMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.UEV].asStack());
+    }
+
+    private static void addCompressedMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
+        int[] tiers = { GTValues.LV, GTValues.MV, GTValues.HV, GTValues.EV, GTValues.IV, GTValues.LuV,
+                GTValues.ZPM, GTValues.UV, GTValues.UHV, GTValues.UEV, GTValues.UIV };
+        for (int tier : tiers) {
+            MachineDefinition input = tier == GTValues.LV ?
+                    GTLMachines.PRIMITIVE_MAGIC_ENERGY[GTValues.LV] :
+                    VividMachines.PRIMITIVE_MAGIC_ENERGY[tier];
+            GTRecipeTypes.COMPRESSOR_RECIPES.recipeBuilder(
+                            "compressed_primitive_magic_energy_" + GTValues.VN[tier].toLowerCase(Locale.ROOT))
+                    .inputItems(input, 16)
+                    .outputItems(VividMachines.COMPRESSED_PRIMITIVE_MAGIC_ENERGY[tier].asStack())
+                    .EUt(30).duration(20 * 60)
+                    .save(provider);
+        }
     }
 
     private static void addSteamModuleRecipes(Consumer<FinishedRecipe> provider) {

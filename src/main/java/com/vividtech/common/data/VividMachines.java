@@ -7,6 +7,7 @@ import com.vividtech.client.renderer.machine.SubsystemHatchRenderer;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
+import com.vividtech.common.machine.generator.CompressedMagicEnergyMachine;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
@@ -130,6 +131,10 @@ public class VividMachines {
                     .build())
             .register();
 
+    static {
+        REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+    }
+
     /**
      * 魔法能源吸收器的 MV ~ LuV 版本。ULV/LV 由 GTLCore 注册，这里只补后续等级。
      * 发电量、容量和 16A 输出逻辑与 GTLCore 的版本保持一致。
@@ -151,7 +156,12 @@ public class VividMachines {
                             FormattingUtil.formatNumbers(GTValues.V[tier] * 512L)))
                     .tooltipBuilder(VIVID_ADD)
                     .register(),
-            GTValues.MV, GTValues.HV, GTValues.EV, GTValues.IV, GTValues.LuV);
+            GTValues.MV, GTValues.HV, GTValues.EV, GTValues.IV, GTValues.LuV,
+            GTValues.ZPM, GTValues.UV, GTValues.UHV, GTValues.UEV, GTValues.UIV);
+
+    static {
+        REGISTRATE.creativeModeTab(() -> STEAM_TAB);
+    }
 
     private static String magicEnergyName(int tier) {
         return switch (tier) {
@@ -160,8 +170,20 @@ public class VividMachines {
             case GTValues.EV -> "Master Magic Energy Absorber";
             case GTValues.IV -> "Grandmaster Magic Energy Absorber";
             case GTValues.LuV -> "Legendary Magic Energy Absorber";
+            case GTValues.ZPM -> "Mythic Magic Energy Absorber";
+            case GTValues.UV -> "Transcendent Magic Energy Absorber";
+            case GTValues.UHV -> "Ultimate Magic Energy Absorber";
+            case GTValues.UEV -> "Eternal Magic Energy Absorber";
+            case GTValues.UIV -> "Paradoxical Magic Energy Absorber";
             default -> "Magic Energy Absorber";
         };
+    }
+
+    private static String compressedMagicEnergyName(int tier) {
+        if (tier == GTValues.LV) {
+            return "Compressed Low Voltage Primitive Magic Energy Absorber";
+        }
+        return "Compressed " + magicEnergyName(tier);
     }
 
     /** 一种蒸汽加工类型对应一组独立的模块方块。 */
@@ -597,6 +619,26 @@ public class VividMachines {
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_solid_steel"),
                     GTCEu.id("block/multiblock/gcym/large_maceration_tower"))
             .register();
+
+    public static final MachineDefinition[] COMPRESSED_PRIMITIVE_MAGIC_ENERGY = GTMachines.registerTieredMachines(
+            "compressed_primitive_magic_energy",
+            CompressedMagicEnergyMachine::new,
+            (tier, builder) -> builder
+                    .langValue(compressedMagicEnergyName(tier))
+                    .rotationState(RotationState.NON_Y_AXIS)
+                    .renderer(() -> new SimpleGeneratorMachineRenderer(tier,
+                            GTCEu.id("block/generators/primitive_magic_energy")))
+                    .tooltips(Component.translatable("gtceu.machine.primitive_magic_energy.tooltip.0"))
+                    .tooltips(Component.translatable("gtceu.machine.primitive_magic_energy.tooltip.1"))
+                    .tooltips(Component.translatable("gtceu.universal.tooltip.ampere_out", 256))
+                    .tooltips(Component.translatable("gtceu.universal.tooltip.voltage_out",
+                            FormattingUtil.formatNumbers(GTValues.V[tier]), GTValues.VNF[tier]))
+                    .tooltips(Component.translatable("gtceu.universal.tooltip.energy_storage_capacity",
+                            FormattingUtil.formatNumbers(GTValues.V[tier] * 512L * 16L)))
+                    .tooltipBuilder(VIVID_ADD)
+                    .register(),
+            GTValues.LV, GTValues.MV, GTValues.HV, GTValues.EV, GTValues.IV, GTValues.LuV,
+            GTValues.ZPM, GTValues.UV, GTValues.UHV, GTValues.UEV, GTValues.UIV);
 
     static {
         REGISTRATE.creativeModeTab(() -> STEAM_TAB);
