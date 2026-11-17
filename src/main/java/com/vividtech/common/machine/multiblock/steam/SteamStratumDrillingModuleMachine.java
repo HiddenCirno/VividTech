@@ -50,6 +50,10 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
         return MANAGED_FIELD_HOLDER;
     }
 
+    public boolean isSaltWaterMode() {
+        return saltWaterMode;
+    }
+
     @Override
     protected void tickResource() {
         RecipeLogic logic = getRecipeLogic();

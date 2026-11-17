@@ -130,6 +130,8 @@ dependencies {
     modImplementation("curse.maven:ftb-library-forge-404465:5567591") { transitive = false }
     modImplementation("curse.maven:ftb-teams-forge-404468:5267190") { transitive = false }
     modImplementation("curse.maven:ftb-chunks-forge-314906:5378090") { transitive = false }
+    modCompileOnly("curse.maven:jade-324717:6855440")
+    modLocalRuntime("curse.maven:jade-324717:6855440")
     // Local copies of GTLCore's optional/mandatory runtime deps for the dev client.
     modImplementation fileTree(dir: 'libs', include: '*.jar')
     implementation files("../GTLCore/cgse-engine/build/libs/cgse-engine-0.3.1.jar")
