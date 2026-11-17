@@ -192,6 +192,29 @@ public class VividGTAddon implements IGTAddon {
         workBlocks.put("extractor", GTMachines.STEAM_EXTRACTOR.first());
         workBlocks.put("furnace", GTMachines.STEAM_OVEN);
         workBlocks.put("rock_breaker", GTMachines.STEAM_ROCK_CRUSHER.first());
+        workBlocks.put("arc_furnace", GTMachines.ARC_FURNACE[GTValues.LV]);
+        workBlocks.put("assembler", GTMachines.ASSEMBLER[GTValues.LV]);
+        workBlocks.put("autoclave", GTMachines.AUTOCLAVE[GTValues.LV]);
+        workBlocks.put("bender", GTMachines.BENDER[GTValues.LV]);
+        workBlocks.put("brewery", GTMachines.BREWERY[GTValues.LV]);
+        workBlocks.put("canner", GTMachines.CANNER[GTValues.LV]);
+        workBlocks.put("chemical_reactor", GTMachines.CHEMICAL_REACTOR[GTValues.LV]);
+        workBlocks.put("cutter", GTMachines.CUTTER[GTValues.LV]);
+        workBlocks.put("distillery", GTMachines.DISTILLERY[GTValues.LV]);
+        workBlocks.put("electrolyzer", GTMachines.ELECTROLYZER[GTValues.LV]);
+        workBlocks.put("extruder", GTMachines.EXTRUDER[GTValues.LV]);
+        workBlocks.put("fermenter", GTMachines.FERMENTER[GTValues.LV]);
+        workBlocks.put("fluid_heater", GTMachines.FLUID_HEATER[GTValues.LV]);
+        workBlocks.put("fluid_solidifier", GTMachines.FLUID_SOLIDIFIER[GTValues.LV]);
+        workBlocks.put("forming_press", GTMachines.FORMING_PRESS[GTValues.LV]);
+        workBlocks.put("lathe", GTMachines.LATHE[GTValues.LV]);
+        workBlocks.put("polarizer", GTMachines.POLARIZER[GTValues.LV]);
+        workBlocks.put("laser_engraver", GTMachines.LASER_ENGRAVER[GTValues.LV]);
+        workBlocks.put("sifter", GTMachines.SIFTER[GTValues.LV]);
+        workBlocks.put("wiremill", GTMachines.WIREMILL[GTValues.LV]);
+        workBlocks.put("gas_collector", GTMachines.GAS_COLLECTOR[GTValues.LV]);
+        workBlocks.put("dehydrator", GTLMachines.DEHYDRATOR[GTValues.LV]);
+        workBlocks.put("lightning_processor", GTLMachines.LIGHTNING_PROCESSOR[GTValues.LV]);
 
         for (Map.Entry<String, MachineDefinition> entry : workBlocks.entrySet()) {
             String type = entry.getKey();

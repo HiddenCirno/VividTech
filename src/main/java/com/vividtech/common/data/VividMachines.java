@@ -19,6 +19,7 @@ import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMac
 
 import org.gtlcore.gtlcore.api.pattern.GTLPredicates;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
+import org.gtlcore.gtlcore.common.data.GTLRecipeTypes;
 import org.gtlcore.gtlcore.common.machine.generator.MagicEnergyMachine;
 
 import com.gregtechceu.gtceu.GTCEu;
@@ -155,21 +156,44 @@ public class VividMachines {
     private record SteamModuleType(String id, String enName, String zhName, GTRecipeType recipeType) {}
 
     private static final List<SteamModuleType> STEAM_MODULE_TYPES = List.of(
-            new SteamModuleType("circuit_assembly", "Circuit Assembly", "电路组装",
+            new SteamModuleType("circuit_assembly", "Circuit Assembler", "电路组装机",
                     GTRecipeTypes.CIRCUIT_ASSEMBLER_RECIPES),
-            new SteamModuleType("forge_hammer", "Forge Hammer", "锻造", GTRecipeTypes.FORGE_HAMMER_RECIPES),
-            new SteamModuleType("compressor", "Compressor", "压缩", GTRecipeTypes.COMPRESSOR_RECIPES),
-            new SteamModuleType("macerator", "Macerator", "研磨", GTRecipeTypes.MACERATOR_RECIPES),
+            new SteamModuleType("forge_hammer", "Forge Hammer", "锻造锤", GTRecipeTypes.FORGE_HAMMER_RECIPES),
+            new SteamModuleType("compressor", "Compressor", "压缩机", GTRecipeTypes.COMPRESSOR_RECIPES),
+            new SteamModuleType("macerator", "Macerator", "研磨机", GTRecipeTypes.MACERATOR_RECIPES),
             new SteamModuleType("alloy_smelter", "Alloy Smelter", "合金冶炼", GTRecipeTypes.ALLOY_SMELTER_RECIPES),
-            new SteamModuleType("mixer", "Mixer", "混合", GTRecipeTypes.MIXER_RECIPES),
-            new SteamModuleType("centrifuge", "Centrifuge", "离心", GTRecipeTypes.CENTRIFUGE_RECIPES),
-            new SteamModuleType("thermal_centrifuge", "Thermal Centrifuge", "热力离心",
+            new SteamModuleType("mixer", "Mixer", "搅拌机", GTRecipeTypes.MIXER_RECIPES),
+            new SteamModuleType("centrifuge", "Centrifuge", "离心机", GTRecipeTypes.CENTRIFUGE_RECIPES),
+            new SteamModuleType("thermal_centrifuge", "Thermal Centrifuge", "热力离心机",
                     GTRecipeTypes.THERMAL_CENTRIFUGE_RECIPES),
-            new SteamModuleType("ore_washer", "Ore Washer", "洗矿", GTRecipeTypes.ORE_WASHER_RECIPES),
-            new SteamModuleType("chemical_bath", "Chemical Bath", "化学浸洗", GTRecipeTypes.CHEMICAL_BATH_RECIPES),
-            new SteamModuleType("extractor", "Extractor", "提取", GTRecipeTypes.EXTRACTOR_RECIPES),
-            new SteamModuleType("furnace", "Furnace", "熔炼", GTRecipeTypes.FURNACE_RECIPES),
-            new SteamModuleType("rock_breaker", "Rock Breaker", "碎岩", GTRecipeTypes.ROCK_BREAKER_RECIPES));
+            new SteamModuleType("ore_washer", "Ore Washer", "洗矿厂", GTRecipeTypes.ORE_WASHER_RECIPES),
+            new SteamModuleType("chemical_bath", "Chemical Bath", "化学浸洗机", GTRecipeTypes.CHEMICAL_BATH_RECIPES),
+            new SteamModuleType("extractor", "Extractor", "提取机", GTRecipeTypes.EXTRACTOR_RECIPES),
+            new SteamModuleType("furnace", "Electric Furnace", "电炉", GTRecipeTypes.FURNACE_RECIPES),
+            new SteamModuleType("rock_breaker", "Rock Breaker", "碎岩机", GTRecipeTypes.ROCK_BREAKER_RECIPES),
+            new SteamModuleType("arc_furnace", "Arc Furnace", "电弧炉", GTRecipeTypes.ARC_FURNACE_RECIPES),
+            new SteamModuleType("assembler", "Assembler", "组装机", GTRecipeTypes.ASSEMBLER_RECIPES),
+            new SteamModuleType("autoclave", "Autoclave", "高压釜", GTRecipeTypes.AUTOCLAVE_RECIPES),
+            new SteamModuleType("bender", "Bender", "卷板机", GTRecipeTypes.BENDER_RECIPES),
+            new SteamModuleType("brewery", "Brewery", "酿造室", GTRecipeTypes.BREWING_RECIPES),
+            new SteamModuleType("canner", "Canner", "装罐机", GTRecipeTypes.CANNER_RECIPES),
+            new SteamModuleType("chemical_reactor", "Chemical Reactor", "化学反应釜", GTRecipeTypes.CHEMICAL_RECIPES),
+            new SteamModuleType("cutter", "Cutter", "切割机", GTRecipeTypes.CUTTER_RECIPES),
+            new SteamModuleType("distillery", "Distillery", "蒸馏室", GTRecipeTypes.DISTILLERY_RECIPES),
+            new SteamModuleType("electrolyzer", "Electrolyzer", "电解机", GTRecipeTypes.ELECTROLYZER_RECIPES),
+            new SteamModuleType("extruder", "Extruder", "压模器", GTRecipeTypes.EXTRUDER_RECIPES),
+            new SteamModuleType("fermenter", "Fermenter", "发酵槽", GTRecipeTypes.FERMENTING_RECIPES),
+            new SteamModuleType("fluid_heater", "Fluid Heater", "流体加热器", GTRecipeTypes.FLUID_HEATER_RECIPES),
+            new SteamModuleType("fluid_solidifier", "Fluid Solidifier", "流体固化器", GTRecipeTypes.FLUID_SOLIDFICATION_RECIPES),
+            new SteamModuleType("forming_press", "Forming Press", "冲压机床", GTRecipeTypes.FORMING_PRESS_RECIPES),
+            new SteamModuleType("lathe", "Lathe", "车床", GTRecipeTypes.LATHE_RECIPES),
+            new SteamModuleType("polarizer", "Polarizer", "两极磁化机", GTRecipeTypes.POLARIZER_RECIPES),
+            new SteamModuleType("laser_engraver", "Laser Engraver", "激光蚀刻机", GTRecipeTypes.LASER_ENGRAVER_RECIPES),
+            new SteamModuleType("sifter", "Sifter", "筛选机", GTRecipeTypes.SIFTER_RECIPES),
+            new SteamModuleType("wiremill", "Wiremill", "线材轧机", GTRecipeTypes.WIREMILL_RECIPES),
+            new SteamModuleType("gas_collector", "Gas Collector", "集气室", GTRecipeTypes.GAS_COLLECTOR_RECIPES),
+            new SteamModuleType("dehydrator", "Dehydrator", "脱水机", GTLRecipeTypes.DEHYDRATOR_RECIPES),
+            new SteamModuleType("lightning_processor", "Lightning Processor", "闪电处理机", GTLRecipeTypes.LIGHTNING_PROCESSOR_RECIPES));
 
     /** 所有已注册的蒸汽模块控制器，供梦想电梯模块槽位识别。 */
     public static final List<MultiblockMachineDefinition> STEAM_MODULES = new ArrayList<>();
