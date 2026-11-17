@@ -65,9 +65,6 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
             setWaiting(Component.translatable("vividtech.machine.resource_module.wrong_dimension"));
             return;
         }
-        if (machine.getOffsetTimer() % 20 != 0) {
-            return;
-        }
         GTRecipe recipe = machine.buildCycleRecipe(level);
         if (recipe == null) {
             setWaiting(Component.translatable("vividtech.machine.resource_module.no_output"));
@@ -104,6 +101,8 @@ public class ResourceModuleRecipeLogic extends RecipeLogic {
         setStatus(Status.IDLE);
         progress = 0;
         duration = 0;
+        // 允许同一个 tick 内立刻开始下一周期，否则 1 tick 周期会被推迟到下一个 tick。
+        findAndHandleRecipe();
     }
 
     /**
