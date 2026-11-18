@@ -16,6 +16,7 @@ import com.gregtechceu.gtceu.common.item.TooltipBehavior;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 import com.tterrag.registrate.util.entry.ItemEntry;
 
@@ -111,5 +112,6 @@ public final class VividCovers {
         lines.add(Component.translatable("vividtech.wireless_grid_transmit_cover.tooltip.2",
                 FormattingUtil.formatNumbers(GTValues.V[tier] * (long) amperage)));
         lines.add(Component.translatable("vividtech.wireless_grid_transmit_cover.tooltip.3"));
+        VividMachines.VIVID_ADD.accept(ItemStack.EMPTY, lines);
     }
 }

@@ -9,6 +9,7 @@ import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
 import com.vividtech.common.machine.generator.CompressedMagicEnergyMachine;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
+import com.vividtech.common.machine.multiblock.part.CastingInputBusPartMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
@@ -62,6 +63,7 @@ import net.minecraft.world.level.block.Blocks;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
@@ -133,6 +135,44 @@ public class VividMachines {
 
     static {
         REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+    }
+
+    /**
+     * 熔铸输入总线：LV 起，容量与原版同级输入总线一致。
+     * ULV 没有同级电力活塞，因此不注册。
+     */
+    public static final int[] CASTING_INPUT_BUS_TIERS = Arrays.stream(GTMachines.ALL_TIERS)
+            .filter(tier -> tier >= GTValues.LV && tier <= GTValues.OpV)
+            .toArray();
+
+    /** 按电压等级索引，未注册的等级为 null。 */
+    public static final MachineDefinition[] CASTING_INPUT_BUS = registerCastingInputBuses();
+
+    private static MachineDefinition[] registerCastingInputBuses() {
+        REGISTRATE.creativeModeTab(() -> STEAM_TAB);
+        try {
+            MachineDefinition[] registered = GTMachines.registerTieredMachines(
+                    "casting_input_bus",
+                    CastingInputBusPartMachine::new,
+                    (tier, builder) -> builder
+                            .langValue(GTValues.VNF[tier] + " Casting Input Bus")
+                            .rotationState(RotationState.ALL)
+                            .abilities(PartAbility.IMPORT_ITEMS)
+                            .overlayTieredHullRenderer("item_bus.import")
+                            .tooltips(Component.translatable("gtceu.machine.item_bus.import.tooltip"))
+                            .tooltips(Component.translatable("vividtech.machine.casting_input_bus.tooltip.0"))
+                            .tooltips(Component.translatable("gtceu.universal.tooltip.item_storage_capacity",
+                                    (1 + Math.min(9, tier)) * (1 + Math.min(9, tier))))
+                            .tooltipBuilder(VIVID_ADD)
+                            .register(),
+                    CASTING_INPUT_BUS_TIERS);
+
+            // GTMachines.registerTieredMachines 返回的数组已经按 tier 索引，
+            // 不能按传入 tiers 的循环顺序重新映射，否则整条线会错位一级。
+            return registered;
+        } finally {
+            REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+        }
     }
 
     /**
@@ -487,6 +527,12 @@ public class VividMachines {
         allowed.addAll(PartAbility.EXPORT_ITEMS.getAllBlocks());
         allowed.addAll(PartAbility.IMPORT_FLUIDS.getAllBlocks());
         allowed.addAll(PartAbility.EXPORT_FLUIDS.getAllBlocks());
+        // PartAbility 的方块列表可能被缓存；显式补上熔铸输入总线。
+        for (MachineDefinition definition : CASTING_INPUT_BUS) {
+            if (definition != null) {
+                allowed.add(definition.getBlock());
+            }
+        }
         Block[] allowedArray = allowed.stream().distinct().toArray(Block[]::new);
         BlockInfo[] candidates = Stream.of(allowedArray)
                 .map(block -> BlockInfo.fromBlockState(block.defaultBlockState()))

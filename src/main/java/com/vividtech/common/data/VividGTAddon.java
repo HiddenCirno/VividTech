@@ -21,6 +21,8 @@ import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
 
+import com.tterrag.registrate.util.entry.ItemEntry;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
@@ -132,6 +134,7 @@ public class VividGTAddon implements IGTAddon {
         addSteamModuleRecipes(provider);
         addPrimitiveMagicEnergyRecipes(provider);
         addCompressedMagicEnergyRecipes(provider);
+        addCastingInputBusRecipes(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -394,4 +397,50 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(480).duration(20 * 60)
                 .save(provider);
     }
+
+    private static void addCastingInputBusRecipes(Consumer<FinishedRecipe> provider) {
+        for (int tier : VividMachines.CASTING_INPUT_BUS_TIERS) {
+            ItemEntry<Item> piston = electricPistonForTier(tier);
+            if (piston == null || VividMachines.CASTING_INPUT_BUS[tier] == null) {
+                continue;
+            }
+            String tierName = GTValues.VN[tier].toLowerCase(Locale.ROOT);
+            addCastingInputBusRecipe(provider, tier, tierName, piston, true);
+            addCastingInputBusRecipe(provider, tier, tierName, piston, false);
+        }
+    }
+
+    private static void addCastingInputBusRecipe(Consumer<FinishedRecipe> provider, int tier,
+                                                 String tierName, ItemEntry<Item> piston,
+                                                 boolean solder) {
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder(
+                        "casting_input_bus_" + tierName + (solder ? "_solder" : "_tin"))
+                .inputItems(GTMachines.ITEM_IMPORT_BUS[tier], 1)
+                .inputItems(CustomTags.CIRCUITS_ARRAY[tier], 1)
+                .inputItems(piston, 1)
+                .inputFluids(solder ? GTMaterials.SolderingAlloy.getFluid(144) : GTMaterials.Tin.getFluid(288))
+                .outputItems(VividMachines.CASTING_INPUT_BUS[tier].asStack())
+                .EUt(GTValues.VA[tier]).duration(20 * 10)
+                .save(provider);
+    }
+
+    private static ItemEntry<Item> electricPistonForTier(int tier) {
+        return switch (tier) {
+            case GTValues.LV -> GTItems.ELECTRIC_PISTON_LV;
+            case GTValues.MV -> GTItems.ELECTRIC_PISTON_MV;
+            case GTValues.HV -> GTItems.ELECTRIC_PISTON_HV;
+            case GTValues.EV -> GTItems.ELECTRIC_PISTON_EV;
+            case GTValues.IV -> GTItems.ELECTRIC_PISTON_IV;
+            case GTValues.LuV -> GTItems.ELECTRIC_PISTON_LUV;
+            case GTValues.ZPM -> GTItems.ELECTRIC_PISTON_ZPM;
+            case GTValues.UV -> GTItems.ELECTRIC_PISTON_UV;
+            case GTValues.UHV -> GTItems.ELECTRIC_PISTON_UHV;
+            case GTValues.UEV -> GTItems.ELECTRIC_PISTON_UEV;
+            case GTValues.UIV -> GTItems.ELECTRIC_PISTON_UIV;
+            case GTValues.UXV -> GTItems.ELECTRIC_PISTON_UXV;
+            case GTValues.OpV -> GTItems.ELECTRIC_PISTON_OpV;
+            default -> null;
+        };
+    }
+
 }
