@@ -60,9 +60,10 @@ public class CastingInputBusPartMachine extends ItemBusPartMachine implements ID
                 .setTooltipsSupplier(pressed -> List.of(Component.translatable(pressed ?
                         "behaviour.soft_hammer.enabled" : "behaviour.soft_hammer.disabled"))));
 
+        // 与 IDistinctPart 默认实现一致：上半张是“已隔离”，下半张是“未隔离”。
         panel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
-                GuiTextures.BUTTON_DISTINCT_BUSES.getSubTexture(0, 0, 1, 0.5),
                 GuiTextures.BUTTON_DISTINCT_BUSES.getSubTexture(0, 0.5, 1, 0.5),
+                GuiTextures.BUTTON_DISTINCT_BUSES.getSubTexture(0, 0, 1, 0.5),
                 this::isDistinct,
                 (click, value) -> setDistinct(value))
                 .setTooltipsSupplier(pressed -> List.of(Component.translatable("gtceu.multiblock.universal.distinct")
