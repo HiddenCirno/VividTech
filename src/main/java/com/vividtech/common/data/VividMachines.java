@@ -9,10 +9,11 @@ import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
 import com.vividtech.common.machine.generator.CompressedMagicEnergyMachine;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
-import com.vividtech.common.machine.multiblock.part.CastingInputBusPartMachine;
+import com.vividtech.common.machine.multiblock.part.CastingInputHatchPartMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
+import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.PressurizationModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
@@ -45,6 +46,7 @@ import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
@@ -138,37 +140,65 @@ public class VividMachines {
     }
 
     /**
-     * 熔铸输入总线：LV 起，容量与原版同级输入总线一致。
+     * 锻压输入总线 / 熔铸输入仓：LV 起，容量与原版同级输入部件一致。
      * ULV 没有同级电力活塞，因此不注册。
      */
-    public static final int[] CASTING_INPUT_BUS_TIERS = Arrays.stream(GTMachines.ALL_TIERS)
+    public static final int[] MOLD_INPUT_PART_TIERS = Arrays.stream(GTMachines.ALL_TIERS)
             .filter(tier -> tier >= GTValues.LV && tier <= GTValues.OpV)
             .toArray();
 
     /** 按电压等级索引，未注册的等级为 null。 */
-    public static final MachineDefinition[] CASTING_INPUT_BUS = registerCastingInputBuses();
+    public static final MachineDefinition[] FORGING_INPUT_BUS = registerForgingInputBuses();
+    public static final MachineDefinition[] CASTING_INPUT_HATCH = registerCastingInputHatches();
 
-    private static MachineDefinition[] registerCastingInputBuses() {
+    private static MachineDefinition[] registerForgingInputBuses() {
         REGISTRATE.creativeModeTab(() -> STEAM_TAB);
         try {
             MachineDefinition[] registered = GTMachines.registerTieredMachines(
+                    // 保留旧注册 ID，避免已放置的方块在更新后消失；显示名与行为已改为锻压输入总线。
                     "casting_input_bus",
-                    CastingInputBusPartMachine::new,
+                    ForgingInputBusPartMachine::new,
                     (tier, builder) -> builder
-                            .langValue(GTValues.VNF[tier] + " Casting Input Bus")
+                            .langValue(GTValues.VNF[tier] + " Forging Input Bus")
                             .rotationState(RotationState.ALL)
                             .abilities(PartAbility.IMPORT_ITEMS)
                             .overlayTieredHullRenderer("item_bus.import")
                             .tooltips(Component.translatable("gtceu.machine.item_bus.import.tooltip"))
-                            .tooltips(Component.translatable("vividtech.machine.casting_input_bus.tooltip.0"))
+                            .tooltips(Component.translatable("vividtech.machine.forging_input_bus.tooltip.0"))
                             .tooltips(Component.translatable("gtceu.universal.tooltip.item_storage_capacity",
                                     (1 + Math.min(9, tier)) * (1 + Math.min(9, tier))))
                             .tooltipBuilder(VIVID_ADD)
                             .register(),
-                    CASTING_INPUT_BUS_TIERS);
+                    MOLD_INPUT_PART_TIERS);
 
             // GTMachines.registerTieredMachines 返回的数组已经按 tier 索引，
             // 不能按传入 tiers 的循环顺序重新映射，否则整条线会错位一级。
+            return registered;
+        } finally {
+            REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+        }
+    }
+
+    private static MachineDefinition[] registerCastingInputHatches() {
+        REGISTRATE.creativeModeTab(() -> STEAM_TAB);
+        try {
+            MachineDefinition[] registered = GTMachines.registerTieredMachines(
+                    "casting_input_hatch",
+                    CastingInputHatchPartMachine::new,
+                    (tier, builder) -> builder
+                            .langValue(GTValues.VNF[tier] + " Casting Input Hatch")
+                            .rotationState(RotationState.ALL)
+                            .abilities(PartAbility.IMPORT_FLUIDS, PartAbility.IMPORT_FLUIDS_1X)
+                            .overlayTieredHullRenderer("fluid_hatch.import")
+                            .tooltips(Component.translatable("gtceu.machine.fluid_hatch.import.tooltip"))
+                            .tooltips(Component.translatable("vividtech.machine.casting_input_hatch.tooltip.0"))
+                            .tooltips(Component.translatable("gtceu.universal.tooltip.fluid_storage_capacity",
+                                    FormattingUtil.formatNumbers(FluidHatchPartMachine.getTankCapacity(
+                                            FluidHatchPartMachine.INITIAL_TANK_CAPACITY_1X, tier))))
+                            .tooltipBuilder(VIVID_ADD)
+                            .register(),
+                    MOLD_INPUT_PART_TIERS);
+
             return registered;
         } finally {
             REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
@@ -527,10 +557,12 @@ public class VividMachines {
         allowed.addAll(PartAbility.EXPORT_ITEMS.getAllBlocks());
         allowed.addAll(PartAbility.IMPORT_FLUIDS.getAllBlocks());
         allowed.addAll(PartAbility.EXPORT_FLUIDS.getAllBlocks());
-        // PartAbility 的方块列表可能被缓存；显式补上熔铸输入总线。
-        for (MachineDefinition definition : CASTING_INPUT_BUS) {
-            if (definition != null) {
-                allowed.add(definition.getBlock());
+        // PartAbility 的方块列表可能被缓存；显式补上锻压输入总线与熔铸输入仓。
+        for (MachineDefinition[] definitions : new MachineDefinition[][] { FORGING_INPUT_BUS, CASTING_INPUT_HATCH }) {
+            for (MachineDefinition definition : definitions) {
+                if (definition != null) {
+                    allowed.add(definition.getBlock());
+                }
             }
         }
         Block[] allowedArray = allowed.stream().distinct().toArray(Block[]::new);

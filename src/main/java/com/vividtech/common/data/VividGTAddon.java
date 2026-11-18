@@ -134,7 +134,8 @@ public class VividGTAddon implements IGTAddon {
         addSteamModuleRecipes(provider);
         addPrimitiveMagicEnergyRecipes(provider);
         addCompressedMagicEnergyRecipes(provider);
-        addCastingInputBusRecipes(provider);
+        addForgingInputBusRecipes(provider);
+        addCastingInputHatchRecipes(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -398,28 +399,43 @@ public class VividGTAddon implements IGTAddon {
                 .save(provider);
     }
 
-    private static void addCastingInputBusRecipes(Consumer<FinishedRecipe> provider) {
-        for (int tier : VividMachines.CASTING_INPUT_BUS_TIERS) {
+    private static void addForgingInputBusRecipes(Consumer<FinishedRecipe> provider) {
+        addVirtualShapePartRecipes(provider, "forging_input_bus",
+                GTMachines.ITEM_IMPORT_BUS, VividMachines.FORGING_INPUT_BUS);
+    }
+
+    private static void addCastingInputHatchRecipes(Consumer<FinishedRecipe> provider) {
+        addVirtualShapePartRecipes(provider, "casting_input_hatch",
+                GTMachines.FLUID_IMPORT_HATCH, VividMachines.CASTING_INPUT_HATCH);
+    }
+
+    private static void addVirtualShapePartRecipes(Consumer<FinishedRecipe> provider, String recipeId,
+                                                   MachineDefinition[] baseParts,
+                                                   MachineDefinition[] outputs) {
+        for (int tier : VividMachines.MOLD_INPUT_PART_TIERS) {
             ItemEntry<Item> piston = electricPistonForTier(tier);
-            if (piston == null || VividMachines.CASTING_INPUT_BUS[tier] == null) {
+            if (piston == null || baseParts[tier] == null || outputs[tier] == null) {
                 continue;
             }
             String tierName = GTValues.VN[tier].toLowerCase(Locale.ROOT);
-            addCastingInputBusRecipe(provider, tier, tierName, piston, true);
-            addCastingInputBusRecipe(provider, tier, tierName, piston, false);
+            addVirtualShapePartRecipe(provider, recipeId, tier, tierName, piston, baseParts[tier], outputs[tier],
+                    true);
+            addVirtualShapePartRecipe(provider, recipeId, tier, tierName, piston, baseParts[tier], outputs[tier],
+                    false);
         }
     }
 
-    private static void addCastingInputBusRecipe(Consumer<FinishedRecipe> provider, int tier,
-                                                 String tierName, ItemEntry<Item> piston,
-                                                 boolean solder) {
+    private static void addVirtualShapePartRecipe(Consumer<FinishedRecipe> provider, String recipeId, int tier,
+                                                  String tierName, ItemEntry<Item> piston,
+                                                  MachineDefinition basePart, MachineDefinition output,
+                                                  boolean solder) {
         GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder(
-                        "casting_input_bus_" + tierName + (solder ? "_solder" : "_tin"))
-                .inputItems(GTMachines.ITEM_IMPORT_BUS[tier], 1)
+                        recipeId + "_" + tierName + (solder ? "_solder" : "_tin"))
+                .inputItems(basePart.asStack())
                 .inputItems(CustomTags.CIRCUITS_ARRAY[tier], 1)
                 .inputItems(piston, 1)
                 .inputFluids(solder ? GTMaterials.SolderingAlloy.getFluid(144) : GTMaterials.Tin.getFluid(288))
-                .outputItems(VividMachines.CASTING_INPUT_BUS[tier].asStack())
+                .outputItems(output.asStack())
                 .EUt(GTValues.VA[tier]).duration(20 * 10)
                 .save(provider);
     }

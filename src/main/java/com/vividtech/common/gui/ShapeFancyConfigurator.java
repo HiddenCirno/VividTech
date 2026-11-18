@@ -25,9 +25,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 熔铸输入总线的左侧配置页：从 GT 的全部铸模/挤出模中选择一个虚拟模具。
+ * 虚拟模具/模头选择页：锻压输入总线只会看到模头，熔铸输入仓只会看到模具。
  */
-public class MoldFancyConfigurator implements IFancyConfigurator {
+public class ShapeFancyConfigurator implements IFancyConfigurator {
+
+    public enum Kind {
+
+        MOLD("vividtech.gui.casting_input_hatch.mold",
+                "vividtech.gui.casting_input_hatch.mold.tooltip"),
+        EXTRUDER("vividtech.gui.forging_input_bus.extruder",
+                "vividtech.gui.forging_input_bus.extruder.tooltip");
+
+        private final String titleKey;
+        private final String tooltipKey;
+
+        Kind(String titleKey, String tooltipKey) {
+            this.titleKey = titleKey;
+            this.tooltipKey = tooltipKey;
+        }
+    }
 
     private static final int WIDTH = 174;
     private static final int HEIGHT = 150;
@@ -36,32 +52,30 @@ public class MoldFancyConfigurator implements IFancyConfigurator {
     private static final int COLUMNS = 9;
     private static final int CELL = 18;
 
-    private static final List<ItemStack> MOLDS = buildMolds();
+    private static final List<ItemStack> MOLDS = buildItems(GTItems.SHAPE_MOLDS);
+    private static final List<ItemStack> EXTRUDERS = buildItems(GTItems.SHAPE_EXTRUDERS);
 
     private final ItemStackTransfer slot;
+    private final Kind kind;
 
-    public MoldFancyConfigurator(ItemStackTransfer slot) {
+    public ShapeFancyConfigurator(ItemStackTransfer slot, Kind kind) {
         this.slot = slot;
+        this.kind = kind;
     }
 
-    private static List<ItemStack> buildMolds() {
-        List<ItemStack> molds = new ArrayList<>();
-        for (ItemEntry<Item> entry : GTItems.SHAPE_MOLDS) {
+    private static List<ItemStack> buildItems(ItemEntry<Item>[] entries) {
+        List<ItemStack> items = new ArrayList<>();
+        for (ItemEntry<Item> entry : entries) {
             if (entry != null) {
-                molds.add(entry.asStack());
+                items.add(entry.asStack());
             }
         }
-        for (ItemEntry<Item> entry : GTItems.SHAPE_EXTRUDERS) {
-            if (entry != null) {
-                molds.add(entry.asStack());
-            }
-        }
-        return List.copyOf(molds);
+        return List.copyOf(items);
     }
 
     @Override
     public Component getTitle() {
-        return Component.translatable("vividtech.gui.casting_input_bus.mold");
+        return Component.translatable(kind.titleKey);
     }
 
     @Override
@@ -78,19 +92,19 @@ public class MoldFancyConfigurator implements IFancyConfigurator {
                 .setBackgroundTexture(new GuiTextureGroup(GuiTextures.SLOT, GuiTextures.MOLD_OVERLAY)));
 
         int index = 0;
-        for (ItemStack mold : MOLDS) {
+        for (ItemStack item : kind == Kind.MOLD ? MOLDS : EXTRUDERS) {
             int x = GRID_X + (index % COLUMNS) * CELL;
             int y = GRID_Y + (index / COLUMNS) * CELL;
             group.addWidget(new ButtonWidget(x, y, CELL, CELL,
-                    new ItemStackTexture(mold),
+                    new ItemStackTexture(item),
                     click -> {
                         if (click.isRemote) {
                             return;
                         }
-                        slot.setStackInSlot(0, mold.copy());
+                        slot.setStackInSlot(0, item.copy());
                         slot.onContentsChanged(0);
                     })
-                    .setHoverTooltips(mold.getHoverName()));
+                    .setHoverTooltips(item.getHoverName()));
             index++;
         }
 
@@ -105,13 +119,13 @@ public class MoldFancyConfigurator implements IFancyConfigurator {
                     slot.setStackInSlot(0, ItemStack.EMPTY);
                     slot.onContentsChanged(0);
                 })
-                .setHoverTooltips(Component.translatable("vividtech.gui.casting_input_bus.mold.clear")));
+                .setHoverTooltips(Component.translatable("vividtech.gui.mold_selection.clear")));
 
         return group;
     }
 
     @Override
     public List<Component> getTooltips() {
-        return List.of(Component.translatable("vividtech.gui.casting_input_bus.mold.tooltip"));
+        return List.of(Component.translatable(kind.tooltipKey));
     }
 }
