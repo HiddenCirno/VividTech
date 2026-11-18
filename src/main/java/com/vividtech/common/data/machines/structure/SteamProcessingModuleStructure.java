@@ -10,6 +10,7 @@ import static com.gregtechceu.gtceu.api.pattern.util.RelativeDirection.*;
  * <p>
  * 控制器位于外侧切片的第二层，与 GTNH 太空电梯模块的控制器位置一致；
  * 模块嵌在梦想电梯的模块槽位中，外壳位置同时被主机结构认可。
+ * 除控制器外的 9 个外壳位置均可安装输入/输出总线、仓、总成或 ME 仓。
  * </p>
  */
 @SuppressWarnings("unused")
