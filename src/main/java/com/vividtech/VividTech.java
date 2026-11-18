@@ -1,9 +1,11 @@
 package com.vividtech;
 
+import com.vividtech.common.data.VividCovers;
 import com.vividtech.common.data.VividMachines;
 import com.vividtech.common.data.VividRecipeTypes;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
+import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 
@@ -21,6 +23,7 @@ public class VividTech {
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         eventBus.addGenericListener(GTRecipeType.class, this::registerRecipeTypes);
         eventBus.addGenericListener(MachineDefinition.class, this::registerMachines);
+        eventBus.addGenericListener(CoverDefinition.class, this::registerCovers);
     }
 
     private void registerRecipeTypes(GTCEuAPI.RegisterEvent<ResourceLocation, GTRecipeType> event) {
@@ -29,6 +32,10 @@ public class VividTech {
 
     private void registerMachines(GTCEuAPI.RegisterEvent<ResourceLocation, MachineDefinition> event) {
         VividMachines.init();
+    }
+
+    private void registerCovers(GTCEuAPI.RegisterEvent<ResourceLocation, CoverDefinition> event) {
+        VividCovers.init();
     }
 
     public static ResourceLocation id(String path) {

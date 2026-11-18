@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "vividtech:item/uiv_256a_wireless_grid_transmit_cover"
+  }
+}

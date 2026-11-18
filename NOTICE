@@ -1,0 +1,17 @@
+VividTech
+Copyright (C) 2026 HiddenCirno
+
+This project is licensed under the GNU Lesser General Public License,
+version 3.0 only (LGPL-3.0-only). See LICENSE for the full license text.
+
+Third-party notices
+-------------------
+
+GTMThings (mod id: gtmthings)
+  Author: liansishen
+  License: LGPLv3.0
+  Source: https://www.curseforge.com/minecraft/mc-mods/gtmthings
+  Use: The wireless grid transmitter item and cover textures are derived from
+       GTMThings' wireless energy receiver cover textures. The cover body is
+       reused, and the center lightning glyph is recolored per amperage tier.
+       These derivative textures remain under LGPL-3.0.
