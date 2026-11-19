@@ -599,5 +599,14 @@
   "vividtech.gui.forging_input_bus.extruder.tooltip": "§7The selected extruder head is virtual and is not consumed.",
   "vividtech.gui.casting_input_hatch.mold": "Mold Selection",
   "vividtech.gui.casting_input_hatch.mold.tooltip": "§7The selected mold is virtual and is not consumed.",
-  "vividtech.gui.mold_selection.clear": "Clear selection"
+  "vividtech.gui.mold_selection.clear": "Clear selection",
+  "block.gtceu.crystal_aggregation_factory": "Crystal Recasting Factory",
+  "gtceu.crystal_aggregation_factory": "Crystal Recasting Factory",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.0": "§7Casts silicon and metal materials into §elattice silicon§7, or casts gem dust into §6gems",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.1": "§eEight hearts and eight arrows, finely crafted",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.2": "§7While working, final duration passes through an independent multiplier: Max(§erecipe temperature§7 / §acoil temperature§7, §c0.5§7)",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.3": "§7While working, for every §b900K§7 the §acoil temperature§7 exceeds the §erecipe temperature§7, final energy use *§e90%",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.4": "§7While working, for each §blevel§7 the §bvoltage tier§7 exceeds §bMV§7, working speed *§e150%",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.5": "§7Supports up to §e8§7 energy hatches. §cParallel control hatches cannot§7 be installed",
+  "gtceu.crystal_aggregation": "Crystal Casting"
 }

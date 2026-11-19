@@ -14,6 +14,7 @@ import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachi
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
+import com.vividtech.common.machine.multiblock.electric.CrystalAggregationFactoryMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.PressurizationModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
@@ -35,6 +36,8 @@ import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
+import com.gregtechceu.gtceu.api.pattern.FactoryBlockPattern;
+import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
@@ -697,6 +700,59 @@ public class VividMachines {
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_solid_steel"),
                     GTCEu.id("block/multiblock/gcym/large_maceration_tower"))
             .register();
+
+    /**
+     * 晶体重铸工厂：单晶硅与宝石粉的高温重铸设备。
+     */
+    public static final MultiblockMachineDefinition CRYSTAL_AGGREGATION_FACTORY = REGISTRATE
+            .multiblock("crystal_aggregation_factory", CrystalAggregationFactoryMachine::new)
+            .langValue("Crystal Recasting Factory")
+            .rotationState(RotationState.ALL)
+            .allowExtendedFacing(false)
+            .recipeType(VividRecipeTypes.CRYSTAL_AGGREGATION_RECIPES)
+            .recipeModifier(CrystalAggregationFactoryMachine::modifyRecipe)
+            .appearanceBlock(GTBlocks.CASING_ALUMINIUM_FROSTPROOF)
+            .tooltips(
+                    Component.translatable("vividtech.machine.crystal_aggregation_factory.tooltip.0"),
+                    Component.translatable("vividtech.machine.crystal_aggregation_factory.tooltip.1"),
+                    Component.translatable("vividtech.machine.crystal_aggregation_factory.tooltip.2"),
+                    Component.translatable("vividtech.machine.crystal_aggregation_factory.tooltip.3"),
+                    Component.translatable("vividtech.machine.crystal_aggregation_factory.tooltip.4"),
+                    Component.translatable("vividtech.machine.crystal_aggregation_factory.tooltip.5"))
+            .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> FactoryBlockPattern.start(RelativeDirection.FRONT, RelativeDirection.UP, RelativeDirection.RIGHT)
+                    .aisle("         ", "  AAAAA  ", " AABBBAA ", " ABBBBBA ", " ABBBBBA ", " ABBBBBA ", " AABBBAA ", "  AAAAA  ", "         ")
+                    .aisle("  AAAAA  ", " ACDDDCA ", "AC     CA", "AD     DA", "AD     DA", "AD     DA", "AC     CA", " ACDDDCA ", "  AAAAA  ")
+                    .aisle(" AABBBAA ", "AC     CA", "A C   C A", "B       B", "B       B", "B       B", "A C   C A", "AC     CA", " AABBBAA ")
+                    .aisle(" ABBBBBA ", "AD     DA", "B       B", "B  CBC  B", "B  BBB  B", "B  CBC  B", "B       B", "AD     DA", " ABBBBBA ")
+                    .aisle(" ABBBBBA ", "AD     DE", "B       B", "B  BBB  B", "B  BBB  B", "B  BBB  B", "B       B", "AD     DA", " ABBBBBA ")
+                    .aisle(" ABBBBBA ", "AD     DA", "B       B", "B  CBC  B", "B  BBB  B", "B  CBC  B", "B       B", "AD     DA", " ABBBBBA ")
+                    .aisle(" AABBBAA ", "AC     CA", "A C   C A", "B       B", "B       B", "B       B", "A C   C A", "AC     CA", " AABBBAA ")
+                    .aisle("  AAAAA  ", " ACDDDCA ", "AC     CA", "AD     DA", "AD     DA", "AD     DA", "AC     CA", " ACDDDCA ", "  AAAAA  ")
+                    .aisle("         ", "  AAAAA  ", " AABBBAA ", " ABBBBBA ", " ABBBBBA ", " ABBBBBA ", " AABBBAA ", "  AAAAA  ", "         ")
+                    .where("E", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("D", Predicates.heatingCoils())
+                    .where("C", Predicates.blocks(ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.Aluminium)))
+                    .where("B", Predicates.blocks(GTBlocks.CASING_TEMPERED_GLASS.get()))
+                    .where("A", crystalAggregationFactoryCasing())
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_frost_proof"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
+            .register();
+
+    /**
+     * A 位：防冻机械方块，或能源/物品/流体/维护/ME 仓室。
+     */
+    private static TraceabilityPredicate crystalAggregationFactoryCasing() {
+        return Predicates.blocks(GTBlocks.CASING_ALUMINIUM_FROSTPROOF.get())
+                .or(Predicates.abilities(PartAbility.INPUT_ENERGY)
+                        .setMinGlobalLimited(1).setMaxGlobalLimited(8).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1));
+    }
 
     public static final MachineDefinition[] COMPRESSED_PRIMITIVE_MAGIC_ENERGY = GTMachines.registerTieredMachines(
             "compressed_primitive_magic_energy",

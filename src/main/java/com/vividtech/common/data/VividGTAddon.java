@@ -27,6 +27,7 @@ import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
 
 import com.tterrag.registrate.util.entry.ItemEntry;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
@@ -141,6 +142,7 @@ public class VividGTAddon implements IGTAddon {
         addForgingInputBusRecipes(provider);
         addCastingInputHatchRecipes(provider);
         addAutoclaveRecipes(provider);
+        addCrystalAggregationRecipes(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -448,6 +450,146 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(24)
                 .duration(20 * 30)
                 .save(provider);
+    }
+
+    private static void addCrystalAggregationRecipes(Consumer<FinishedRecipe> provider) {
+        addCrystalAggregationFactoryRecipe(provider);
+        addCrystalBouleRecipes(provider);
+        addGemAggregationRecipes(provider);
+    }
+
+    private static void addCrystalAggregationFactoryRecipe(Consumer<FinishedRecipe> provider) {
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("crystal_aggregation_factory")
+                .inputItems(GTBlocks.CASING_ALUMINIUM_FROSTPROOF.asStack(4))
+                .inputItems(TagPrefix.frameGt, GTMaterials.Aluminium, 4)
+                .inputItems(GTItems.EMITTER_MV, 8)
+                .inputItems(GTItems.SENSOR_MV, 8)
+                .inputItems(GTItems.FIELD_GENERATOR_MV, 6)
+                .inputItems(CustomTags.MV_CIRCUITS, 12)
+                .inputFluids(GTMaterials.VanadiumSteel.getFluid(1296))
+                .outputItems(VividMachines.CRYSTAL_AGGREGATION_FACTORY.asStack())
+                .EUt(GTValues.VA[GTValues.MV])
+                .duration(20 * 60)
+                .save(provider);
+    }
+
+    private static void addCrystalBouleRecipes(Consumer<FinishedRecipe> provider) {
+        var type = VividRecipeTypes.CRYSTAL_AGGREGATION_RECIPES;
+
+        type.recipeBuilder("vividtech_crystal_silicon_boule")
+                .inputItems(TagPrefix.dust, GTMaterials.Silicon, 32)
+                .inputItems(TagPrefix.dustSmall, GTMaterials.GalliumArsenide, 1)
+                .outputItems(GTItems.SILICON_BOULE.asStack())
+                .blastFurnaceTemp(1784)
+                .duration(900).EUt(GTValues.VA[GTValues.MV])
+                .addData("vividtech_crystal_boule", true)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_crystal_phosphorus_boule")
+                .inputItems(TagPrefix.dust, GTMaterials.Silicon, 64)
+                .inputItems(TagPrefix.dust, GTMaterials.Phosphorus, 8)
+                .inputItems(TagPrefix.dustSmall, GTMaterials.GalliumArsenide, 2)
+                .inputFluids(GTMaterials.Nitrogen.getFluid(8000))
+                .outputItems(GTItems.PHOSPHORUS_BOULE.asStack())
+                .blastFurnaceTemp(2484)
+                .duration(1200).EUt(GTValues.VA[GTValues.HV])
+                .addData("vividtech_crystal_boule", true)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_crystal_naquadah_boule")
+                .inputItems(TagPrefix.block, GTMaterials.Silicon, 16)
+                .inputItems(TagPrefix.ingot, GTMaterials.Naquadah, 1)
+                .inputItems(TagPrefix.dust, GTMaterials.GalliumArsenide, 1)
+                .inputFluids(GTMaterials.Argon.getFluid(8000))
+                .outputItems(GTItems.NAQUADAH_BOULE.asStack())
+                .blastFurnaceTemp(5400)
+                .duration(1500).EUt(GTValues.VA[GTValues.EV])
+                .addData("vividtech_crystal_boule", true)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_crystal_neutronium_boule")
+                .inputItems(TagPrefix.block, GTMaterials.Silicon, 32)
+                .inputItems(TagPrefix.ingot, GTMaterials.Neutronium, 4)
+                .inputItems(TagPrefix.dust, GTMaterials.GalliumArsenide, 2)
+                .inputFluids(GTMaterials.Xenon.getFluid(8000))
+                .outputItems(GTItems.NEUTRONIUM_BOULE.asStack())
+                .blastFurnaceTemp(6484)
+                .duration(1800).EUt(GTValues.VA[GTValues.IV])
+                .addData("vividtech_crystal_boule", true)
+                .save(provider);
+
+        ItemStack rutherfordiumBoule = item("kubejs", "rutherfordium_neutronium_boule");
+        if (!rutherfordiumBoule.isEmpty()) {
+            type.recipeBuilder("vividtech_crystal_rutherfordium_neutronium_boule")
+                    .inputItems(GTItems.NEUTRONIUM_BOULE.asStack())
+                    .inputItems(TagPrefix.dust, GTMaterials.Rutherfordium, 4)
+                    .inputFluids(GTMaterials.Radon.getFluid(8000))
+                    .outputItems(rutherfordiumBoule.copy())
+                    .blastFurnaceTemp(8100)
+                    .duration(2100).EUt(GTValues.VA[GTValues.LuV])
+                    .addData("vividtech_crystal_boule", true)
+                    .save(provider);
+        }
+
+        ItemStack taraniumBoule = item("kubejs", "taranium_boule");
+        if (!taraniumBoule.isEmpty()) {
+            type.recipeBuilder("vividtech_crystal_taranium_boule")
+                    .inputItems(TagPrefix.block, GTMaterials.Silicon, 64)
+                    .inputItems(TagPrefix.ingot, GTLMaterials.Taranium, 8)
+                    .inputItems(TagPrefix.dust, GTMaterials.GalliumArsenide, 4)
+                    .inputFluids(GTMaterials.Radon.getFluid(16000))
+                    .outputItems(taraniumBoule.copy())
+                    .blastFurnaceTemp(10500)
+                    .duration(2400).EUt(GTValues.VA[GTValues.ZPM])
+                    .addData("vividtech_crystal_boule", true)
+                    .save(provider);
+        }
+
+    }
+
+    private static void addGemAggregationRecipes(Consumer<FinishedRecipe> provider) {
+        for (Material material : GTCEuAPI.materialManager.getRegisteredMaterials()) {
+            if (!material.hasProperty(PropertyKey.GEM)) {
+                continue;
+            }
+            ItemStack dust = ChemicalHelper.get(TagPrefix.dust, material);
+            if (dust.isEmpty() && material == GTLMaterials.MagnetoResonatic) {
+                dust = item("gtceu", "magneto_resonatic_dust");
+            }
+            if (dust.isEmpty()) {
+                continue;
+            }
+            String id = material.getResourceLocation().toString().replace(':', '_').replace('/', '_');
+            addGemAggregationRecipe(provider, id, dust, ChemicalHelper.get(TagPrefix.gem, material),
+                    1, 1, 100, 600);
+            addGemAggregationRecipe(provider, id, dust, ChemicalHelper.get(TagPrefix.gemFlawless, material),
+                    2, 2, 500, 1200);
+            addGemAggregationRecipe(provider, id, dust, ChemicalHelper.get(TagPrefix.gemExquisite, material),
+                    3, 4, 1000, 1800);
+        }
+    }
+
+    private static void addGemAggregationRecipe(Consumer<FinishedRecipe> provider, String id, ItemStack dust,
+                                                ItemStack output, int circuit, int dustCount, int water,
+                                                int duration) {
+        if (output.isEmpty()) {
+            return;
+        }
+        VividRecipeTypes.CRYSTAL_AGGREGATION_RECIPES.recipeBuilder("vividtech_gem_" + id + "_" + circuit)
+                .circuitMeta(circuit)
+                .inputItems(dust.copyWithCount(dustCount))
+                .inputFluids(GTMaterials.DistilledWater.getFluid(water))
+                .outputItems(output.copy())
+                .blastFurnaceTemp(2700)
+                .EUt(GTValues.VA[GTValues.MV])
+                .duration(duration)
+                .addData("vividtech_gem_aggregation", true)
+                .save(provider);
+    }
+
+    private static ItemStack item(String namespace, String path) {
+        Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(namespace, path));
+        return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
     }
 
     private static void addForgingInputBusRecipes(Consumer<FinishedRecipe> provider) {

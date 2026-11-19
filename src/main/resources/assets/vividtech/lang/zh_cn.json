@@ -599,5 +599,14 @@
   "vividtech.gui.forging_input_bus.extruder.tooltip": "§7选中的模头不会被消耗",
   "vividtech.gui.casting_input_hatch.mold": "模具选择",
   "vividtech.gui.casting_input_hatch.mold.tooltip": "§7选中的模具不会被消耗",
-  "vividtech.gui.mold_selection.clear": "清空选择"
+  "vividtech.gui.mold_selection.clear": "清空选择",
+  "block.gtceu.crystal_aggregation_factory": "晶体重铸工厂",
+  "gtceu.crystal_aggregation_factory": "晶体重铸工厂",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.0": "§7将硅和金属材料熔铸为§e晶格硅§7，或者将宝石粉熔铸为§6宝石",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.1": "§e八心八箭，精工细作",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.2": "§7工作时，最终耗时会经过独立乘区，计算公式为Max(§e配方需求温度§7/§a线圈温度§7,§c0.5§7)",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.3": "§7工作时，§a线圈温度§7每超过§e配方需求温度§b900K§7，最终耗能*§e90%",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.4": "§7工作时，§b电压等级§7每高出§bMV§a1§7级，工作速度*§e150%",
+  "vividtech.machine.crystal_aggregation_factory.tooltip.5": "§7最多可以安装§e8§7个能源仓，§c无法§7安装§a并行控制仓",
+  "gtceu.crystal_aggregation": "晶体熔铸"
 }
