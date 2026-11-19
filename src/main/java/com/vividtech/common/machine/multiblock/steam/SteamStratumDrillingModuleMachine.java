@@ -34,7 +34,7 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
 
     private static final long OIL_OUTPUT = 64_000L;
 
-    /** false = 石油；true = 盐水。仅主世界有效。 */
+    /** false = 石油；true = 盐水。主世界（含 Re-Avaritia 私人维度）有效。 */
     @Persisted
     @DescSynced
     private boolean saltWaterMode;
@@ -101,7 +101,7 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
         if (playerIn.isShiftKeyDown()) {
             if (!isRemote()) {
                 Level level = getLevel();
-                if (level != null && level.dimension().equals(Level.OVERWORLD)) {
+                if (level != null && ResourceDimensionCompat.isOverworldLike(level.dimension())) {
                     saltWaterMode = !saltWaterMode;
                     markDirty();
                     notifyBlockUpdate();
@@ -137,7 +137,7 @@ public class SteamStratumDrillingModuleMachine extends AbstractSteamResourceModu
     }
 
     private FluidStack getOutputFluid(Level level) {
-        if (level.dimension().equals(Level.OVERWORLD)) {
+        if (ResourceDimensionCompat.isOverworldLike(level.dimension())) {
             Fluid output = saltWaterMode ? GTMaterials.SaltWater.getFluid() : GTMaterials.Oil.getFluid();
             return FluidStack.create(output, OIL_OUTPUT);
         }

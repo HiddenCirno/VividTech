@@ -46,10 +46,10 @@ public final class ResourceOreTable {
      */
     public static ItemStack roll(Level level, int amount, RandomSource random, Set<Material> filtered,
                                  boolean whitelist) {
-        ResourceKey<Level> dimension = level.dimension();
+        ResourceKey<Level> dimension = ResourceDimensionCompat.effectiveDimension(level.dimension());
         List<WeightedOre> table = CACHE.get(dimension);
         if (table == null) {
-            build(level);
+            build(dimension);
             table = CACHE.getOrDefault(dimension, List.of());
         }
 
@@ -111,8 +111,7 @@ public final class ResourceOreTable {
         return new TagPrefix[] { TagPrefix.ore, TagPrefix.rawOre, TagPrefix.gem, TagPrefix.dust };
     }
 
-    private static synchronized void build(Level level) {
-        ResourceKey<Level> dimension = level.dimension();
+    private static synchronized void build(ResourceKey<Level> dimension) {
         if (CACHE.containsKey(dimension)) {
             return;
         }

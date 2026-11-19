@@ -58,7 +58,10 @@ public class SteamStratumMiningModuleMachine extends AbstractSteamResourceModule
 
     @Override
     public boolean isDimensionAllowed(Level level) {
-        if (level.dimension().equals(Level.OVERWORLD)) {
+        if (ResourceDimensionCompat.isOverworldLike(level.dimension())) {
+            return true;
+        }
+        if (ResourceDimensionCompat.isAncientWorld(level.dimension())) {
             return true;
         }
         if (level.dimension().equals(Level.NETHER)) {

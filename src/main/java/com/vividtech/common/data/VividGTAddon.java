@@ -6,10 +6,14 @@ import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLMaterials;
 import org.gtlcore.gtlcore.common.data.machines.MultiBlockMachineA;
 
+import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.addon.GTAddon;
 import com.gregtechceu.gtceu.api.addon.IGTAddon;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
+import com.gregtechceu.gtceu.api.data.chemical.material.Material;
+import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlags;
+import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
@@ -136,6 +140,7 @@ public class VividGTAddon implements IGTAddon {
         addCompressedMagicEnergyRecipes(provider);
         addForgingInputBusRecipes(provider);
         addCastingInputHatchRecipes(provider);
+        addAutoclaveRecipes(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -396,6 +401,52 @@ public class VividGTAddon implements IGTAddon {
                 .inputItems(CustomTags.HV_CIRCUITS, 8)
                 .outputItems(VividMachines.getSteamModule(type, 3).asStack())
                 .EUt(480).duration(20 * 60)
+                .save(provider);
+    }
+
+    /**
+     * 为所有还没有高压釜结晶配方的宝石粉补充水/蒸馏水结晶配方。
+     * 水：70% 概率产出，60 秒；蒸馏水：必定产出，30 秒。
+     */
+    private static void addAutoclaveRecipes(Consumer<FinishedRecipe> provider) {
+        for (Material material : GTCEuAPI.materialManager.getRegisteredMaterials()) {
+            if (!material.hasProperty(PropertyKey.GEM) || !material.hasProperty(PropertyKey.DUST)) {
+                continue;
+            }
+            // GT/GTLCore 会为 CRYSTALLIZABLE 材料生成同款高压釜配方。
+            if (material.hasFlag(MaterialFlags.CRYSTALLIZABLE)) {
+                continue;
+            }
+            // 兰波顿有独立的 15 粉 + 1000 mB 结晶配方，避免加入更廉价的替代路线。
+            if (material == GTMaterials.Lapotron) {
+                continue;
+            }
+            addAutoclaveRecipe(provider, material);
+        }
+    }
+
+    private static void addAutoclaveRecipe(Consumer<FinishedRecipe> provider, Material material) {
+        ItemStack dust = ChemicalHelper.get(TagPrefix.dust, material);
+        ItemStack product = ChemicalHelper.get(TagPrefix.gem, material);
+        if (dust.isEmpty() || product.isEmpty()) {
+            return;
+        }
+        String id = material.getResourceLocation().toString().replace(':', '_');
+
+        GTRecipeTypes.AUTOCLAVE_RECIPES.recipeBuilder("vividtech_autoclave_" + id + "_water")
+                .inputItems(dust.copy())
+                .inputFluids(GTMaterials.Water.getFluid(250))
+                .chancedOutput(product.copy(), 7000, 0)
+                .EUt(24)
+                .duration(20 * 60)
+                .save(provider);
+
+        GTRecipeTypes.AUTOCLAVE_RECIPES.recipeBuilder("vividtech_autoclave_" + id + "_distilled_water")
+                .inputItems(dust.copy())
+                .inputFluids(GTMaterials.DistilledWater.getFluid(50))
+                .outputItems(product.copy())
+                .EUt(24)
+                .duration(20 * 30)
                 .save(provider);
     }
 

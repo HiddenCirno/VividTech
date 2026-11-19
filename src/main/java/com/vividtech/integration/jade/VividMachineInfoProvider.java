@@ -5,6 +5,7 @@ import com.vividtech.common.machine.multiblock.steam.AbstractSteamResourceModule
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamProcessingModuleMachine;
 import com.vividtech.common.machine.multiblock.steam.SteamStratumDrillingModuleMachine;
+import com.vividtech.common.machine.multiblock.steam.ResourceDimensionCompat;
 import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMachine;
 
 import com.gregtechceu.gtceu.api.GTValues;
@@ -84,7 +85,7 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
                 data.putBoolean("whitelist", mining.isWhitelistMode());
             } else if (module instanceof SteamStratumDrillingModuleMachine drilling) {
                 Level level = drilling.getLevel();
-                if (level != null && level.dimension().equals(Level.OVERWORLD)) {
+                if (level != null && ResourceDimensionCompat.isOverworldLike(level.dimension())) {
                     data.putString("output", drilling.isSaltWaterMode() ? "salt_water" : "oil");
                 } else if (level != null && level.dimension().equals(Level.NETHER) &&
                         drilling.getModuleTier() >= 2) {
