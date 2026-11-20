@@ -31,6 +31,14 @@ public final class ResourceDimensionCompat {
         return dimension.location().equals(ANCIENT_WORLD);
     }
 
+    /**
+     * 钻探模块的主世界判定：私人维度与远古世界都按主世界处理，
+     * 允许抽取石油/盐水。矿脉表仍由 {@link #effectiveDimension} 单独处理。
+     */
+    public static boolean isDrillingOverworldLike(ResourceKey<Level> dimension) {
+        return isOverworldLike(dimension) || isAncientWorld(dimension);
+    }
+
     /** 用于矿脉权重查询和产出形态选择的实际维度。 */
     public static ResourceKey<Level> effectiveDimension(ResourceKey<Level> dimension) {
         return isAvaritiaPersonal(dimension) ? Level.OVERWORLD : dimension;
