@@ -128,7 +128,7 @@ public class VividGTAddon implements IGTAddon {
 
         VanillaRecipeHelper.addShapelessRecipe(provider, "dream_elevator_cleanroom_subsystem",
                 VividMachines.CLEANROOM_SUBSYSTEM.asStack(),
-                GTLMachines.CLEANING_CONFIGURATION_MAINTENANCE_HATCH.asStack());
+                GTMachines.CLEANING_MAINTENANCE_HATCH.asStack());
 
         VanillaRecipeHelper.addShapedRecipe(provider, "dream_elevator_gravity_subsystem",
                 VividMachines.GRAVITY_SUBSYSTEM.asStack(),
