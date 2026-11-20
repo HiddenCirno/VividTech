@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.vividtech.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "vividtech.refmap.json",
+  "mixins": [
+    "RecipeHelperOverclockMixin"
+  ],
+  "client": [],
+  "server": []
+}

@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.CoilWorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
+import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
 import com.gregtechceu.gtceu.api.recipe.logic.OCParams;
 import com.gregtechceu.gtceu.api.recipe.logic.OCResult;
@@ -31,6 +32,9 @@ public class CrystalAggregationFactoryMachine extends CoilWorkableElectricMultib
         if (!(machine instanceof CrystalAggregationFactoryMachine factory)) {
             return recipe;
         }
+        // 本机器的超频在下方自行完成，清掉可能残留的 OC 结果，避免被框架再应用一次。
+        result.reset();
+
         boolean boule = recipe.data.getBoolean("vividtech_crystal_boule");
         boolean gem = recipe.data.getBoolean("vividtech_gem_aggregation");
         if (!boule && !gem) {
@@ -64,6 +68,10 @@ public class CrystalAggregationFactoryMachine extends CoilWorkableElectricMultib
         GTRecipe modified = recipe.copy();
         modified.duration = Math.max(1, (int) Math.round(recipe.duration * durationMultiplier));
         RecipeHelper.setInputEUt(modified, eut);
+
+        // 线圈/电压加速结算后再做普通无损超频；低于 1t 的最后一档由全局 Mixin 取整到 1t。
+        RecipeHelper.applyOverclock(OverclockingLogic.PERFECT_OVERCLOCK, modified,
+                factory.getOverclockVoltage(), params, result);
         return modified;
     }
 }

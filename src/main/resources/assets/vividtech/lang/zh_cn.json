@@ -462,6 +462,7 @@
   "block.gtceu.basic_integrated_ore_processor": "基础集成矿物处理厂",
   "gtceu.basic_integrated_ore_processor": "基础集成矿物处理厂",
   "vividtech.machine.basic_integrated_ore_processor.tooltip.0": "§7不支持并行控制仓",
+  "vividtech.machine.basic_integrated_ore_processor.tooltip.1": "§7最大并行数：§e16",
   "itemGroup.vividtech.infinite_potential": "绚乱科技：潜能无限",
   "vividtech.jade.steam_per_tick": "§7蒸汽消耗：§e%s§7 mB/t",
   "block.gtceu.lv_compressed_primitive_magic_energy": "压缩低压原始魔法能源吸收器",
@@ -608,5 +609,12 @@
   "vividtech.machine.crystal_aggregation_factory.tooltip.3": "§7工作时，§a线圈温度§7每超过§e配方需求温度§b900K§7，最终耗能*§e90%",
   "vividtech.machine.crystal_aggregation_factory.tooltip.4": "§7工作时，§b电压等级§7每高出§bMV§a1§7级，工作速度*§e150%",
   "vividtech.machine.crystal_aggregation_factory.tooltip.5": "§7最多可以安装§e8§7个能源仓，§c无法§7安装§a并行控制仓",
-  "gtceu.crystal_aggregation": "晶体熔铸"
+  "gtceu.crystal_aggregation": "晶体熔铸",
+  "block.gtceu.atmospheric_collection_unit": "大气捕集单元",
+  "gtceu.atmospheric_collection_unit": "大气捕集单元",
+  "gtceu.atmospheric_collection": "大气捕集",
+  "vividtech.machine.atmospheric_collection_unit.tooltip.0": "§7只能在拥有大气环境的维度工作",
+  "vividtech.machine.atmospheric_collection_unit.tooltip.1": "§d自动捕集并冷凝大气",
+  "vividtech.machine.atmospheric_collection_unit.tooltip.2": "§7安装并行控制仓后，可以同时处理多个相同配方",
+  "vividtech.dimension.avaritia_personal": "穹宇洞虚之界"
 }

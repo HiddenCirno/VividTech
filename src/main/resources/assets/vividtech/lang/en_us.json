@@ -462,6 +462,7 @@
   "block.gtceu.basic_integrated_ore_processor": "Basic Integrated Ore Processing Plant",
   "gtceu.basic_integrated_ore_processor": "Basic Integrated Ore Processing Plant",
   "vividtech.machine.basic_integrated_ore_processor.tooltip.0": "§7Does not support parallel control hatches",
+  "vividtech.machine.basic_integrated_ore_processor.tooltip.1": "§7Max Parallel: §e16",
   "itemGroup.vividtech.infinite_potential": "VividTech: Infinite Potential",
   "vividtech.jade.steam_per_tick": "§7Steam Usage: §e%s§7 mB/t",
   "block.gtceu.lv_compressed_primitive_magic_energy": "Compressed Low Voltage Primitive Magic Energy Absorber",
@@ -608,5 +609,12 @@
   "vividtech.machine.crystal_aggregation_factory.tooltip.3": "§7While working, for every §b900K§7 the §acoil temperature§7 exceeds the §erecipe temperature§7, final energy use *§e90%",
   "vividtech.machine.crystal_aggregation_factory.tooltip.4": "§7While working, for each §blevel§7 the §bvoltage tier§7 exceeds §bMV§7, working speed *§e150%",
   "vividtech.machine.crystal_aggregation_factory.tooltip.5": "§7Supports up to §e8§7 energy hatches. §cParallel control hatches cannot§7 be installed",
-  "gtceu.crystal_aggregation": "Crystal Casting"
+  "gtceu.crystal_aggregation": "Crystal Casting",
+  "block.gtceu.atmospheric_collection_unit": "Atmospheric Collection Unit",
+  "gtceu.atmospheric_collection_unit": "Atmospheric Collection Unit",
+  "gtceu.atmospheric_collection": "Atmospheric Collection",
+  "vividtech.machine.atmospheric_collection_unit.tooltip.0": "§7Only works in dimensions with an atmosphere",
+  "vividtech.machine.atmospheric_collection_unit.tooltip.1": "§dAutomatically collects and condenses atmospheric air",
+  "vividtech.machine.atmospheric_collection_unit.tooltip.2": "§7With a parallel control hatch, multiple identical recipes can be processed at once",
+  "vividtech.dimension.avaritia_personal": "Void-Realm of the Firmament"
 }

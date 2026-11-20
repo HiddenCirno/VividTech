@@ -14,6 +14,8 @@ import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachi
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
+import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
+import com.vividtech.common.machine.multiblock.electric.BasicIntegratedOreProcessorMachine;
 import com.vividtech.common.machine.multiblock.electric.CrystalAggregationFactoryMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.PressurizationModuleMachine;
@@ -41,13 +43,11 @@ import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
-import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.client.renderer.machine.SimpleGeneratorMachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
-import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
@@ -666,12 +666,12 @@ public class VividMachines {
     }
 
     public final static MultiblockMachineDefinition BASIC_INTEGRATED_ORE_PROCESSOR = REGISTRATE
-            .multiblock("basic_integrated_ore_processor", WorkableElectricMultiblockMachine::new)
+            .multiblock("basic_integrated_ore_processor", BasicIntegratedOreProcessorMachine::new)
             .langValue("Basic Integrated Ore Processing Plant")
             .rotationState(RotationState.NON_Y_AXIS)
             .allowExtendedFacing(false)
             .recipeType(GTLRecipeTypes.INTEGRATED_ORE_PROCESSOR)
-            .recipeModifier(GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
+            .recipeModifier(BasicIntegratedOreProcessorMachine::modifyRecipe)
             .appearanceBlock(GTBlocks.CASING_STEEL_SOLID)
             .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.0"))
             .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.1"))
@@ -682,6 +682,7 @@ public class VividMachines {
             .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.6"))
             .tooltips(Component.translatable("gtceu.machine.integrated_ore_processor.tooltip.7"))
             .tooltips(Component.translatable("vividtech.machine.basic_integrated_ore_processor.tooltip.0"))
+            .tooltips(Component.translatable("vividtech.machine.basic_integrated_ore_processor.tooltip.1"))
             .tooltipBuilder(VIVID_ADD)
             .pattern(definition -> MultiBlockMachineAStructureA.INTEGRATED_ORE_PROCESSOR
                     .where("~", Predicates.controller(Predicates.blocks(definition.get())))
@@ -739,6 +740,67 @@ public class VividMachines {
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_frost_proof"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
             .register();
+
+    /**
+     * 大气捕集单元。
+     *
+     * <p>结构来自导出图，控制器位于最后一层底部中央；在默认朝向（主机面朝西）下，
+     * 结构向控制器后方展开。主机与方块的渲染沿用晶体重铸工厂。</p>
+     */
+    public static final MultiblockMachineDefinition ATMOSPHERIC_COLLECTION_UNIT = REGISTRATE
+            .multiblock("atmospheric_collection_unit", AtmosphericCollectionUnitMachine::new)
+            .langValue("Atmospheric Collection Unit")
+            .tier(GTValues.MV)
+            .rotationState(RotationState.ALL)
+            .allowExtendedFacing(false)
+            .recipeType(VividRecipeTypes.ATMOSPHERIC_COLLECTION_RECIPES)
+            .recipeModifier(AtmosphericCollectionUnitMachine::modifyRecipe)
+            .appearanceBlock(GTBlocks.CASING_ALUMINIUM_FROSTPROOF)
+            .tooltips(atmosphericCollectionTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> FactoryBlockPattern.start()
+                    .aisle("  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ")
+                    .aisle(" AAAAA ", " ACCCA ", " A   A ", " A D A ", " A   A ", " A D A ", " A   A ", " A D A ", " AEEEA ")
+                    .aisle("AAAAAAA", "ACFFFCA", "A CCC A", "A  D  A", "A     A", "A  D  A", "A     A", "A  D  A", "AEEEEEA")
+                    .aisle("AAAAAAA", "ACFFFCA", "A CFC A", "ADDGDDA", "A  G  A", "ADDGDDA", "A  G  A", "ADDGDDA", "AEEEEEA")
+                    .aisle("AAAAAAA", "ACFFFCA", "A CCC A", "A  D  A", "A     A", "A  D  A", "A     A", "A  D  A", "AEEEEEA")
+                    .aisle(" AAAAA ", " ACCCA ", " A   A ", " A D A ", " A   A ", " A D A ", " A   A ", " A D A ", " AEEEA ")
+                    .aisle("  ABA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ", "  AAA  ")
+                    .where("B", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("A", atmosphericCollectionCasing())
+                    .where("C", Predicates.blocks(GTBlocks.CASING_STAINLESS_CLEAN.get()))
+                    .where("D", Predicates.blocks(ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.StainlessSteel)))
+                    .where("E", Predicates.blocks(GTBlocks.FILTER_CASING.get()))
+                    .where("F", Predicates.blocks(GTBlocks.CASING_STEEL_PIPE.get()))
+                    .where("G", Predicates.blocks(GTBlocks.CASING_STAINLESS_STEEL_GEARBOX.get()))
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_frost_proof"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
+            .register();
+
+    /**
+     * A 位：防冻机械方块，或能源/物品/流体/维护/并行仓（无消声仓）。
+     */
+    private static TraceabilityPredicate atmosphericCollectionCasing() {
+        return Predicates.blocks(GTBlocks.CASING_ALUMINIUM_FROSTPROOF.get())
+                .or(Predicates.abilities(PartAbility.INPUT_ENERGY)
+                        .setMaxGlobalLimited(8).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.INPUT_LASER).setMaxGlobalLimited(8).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                .or(Predicates.abilities(PartAbility.PARALLEL_HATCH).setMaxGlobalLimited(1));
+    }
+
+    private static Component[] atmosphericCollectionTooltips() {
+        Component[] tooltips = new Component[3];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.atmospheric_collection_unit.tooltip." + i);
+        }
+        return tooltips;
+    }
 
     /**
      * A 位：防冻机械方块，或能源/物品/流体/维护/ME 仓室。

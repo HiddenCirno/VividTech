@@ -1,6 +1,8 @@
 package com.vividtech.common.data;
 
 import com.vividtech.VividTech;
+import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
+import com.vividtech.common.recipe.condition.AvaritiaPersonalDimensionCondition;
 
 import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLMaterials;
@@ -24,6 +26,8 @@ import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
+
+import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 
 import com.tterrag.registrate.util.entry.ItemEntry;
 
@@ -143,6 +147,7 @@ public class VividGTAddon implements IGTAddon {
         addCastingInputHatchRecipes(provider);
         addAutoclaveRecipes(provider);
         addCrystalAggregationRecipes(provider);
+        addAtmosphericCollectionRecipes(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -584,6 +589,66 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(GTValues.VA[GTValues.MV])
                 .duration(duration)
                 .addData("vividtech_gem_aggregation", true)
+                .save(provider);
+    }
+
+    private static void addAtmosphericCollectionRecipes(Consumer<FinishedRecipe> provider) {
+        addAtmosphericCollectionUnitRecipe(provider, "solder",
+                GTMaterials.SolderingAlloy.getFluid(1152));
+        addAtmosphericCollectionUnitRecipe(provider, "tin",
+                GTMaterials.Tin.getFluid(2304));
+
+        var type = VividRecipeTypes.ATMOSPHERIC_COLLECTION_RECIPES;
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_OVERWORLD,
+                new ResourceLocation("minecraft", "overworld"), GTMaterials.LiquidAir.getFluid(10_000));
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_ANCIENT_WORLD,
+                new ResourceLocation("kubejs", "ancient_world"), GTMaterials.LiquidAir.getFluid(10_000));
+        addAtmosphericPersonalCollectionRecipe(type, provider, GTMaterials.LiquidAir.getFluid(10_000));
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_NETHER,
+                new ResourceLocation("minecraft", "the_nether"), GTMaterials.LiquidNetherAir.getFluid(10_000));
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_END,
+                new ResourceLocation("minecraft", "the_end"), GTMaterials.LiquidEnderAir.getFluid(10_000));
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_BARNARDA,
+                new ResourceLocation("kubejs", "barnarda"), GTLMaterials.BarnardaAir.getFluid(10_000));
+    }
+
+    private static void addAtmosphericCollectionUnitRecipe(Consumer<FinishedRecipe> provider, String solderType,
+                                                            FluidStack solder) {
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("atmospheric_collection_unit_" + solderType)
+                .inputItems(GTBlocks.CASING_ALUMINIUM_FROSTPROOF.asStack(4))
+                .inputItems(TagPrefix.frameGt, GTMaterials.Aluminium, 4)
+                .inputItems(CustomTags.MV_CIRCUITS, 8)
+                .inputItems(GTItems.ELECTRIC_PUMP_MV, 8)
+                .inputItems(GTItems.ELECTRIC_MOTOR_MV, 8)
+                .inputItems(TagPrefix.rotor, GTMaterials.StainlessSteel, 8)
+                .inputFluids(solder)
+                .outputItems(VividMachines.ATMOSPHERIC_COLLECTION_UNIT.asStack())
+                .EUt(GTValues.VA[GTValues.MV])
+                .duration(20 * 20)
+                .save(provider);
+    }
+
+    private static void addAtmosphericCollectionRecipe(com.gregtechceu.gtceu.api.recipe.GTRecipeType type,
+                                                       Consumer<FinishedRecipe> provider, String source,
+                                                       ResourceLocation dimension, FluidStack output) {
+        type.recipeBuilder("atmospheric_collection_" + source)
+                .EUt(GTValues.VA[GTValues.MV])
+                .duration(20 * 10)
+                .outputFluids(output)
+                .addData(AtmosphericCollectionUnitMachine.SOURCE_KEY, source)
+                .dimension(dimension)
+                .save(provider);
+    }
+
+    private static void addAtmosphericPersonalCollectionRecipe(com.gregtechceu.gtceu.api.recipe.GTRecipeType type,
+                                                               Consumer<FinishedRecipe> provider, FluidStack output) {
+        type.recipeBuilder("atmospheric_collection_personal")
+                .EUt(GTValues.VA[GTValues.MV])
+                .duration(20 * 10)
+                .outputFluids(output)
+                .addData(AtmosphericCollectionUnitMachine.SOURCE_KEY,
+                        AtmosphericCollectionUnitMachine.SOURCE_PERSONAL)
+                .addCondition(new AvaritiaPersonalDimensionCondition())
                 .save(provider);
     }
 

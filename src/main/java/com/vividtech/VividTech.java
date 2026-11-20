@@ -2,12 +2,14 @@ package com.vividtech;
 
 import com.vividtech.common.data.VividCovers;
 import com.vividtech.common.data.VividMachines;
+import com.vividtech.common.data.VividRecipeConditions;
 import com.vividtech.common.data.VividRecipeTypes;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -24,6 +26,7 @@ public class VividTech {
         eventBus.addGenericListener(GTRecipeType.class, this::registerRecipeTypes);
         eventBus.addGenericListener(MachineDefinition.class, this::registerMachines);
         eventBus.addGenericListener(CoverDefinition.class, this::registerCovers);
+        eventBus.addGenericListener(RecipeConditionType.class, this::registerRecipeConditions);
     }
 
     private void registerRecipeTypes(GTCEuAPI.RegisterEvent<ResourceLocation, GTRecipeType> event) {
@@ -36,6 +39,10 @@ public class VividTech {
 
     private void registerCovers(GTCEuAPI.RegisterEvent<ResourceLocation, CoverDefinition> event) {
         VividCovers.init();
+    }
+
+    private void registerRecipeConditions(GTCEuAPI.RegisterEvent<ResourceLocation, RecipeConditionType<?>> event) {
+        VividRecipeConditions.init();
     }
 
     public static ResourceLocation id(String path) {

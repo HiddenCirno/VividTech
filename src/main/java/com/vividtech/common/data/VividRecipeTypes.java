@@ -9,6 +9,12 @@ import com.gregtechceu.gtceu.common.data.GTSoundEntries;
 
 import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
 import static com.lowdragmc.lowdraglib.gui.texture.ProgressTexture.FillDirection.LEFT_TO_RIGHT;
 
 public class VividRecipeTypes {
@@ -63,4 +69,21 @@ public class VividRecipeTypes {
             })
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
             .setSound(GTSoundEntries.COOLING);
+
+    /**
+     * 大气捕集：无物品/流体输入，只按当前维度输出对应的空气。
+     * 图标使用大气捕集单元主机方块；维度由配方条件在 EMI 中显示。
+     */
+    public static final GTRecipeType ATMOSPHERIC_COLLECTION_RECIPES = GTRecipeTypes.register("atmospheric_collection",
+            GTRecipeTypes.MULTIBLOCK)
+            .setEUIO(IO.IN)
+            .setMaxIOSize(0, 0, 0, 1)
+            .setIconSupplier(VividRecipeTypes::atmosphericCollectionIcon)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
+            .setSound(GTSoundEntries.COOLING);
+
+    private static ItemStack atmosphericCollectionIcon() {
+        Item item = BuiltInRegistries.ITEM.get(new ResourceLocation("gtceu", "atmospheric_collection_unit"));
+        return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+    }
 }

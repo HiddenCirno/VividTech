@@ -20,6 +20,12 @@ def srgMappingFile = loomCacheRoot.listFiles()?.findAll { it.isDirectory() && it
 
 loom {
     silentMojangMappingsLicense()
+    mixin {
+        defaultRefmapName = "vividtech.refmap.json"
+    }
+    forge {
+        mixinConfigs = ["vividtech.mixins.json"]
+    }
 
     runs {
         named("client").configure {
