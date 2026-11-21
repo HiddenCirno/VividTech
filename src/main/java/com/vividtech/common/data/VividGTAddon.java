@@ -116,6 +116,17 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(30).duration(20 * 120)
                 .save(provider);
 
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("creative_steam_input_hatch")
+                .inputItems(GTLMachines.LARGE_STEAM_HATCH.asStack(64))
+                .inputItems(TagPrefix.frameGt, GTMaterials.Titanium, 16)
+                .inputItems(GTItems.FIELD_GENERATOR_HV, 16)
+                .inputItems(CustomTags.IV_CIRCUITS, 16)
+                .inputFluids(GTMaterials.SolderingAlloy.getFluid(5184))
+                .outputItems(VividMachines.CREATIVE_STEAM_INPUT_HATCH.asStack())
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(20 * 300)
+                .save(provider);
+
         GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("dream_elevator_steam_pressurization_module")
                 .inputItems(TagPrefix.frameGt, GTMaterials.StainlessSteel, 8)
                 .inputItems(TagPrefix.plateDouble, GTMaterials.StainlessSteel, 32)
@@ -314,6 +325,7 @@ public class VividGTAddon implements IGTAddon {
         workBlocks.put("sifter", GTMachines.SIFTER[GTValues.LV]);
         workBlocks.put("wiremill", GTMachines.WIREMILL[GTValues.LV]);
         workBlocks.put("gas_collector", GTMachines.GAS_COLLECTOR[GTValues.LV]);
+        workBlocks.put("packer", GTMachines.PACKER[GTValues.LV]);
         workBlocks.put("dehydrator", GTLMachines.DEHYDRATOR[GTValues.LV]);
         workBlocks.put("lightning_processor", GTLMachines.LIGHTNING_PROCESSOR[GTValues.LV]);
 
@@ -482,6 +494,7 @@ public class VividGTAddon implements IGTAddon {
         var type = VividRecipeTypes.CRYSTAL_AGGREGATION_RECIPES;
 
         type.recipeBuilder("vividtech_crystal_silicon_boule")
+                .circuitMeta(1)
                 .inputItems(TagPrefix.dust, GTMaterials.Silicon, 32)
                 .inputItems(TagPrefix.dustSmall, GTMaterials.GalliumArsenide, 1)
                 .outputItems(GTItems.SILICON_BOULE.asStack())

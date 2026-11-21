@@ -58,6 +58,10 @@ public class SteamStratumMiningModuleMachine extends AbstractSteamResourceModule
 
     @Override
     public boolean isDimensionAllowed(Level level) {
+        // MK-III 覆盖全部维度；更低等级仍保留主世界/远古/下界/末地的限制。
+        if (getModuleTier() >= 3) {
+            return true;
+        }
         if (ResourceDimensionCompat.isOverworldLike(level.dimension())) {
             return true;
         }

@@ -2,20 +2,25 @@ package com.vividtech.common.data;
 
 import com.vividtech.VividTech;
 import com.vividtech.client.renderer.machine.CreativeSteamInputHatchRenderer;
+import com.vividtech.client.renderer.machine.CreativeWirelessGridRenderer;
 import com.vividtech.client.renderer.machine.DreamElevatorRenderer;
 import com.vividtech.client.renderer.machine.SubsystemHatchRenderer;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
+import com.vividtech.common.machine.CreativeWirelessGridEnergyWellMachine;
 import com.vividtech.common.machine.generator.CompressedMagicEnergyMachine;
 import com.vividtech.common.machine.multiblock.noenergy.EyeOfWoodMachine;
 import com.vividtech.common.machine.multiblock.part.CastingInputHatchPartMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
+import com.vividtech.common.machine.multiblock.part.CreativeWirelessGridHatchPartMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
 import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
 import com.vividtech.common.machine.multiblock.electric.BasicIntegratedOreProcessorMachine;
+import com.vividtech.common.command.PatternKind;
+import com.vividtech.common.item.PatternIngredientReplacerItem;
 import com.vividtech.common.machine.multiblock.electric.CrystalAggregationFactoryMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
 import com.vividtech.common.machine.multiblock.steam.PressurizationModuleMachine;
@@ -59,12 +64,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
+import com.tterrag.registrate.util.entry.ItemEntry;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 
 import java.util.ArrayList;
@@ -299,6 +306,7 @@ public class VividMachines {
             new SteamModuleType("sifter", "Sifter", "筛选机", GTRecipeTypes.SIFTER_RECIPES),
             new SteamModuleType("wiremill", "Wiremill", "线材轧机", GTRecipeTypes.WIREMILL_RECIPES),
             new SteamModuleType("gas_collector", "Gas Collector", "集气室", GTRecipeTypes.GAS_COLLECTOR_RECIPES),
+            new SteamModuleType("packer", "Packer", "打包机", GTRecipeTypes.PACKER_RECIPES),
             new SteamModuleType("dehydrator", "Dehydrator", "脱水机", GTLRecipeTypes.DEHYDRATOR_RECIPES),
             new SteamModuleType("lightning_processor", "Lightning Processor", "闪电处理机", GTLRecipeTypes.LIGHTNING_PROCESSOR_RECIPES));
 
@@ -336,6 +344,25 @@ public class VividMachines {
         STEAM_MODULES.addAll(RESOURCE_MODULES);
     }
 
+    static {
+        // 三个创造模式设备统一放入“潜能无限”页。
+        REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+    }
+
+    /** AE2 处理样板原料替换器。 */
+    public static final ItemEntry<PatternIngredientReplacerItem> PATTERN_INGREDIENT_REPLACER = REGISTRATE
+            .item("pattern_ingredient_replacer",
+                    properties -> new PatternIngredientReplacerItem(properties, PatternKind.PROCESSING))
+            .lang("Pattern Ingredient Replacer")
+            .register();
+
+    /** AE2 合成样板原料替换器。 */
+    public static final ItemEntry<PatternIngredientReplacerItem> CRAFTING_PATTERN_INGREDIENT_REPLACER = REGISTRATE
+            .item("crafting_pattern_ingredient_replacer",
+                    properties -> new PatternIngredientReplacerItem(properties, PatternKind.CRAFTING))
+            .lang("Crafting Pattern Ingredient Replacer")
+            .register();
+
     public static final MachineDefinition CREATIVE_STEAM_INPUT_HATCH = REGISTRATE
             .machine("creative_steam_input_hatch", CreativeSteamInputHatchMachine::new)
             .rotationState(RotationState.ALL)
@@ -344,6 +371,35 @@ public class VividMachines {
             .tooltips(Component.translatable("vividtech.machine.creative_steam_input_hatch.tooltip.0"))
             .tooltipBuilder(VIVID_ADD)
             .register();
+
+    /** 创造模式无线电网能量井：每 tick 将放置者的无线电网维持为满值。 */
+    public static final MachineDefinition CREATIVE_WIRELESS_GRID_ENERGY_WELL = REGISTRATE
+            .machine("creative_wireless_grid_energy_well", CreativeWirelessGridEnergyWellMachine::new)
+            .rotationState(RotationState.ALL)
+            .renderer(() -> new CreativeWirelessGridRenderer(
+                    new ResourceLocation("gtmthings", "block/machine/part/wireless_laser_hatch.target")))
+            .tooltips(
+                    Component.translatable("vividtech.machine.creative_wireless_grid_energy_well.tooltip.0"),
+                    Component.translatable("vividtech.machine.creative_wireless_grid_energy_well.tooltip.1"))
+            .register();
+
+    /** 创造模式无线电网仓：从放置者的无线电网拉取能量。 */
+    public static final MachineDefinition CREATIVE_WIRELESS_GRID_HATCH = REGISTRATE
+            // 让 GTLCore 的 HatchPowerTooltip 自动识别为 MAX 级、33554432A 的能源输入仓。
+            .machine("max_33554432a_creative_wireless_grid_energy_input_hatch",
+                    CreativeWirelessGridHatchPartMachine::new)
+            .rotationState(RotationState.ALL)
+            .abilities(PartAbility.INPUT_ENERGY)
+            .renderer(() -> new CreativeWirelessGridRenderer(
+                    new ResourceLocation("gtmthings", "block/machine/part/wireless_energy_hatch")))
+            .tooltips(
+                    Component.translatable("gtmthings.machine.energy_hatch.input.tooltip"),
+                    Component.translatable("gtmthings.machine.wireless_energy_hatch.input.tooltip"))
+            .register();
+
+    static {
+        REGISTRATE.creativeModeTab(() -> STEAM_TAB);
+    }
 
     public static final MultiblockMachineDefinition PRESSURIZATION_MODULE = REGISTRATE
             .multiblock("dream_elevator_steam_pressurization_module", PressurizationModuleMachine::new)

@@ -17,11 +17,22 @@ import com.gregtechceu.gtceu.integration.jade.provider.CapabilityBlockProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraftforge.fluids.FluidStack;
+
+import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.BlockAccessor;
@@ -85,13 +96,22 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
                 data.putBoolean("whitelist", mining.isWhitelistMode());
             } else if (module instanceof SteamStratumDrillingModuleMachine drilling) {
                 Level level = drilling.getLevel();
-                if (level != null && ResourceDimensionCompat.isOverworldLike(level.dimension())) {
-                    data.putString("output", drilling.isSaltWaterMode() ? "salt_water" : "oil");
-                } else if (level != null && level.dimension().equals(Level.NETHER) &&
-                        drilling.getModuleTier() >= 2) {
-                    data.putString("output", "natural_gas");
-                } else {
-                    data.putString("output", "none");
+                if (level != null) {
+                    ListTag available = new ListTag();
+                    for (Fluid fluid : drilling.getAvailableFluids(level)) {
+                        ResourceLocation id = BuiltInRegistries.FLUID.getKey(fluid);
+                        if (id != null) {
+                            available.add(StringTag.valueOf(id.toString()));
+                        }
+                    }
+                    data.put("available_fluids", available);
+                    Fluid selected = drilling.getSelectedFluid(level);
+                    if (selected != Fluids.EMPTY) {
+                        ResourceLocation selectedId = BuiltInRegistries.FLUID.getKey(selected);
+                        if (selectedId != null) {
+                            data.putString("selected_fluid", selectedId.toString());
+                        }
+                    }
                 }
             }
         }
@@ -153,6 +173,40 @@ public final class VividMachineInfoProvider extends CapabilityBlockProvider<Meta
             tooltip.add(Component.translatable("vividtech.jade.output_mode",
                     Component.translatable("vividtech.jade.output." + data.getString("output"))));
         }
+        if (data.contains("available_fluids", Tag.TAG_LIST)) {
+            tooltip.add(Component.translatable("vividtech.jade.available_fluids",
+                    fluidList(data.getList("available_fluids", Tag.TAG_STRING),
+                            data.getString("selected_fluid"))));
+        }
+        if (data.contains("selected_fluid")) {
+            tooltip.add(Component.translatable("vividtech.jade.output_fluid",
+                    fluidName(data.getString("selected_fluid"))));
+        }
+    }
+
+    private static Component fluidList(ListTag ids, String selectedId) {
+        if (ids.isEmpty()) {
+            return Component.translatable("vividtech.jade.output.none");
+        }
+        MutableComponent result = Component.literal("");
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) {
+                result.append(Component.literal(", ").withStyle(ChatFormatting.DARK_GRAY));
+            }
+            String id = ids.getString(i);
+            result.append(fluidName(id).copy().withStyle(
+                    id.equals(selectedId) ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+        }
+        return result;
+    }
+
+    private static Component fluidName(String id) {
+        ResourceLocation location = ResourceLocation.tryParse(id);
+        Fluid fluid = location == null ? Fluids.EMPTY : BuiltInRegistries.FLUID.get(location);
+        if (fluid == Fluids.EMPTY) {
+            return Component.literal(id);
+        }
+        return new FluidStack(fluid, 1).getDisplayName();
     }
 
     private static void addSteamLine(CompoundTag data, ITooltip tooltip) {

@@ -4,6 +4,8 @@ import com.vividtech.common.data.VividCovers;
 import com.vividtech.common.data.VividMachines;
 import com.vividtech.common.data.VividRecipeConditions;
 import com.vividtech.common.data.VividRecipeTypes;
+import com.vividtech.common.menu.VividMenus;
+import com.vividtech.common.network.VividNetwork;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.cover.CoverDefinition;
@@ -23,6 +25,8 @@ public class VividTech {
 
     public VividTech() {
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        VividMenus.MENUS.register(eventBus);
+        VividNetwork.init();
         eventBus.addGenericListener(GTRecipeType.class, this::registerRecipeTypes);
         eventBus.addGenericListener(MachineDefinition.class, this::registerMachines);
         eventBus.addGenericListener(CoverDefinition.class, this::registerCovers);
