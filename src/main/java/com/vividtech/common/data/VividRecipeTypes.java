@@ -1,5 +1,8 @@
 package com.vividtech.common.data;
 
+import com.vividtech.common.machine.multiblock.electric.AdvancedSlaughterhouseMachine;
+
+import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
@@ -90,6 +93,38 @@ public class VividRecipeTypes {
             .setIconSupplier(VividRecipeTypes::atmosphericCollectionIcon)
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
             .setSound(GTSoundEntries.COOLING);
+
+    /**
+     * 进阶工业屠宰场：配方只用于计时/耗电，产物由机器模拟击杀生成。
+     * 电路 1 使用被动生物表，电路 2 使用敌对生物表；武器不进入配方，避免被消耗。
+     */
+    public static final GTRecipeType ADVANCED_SLAUGHTERHOUSE_RECIPES = GTRecipeTypes.register("advanced_slaughterhouse",
+            GTRecipeTypes.MULTIBLOCK)
+            .setEUIO(IO.IN)
+            .setMaxIOSize(0, 0, 0, 0)
+            .setIconSupplier(VividRecipeTypes::advancedSlaughterhouseIcon)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
+            .setSound(GTSoundEntries.MACERATOR)
+            // 无材料配方的工具化：GT 的空配方不会进入普通查找表，这里给机器提供一个
+            // 每次搜索都能拿到的原始配方，实际产出/耗电由机器逻辑处理。
+            .addCustomRecipeLogic(holder -> {
+                if (!(holder instanceof AdvancedSlaughterhouseMachine)) {
+                    return null;
+                }
+                return createAdvancedSlaughterhouseRecipe();
+            });
+
+    private static com.gregtechceu.gtceu.api.recipe.GTRecipe createAdvancedSlaughterhouseRecipe() {
+        return ADVANCED_SLAUGHTERHOUSE_RECIPES.recipeBuilder("processing")
+                .EUt(GTValues.VA[GTValues.HV])
+                .duration(20)
+                .buildRawRecipe();
+    }
+
+    private static ItemStack advancedSlaughterhouseIcon() {
+        Item item = BuiltInRegistries.ITEM.get(new ResourceLocation("gtceu", "advanced_slaughterhouse"));
+        return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+    }
 
     private static ItemStack atmosphericCollectionIcon() {
         Item item = BuiltInRegistries.ITEM.get(new ResourceLocation("gtceu", "atmospheric_collection_unit"));

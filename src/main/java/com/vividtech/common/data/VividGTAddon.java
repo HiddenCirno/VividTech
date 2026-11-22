@@ -8,6 +8,7 @@ import com.hepdd.gtmthings.data.CustomItems;
 
 import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLMaterials;
+import org.gtlcore.gtlcore.common.data.machines.AdvancedMultiBlockMachineB;
 import org.gtlcore.gtlcore.common.data.machines.MultiBlockMachineA;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
@@ -162,6 +163,25 @@ public class VividGTAddon implements IGTAddon {
         addCrystalAggregationRecipes(provider);
         addAtmosphericCollectionRecipes(provider);
         addAtomicReconstructorRecipes(provider);
+        addAdvancedSlaughterhouseRecipes(provider);
+    }
+
+    private static void addAdvancedSlaughterhouseRecipes(Consumer<FinishedRecipe> provider) {
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("advanced_slaughterhouse")
+                .inputItems(AdvancedMultiBlockMachineB.SLAUGHTERHOUSE.asStack(16))
+                .inputItems(TagPrefix.frameGt, GTMaterials.Titanium, 32)
+                .inputItems(GTItems.ELECTRIC_PISTON_EV, 16)
+                .inputItems(GTItems.ROBOT_ARM_EV, 16)
+                .inputItems(TagPrefix.plateDouble, GTMaterials.Titanium, 16)
+                .inputItems(CustomTags.EV_CIRCUITS, 16)
+                .inputItems(CustomTags.IV_CIRCUITS, 8)
+                .inputFluids(GTMaterials.SolderingAlloy.getFluid(2592))
+                .outputItems(VividMachines.ADVANCED_SLAUGHTERHOUSE.asStack())
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(20 * 60)
+                .save(provider);
+
+        // 进阶工业屠宰场没有材料配方；运行配方由配方类型的自定义逻辑动态提供。
     }
 
     private static void addAtomicReconstructorRecipes(Consumer<FinishedRecipe> provider) {

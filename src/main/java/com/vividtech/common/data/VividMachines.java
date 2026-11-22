@@ -17,6 +17,7 @@ import com.vividtech.common.machine.multiblock.part.CreativeWirelessGridHatchPar
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
+import com.vividtech.common.machine.multiblock.electric.AdvancedSlaughterhouseMachine;
 import com.vividtech.common.machine.multiblock.electric.AtomicReconstructorMachine;
 import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
 import com.vividtech.common.machine.multiblock.electric.BasicIntegratedOreProcessorMachine;
@@ -49,12 +50,14 @@ import com.gregtechceu.gtceu.api.pattern.util.RelativeDirection;
 import com.gregtechceu.gtceu.api.pattern.Predicates;
 import com.gregtechceu.gtceu.api.pattern.TraceabilityPredicate;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
+import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.client.renderer.machine.SimpleGeneratorMachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
@@ -835,6 +838,63 @@ public class VividMachines {
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_stable_titanium"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
             .register();
+
+    /**
+     * 先进工业屠宰场。
+     *
+     * <p>结构来自玩家导出图：控制器位于第一层中央；A 为钛稳定机械方块，
+     * 可安装能源/物品/流体输入输出、维护和并行控制仓；无消声仓。</p>
+     */
+    public static final MultiblockMachineDefinition ADVANCED_SLAUGHTERHOUSE = REGISTRATE
+            .multiblock("advanced_slaughterhouse", AdvancedSlaughterhouseMachine::new)
+            .langValue("Advanced Industrial Slaughterhouse")
+            .tier(GTValues.EV)
+            .rotationState(RotationState.ALL)
+            .allowExtendedFacing(false)
+            .recipeType(VividRecipeTypes.ADVANCED_SLAUGHTERHOUSE_RECIPES)
+            .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH,
+                    GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK))
+            .appearanceBlock(GTBlocks.CASING_TITANIUM_STABLE)
+            .tooltips(advancedSlaughterhouseTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> FactoryBlockPattern.start(RelativeDirection.RIGHT, RelativeDirection.UP, RelativeDirection.BACK)
+                    .aisle("AAAAAAA", "AAA~AAA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "AAAAAAA")
+                    .aisle("AAAAAAA", "ACCCCCA", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BEEEEEB", "AAAAAAA")
+                    .aisle("AAAAAAA", "ACCCCCA", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BEEEEEB", "AAAAAAA")
+                    .aisle("AAAAAAA", "ACCCCCA", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BEEEEEB", "AAAAAAA")
+                    .aisle("AAAAAAA", "ACCCCCA", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BD   DB", "BEEEEEB", "AAAAAAA")
+                    .aisle("AAAAAAA", "ACCCCCA", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BDDDDDB", "BEEEEEB", "AAAAAAA")
+                    .aisle("AAAAAAA", "AAAAAAA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "ABBBBBA", "AAAAAAA")
+                    .where("~", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("A", advancedSlaughterhouseCasing())
+                    .where("B", Predicates.blocks(GTBlocks.CLEANROOM_GLASS.get()))
+                    .where("C", Predicates.blocks(GTBlocks.CASING_TITANIUM_GEARBOX.get()))
+                    .where("D", Predicates.blocks(Blocks.IRON_BARS))
+                    .where("E", Predicates.blocks(GTBlocks.FIREBOX_TITANIUM.get()))
+                    .where(" ", Predicates.air())
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_stable_titanium"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
+            .register();
+
+    private static TraceabilityPredicate advancedSlaughterhouseCasing() {
+        return blocks(GTBlocks.CASING_TITANIUM_STABLE.get())
+                .or(Predicates.abilities(PartAbility.INPUT_ENERGY).setMaxGlobalLimited(4))
+                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setMaxGlobalLimited(4))
+                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(4))
+                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(2))
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(4))
+                .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                .or(Predicates.abilities(PartAbility.PARALLEL_HATCH).setMaxGlobalLimited(1));
+    }
+
+    private static Component[] advancedSlaughterhouseTooltips() {
+        Component[] tooltips = new Component[9];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.advanced_slaughterhouse.tooltip." + i);
+        }
+        return tooltips;
+    }
 
     /**
      * 大气捕集单元。
