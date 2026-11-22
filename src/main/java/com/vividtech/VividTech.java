@@ -4,6 +4,7 @@ import com.vividtech.common.data.VividCovers;
 import com.vividtech.common.data.VividMachines;
 import com.vividtech.common.data.VividRecipeConditions;
 import com.vividtech.common.data.VividRecipeTypes;
+import com.vividtech.common.machine.multiblock.electric.AdvancedSlaughterhouseExpectationCache;
 import com.vividtech.common.menu.VividMenus;
 import com.vividtech.common.network.VividNetwork;
 
@@ -14,6 +15,7 @@ import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.condition.RecipeConditionType;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -27,6 +29,8 @@ public class VividTech {
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         VividMenus.MENUS.register(eventBus);
         VividNetwork.init();
+        MinecraftForge.EVENT_BUS.addListener(AdvancedSlaughterhouseExpectationCache::onServerStarted);
+        MinecraftForge.EVENT_BUS.addListener(AdvancedSlaughterhouseExpectationCache::onServerStopped);
         eventBus.addGenericListener(GTRecipeType.class, this::registerRecipeTypes);
         eventBus.addGenericListener(MachineDefinition.class, this::registerMachines);
         eventBus.addGenericListener(CoverDefinition.class, this::registerCovers);
