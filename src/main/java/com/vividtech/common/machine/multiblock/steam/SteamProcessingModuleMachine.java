@@ -15,6 +15,7 @@ import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.ICleanroomProvider;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
+import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableMultiblockMachine;
 import com.gregtechceu.gtceu.api.machine.trait.NotifiableFluidTank;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
@@ -129,6 +130,28 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     public BlockPos[] getHostScanPositions() {
         // 主机主动扫描并连接模块，模块侧不需要自己找主机。
         return new BlockPos[0];
+    }
+
+    /**
+     * GTL 的 {@code GravityCondition} 会遍历“当前配方逻辑所在多方块”的 parts；
+     * 对模块来说这是模块自己的 parts，而不是梦想电梯主机的 parts。
+     * 把主机上的重力子系统追加进来，让条件检查能读到主机的重力值。
+     */
+    @Override
+    public @NotNull List<IMultiPart> getParts() {
+        List<IMultiPart> parts = super.getParts();
+        DreamElevatorMachine currentHost = getHost();
+        if (currentHost == null || !currentHost.isFormed()) {
+            return parts;
+        }
+        IMultiPart gravityPart = currentHost.getGravityPartForCondition();
+        if (gravityPart == null) {
+            return parts;
+        }
+        List<IMultiPart> combined = new ArrayList<>(parts.size() + 1);
+        combined.addAll(parts);
+        combined.add(gravityPart);
+        return combined;
     }
 
     public int getModuleTier() {
@@ -596,6 +619,13 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.steam_processing_module.connected" :
                 "vividtech.machine.steam_processing_module.disconnected"));
+
+        Integer hostGravity = currentHost != null && currentHost.isFormed() ?
+                currentHost.getInstalledGravity() : null;
+        textList.add(Component.translatable("vividtech.machine.steam_processing_module.host_gravity",
+                hostGravity == null ?
+                        Component.translatable("vividtech.machine.dream_elevator.offline") :
+                        Component.literal(hostGravity.toString())));
 
         textList.add(Component.translatable("vividtech.machine.steam_processing_module.overclock",
                 Component.literal(Integer.toString(displayedOverclock))

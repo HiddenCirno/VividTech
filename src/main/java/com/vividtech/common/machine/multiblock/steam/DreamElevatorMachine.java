@@ -35,6 +35,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -82,6 +83,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     private static final int INNER_MODULE_SLOTS = 12;
 
     private static final int HOST_CHECK_INTERVAL_TICKS = 20;
+    /** 定期重建 parts，让成型后才放置的重力/超净子系统也能被 getParts() 识别。 */
+    private static final int STRUCTURE_REFRESH_INTERVAL_TICKS = 100;
 
     /**
      * 加速轨道等级。与 GTL 的 SEPM 外壳检测相同：所有轨道位共用同一个 match context key，
@@ -123,6 +126,14 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     private Set<BlockPos> moduleInnerSlots = Set.of();
     private Set<BlockPos> moduleShellPositions = Set.of();
     private List<NotifiableFluidTank> steamTanks = List.of();
+
+    /**
+     * 重力子系统的位置。正常情况下它就在 parts 里；但如果玩家把它放在结构里
+     * 被 {@code TraceabilityPredicate.isAny()} 接受的空格（这类位置不会登记 parts），
+     * 这里用一次近邻扫描兜底，保证子系统仍然能生效。
+     */
+    @Nullable
+    private BlockPos resolvedGravityPos;
 
     private TickableSubscription hostTickSubscription;
 
@@ -166,6 +177,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         notifyBlockUpdate();
         collectSteamTanks();
         installSteamHandler();
+        resolveGravitySubsystem();
         safeClearModules();
         scanAndConnectModules();
         updateHostSubscription();
@@ -185,6 +197,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         moduleInnerSlots = Set.of();
         moduleShellPositions = Set.of();
         steamTanks = List.of();
+        resolvedGravityPos = null;
         railTier = 0;
         hasLargeSteamHatch = false;
         stopHostSubscription();
@@ -238,12 +251,91 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             return;
         }
         long timer = getOffsetTimer();
+        if (timer % STRUCTURE_REFRESH_INTERVAL_TICKS == 0 && checkPatternWithLock()) {
+            refreshStructureParts();
+        }
         if (timer % HOST_CHECK_INTERVAL_TICKS == 0) {
             pruneParallelReservations();
             if (modules.size() < getMaxModuleCount()) {
                 scanAndConnectModules();
             }
         }
+    }
+
+    /**
+     * 只重建 parts 与能力代理，不重置模块连接/并行/动画。
+     *
+     * <p>GT 在结构成型后不会自动刷新 parts；玩家在成型后放置重力/超净子系统时，
+     * 控制器仍然看不到它们。这里定期用当前结构重新匹配一次并刷新 parts。</p>
+     */
+    private void refreshStructureParts() {
+        super.onStructureFormed();
+        Integer tier = getMultiblockState().getMatchContext().get(RAIL_TIER_KEY);
+        if (tier != null) {
+            railTier = tier;
+        }
+        hasLargeSteamHatch = detectLargeSteamHatch();
+        collectSteamTanks();
+        installSteamHandler();
+        resolveGravitySubsystem();
+        markDirty();
+        notifyBlockUpdate();
+    }
+
+    /**
+     * 解析重力子系统。优先从 parts 里找（正常放在 S/X 仓位的子系统会在这里）；
+     * 如果玩家放在了结构里被 any 接受的空格上，该类位置不会被 {@code BlockPattern}
+     * 登记为 parts，因此在主机周围做一次小范围扫描兜底。
+     */
+    private void resolveGravitySubsystem() {
+        fromParts:
+        {
+            for (IMultiPart part : getParts()) {
+                if (part.self() instanceof DreamElevatorGravitySubsystemMachine gravity) {
+                    resolvedGravityPos = gravity.getPos();
+                    break fromParts;
+                }
+            }
+            resolvedGravityPos = null;
+        }
+
+        Level level = getLevel();
+        if (level == null) {
+            return;
+        }
+        if (resolvedGravityPos != null) {
+            MetaMachine machine = MetaMachine.getMachine(level, resolvedGravityPos);
+            if (machine instanceof IGravityPartMachine) {
+                return;
+            }
+            resolvedGravityPos = null;
+        }
+
+        // 兜底扫描：只认我们自己的重力子系统方块实体，半径 8 足够覆盖控制器周围的仓室位置。
+        final int radius = 8;
+        BlockPos origin = getPos();
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        BlockPos best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    cursor.set(origin.getX() + dx, origin.getY() + dy, origin.getZ() + dz);
+                    if (!level.getBlockState(cursor).hasBlockEntity()) {
+                        continue;
+                    }
+                    if (!(MetaMachine.getMachine(level, cursor) instanceof DreamElevatorGravitySubsystemMachine)) {
+                        continue;
+                    }
+                    double distance = (double) dx * dx + (double) dy * dy + (double) dz * dz;
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        best = cursor.immutable();
+                    }
+                }
+            }
+        }
+        resolvedGravityPos = best;
     }
 
     private void collectModuleSlots() {
@@ -452,6 +544,31 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     }
 
     /**
+     * 给模块的 {@code getParts()} 使用：返回主机上的重力子系统（如果存在）。
+     * GTL 的 {@code GravityCondition} 只认 parts 里的 {@link IGravityPartMachine}，
+     * 因此模块需要把这个仓“借”到自己的 parts 里，配方搜索阶段的条件检查才能通过。
+     */
+    @Nullable
+    public IMultiPart getGravityPartForCondition() {
+        for (IMultiPart part : getParts()) {
+            if (part instanceof IGravityPartMachine) {
+                return part;
+            }
+            if (part.self() instanceof IGravityPartMachine && part.self() instanceof IMultiPart multiPart) {
+                return multiPart;
+            }
+        }
+        Level level = getLevel();
+        if (level != null && resolvedGravityPos != null) {
+            MetaMachine machine = MetaMachine.getMachine(level, resolvedGravityPos);
+            if (machine instanceof IGravityPartMachine && machine instanceof IMultiPart multiPart) {
+                return multiPart;
+            }
+        }
+        return null;
+    }
+
+    /**
      * 当前梦想电梯本体上安装的重力控制子系统提供的重力值。
      * 没有安装（或其它机器没有重力仓）时返回 null，让原版 GravityCondition 自己处理。
      */
@@ -459,6 +576,13 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
     public Integer getInstalledGravity() {
         for (IMultiPart part : getParts()) {
             if (part.self() instanceof IGravityPartMachine gravityPart) {
+                return gravityPart.getCurrentGravity();
+            }
+        }
+        Level level = getLevel();
+        if (level != null && resolvedGravityPos != null) {
+            MetaMachine machine = MetaMachine.getMachine(level, resolvedGravityPos);
+            if (machine instanceof IGravityPartMachine gravityPart) {
                 return gravityPart.getCurrentGravity();
             }
         }
@@ -479,6 +603,10 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             if (part.self() instanceof DreamElevatorGravitySubsystemMachine) {
                 return true;
             }
+        }
+        Level level = getLevel();
+        if (level != null && resolvedGravityPos != null) {
+            return MetaMachine.getMachine(level, resolvedGravityPos) instanceof DreamElevatorGravitySubsystemMachine;
         }
         return false;
     }
