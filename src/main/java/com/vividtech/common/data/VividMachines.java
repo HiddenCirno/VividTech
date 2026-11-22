@@ -17,6 +17,7 @@ import com.vividtech.common.machine.multiblock.part.CreativeWirelessGridHatchPar
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
+import com.vividtech.common.machine.multiblock.electric.AtomicReconstructorMachine;
 import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
 import com.vividtech.common.machine.multiblock.electric.BasicIntegratedOreProcessorMachine;
 import com.vividtech.common.command.PatternKind;
@@ -798,6 +799,44 @@ public class VividMachines {
             .register();
 
     /**
+     * 原子重构器：5×5×5 钛稳定机械方块外壳，控制器位于正面中央。
+     * 最多 4 个能源仓；并行由并行控制仓提供，超频为无损超频。
+     */
+    public static final MultiblockMachineDefinition ATOMIC_RECONSTRUCTOR = REGISTRATE
+            .multiblock("atomic_reconstructor", AtomicReconstructorMachine::new)
+            .langValue("Atomic Reconstructor")
+            .tier(GTValues.EV)
+            .rotationState(RotationState.ALL)
+            .allowExtendedFacing(false)
+            .recipeType(VividRecipeTypes.MATTER_RESHAPING_RECIPES)
+            .recipeModifier(AtomicReconstructorMachine::modifyRecipe)
+            .appearanceBlock(GTBlocks.CASING_TITANIUM_STABLE)
+            .tooltips(atomicReconstructorTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            // 结构来自玩家导出图（纵向切片）。导出图中的 B 是占位控制器，这里换成原子重构器。
+            .pattern(definition -> FactoryBlockPattern.start()
+                    .aisle("  AAA  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  AAA  ")
+                    .aisle(" AAAAA ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " AAAAA ")
+                    .aisle("AAAAAAA", "C  D  C", "C  D  C", "C     C", "C     C", "C     C", "C  E  C", "C E E C", "C  E  C", "C     C", "C     C", "C     C", "C  D  C", "C  D  C", "AAAAAAA")
+                    .aisle("AAAAAAA", "C DFD C", "C DGD C", "C  G  C", "C  G  C", "C     C", "C E E C", "C     C", "C E E C", "C     C", "C  G  C", "C  G  C", "C DGD C", "C DFD C", "AAAAAAA")
+                    .aisle("AAAAAAA", "C  D  C", "C  D  C", "C     C", "C     C", "C     C", "C  E  C", "C E E C", "C  E  C", "C     C", "C     C", "C     C", "C  D  C", "C  D  C", "AAAAAAA")
+                    .aisle(" AAAAA ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " C   C ", " AAAAA ")
+                    .aisle("  A~A  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  CCC  ", "  AAA  ")
+                    .where("~", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("A", atomicReconstructorCasing())
+                    .where("C", Predicates.blocks(GTBlocks.CLEANROOM_GLASS.get()))
+                    .where("D", Predicates.blocks(GTBlocks.CASING_STAINLESS_CLEAN.get()))
+                    .where("E", Predicates.blocks(
+                            ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.Titanium)))
+                    .where("F", Predicates.blocks(GTBlocks.CASING_STAINLESS_STEEL_GEARBOX.get()))
+                    .where("G", Predicates.blocks(GTBlocks.CASING_TITANIUM_PIPE.get()))
+                    .where(" ", Predicates.air())
+                    .build())
+            .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_stable_titanium"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
+            .register();
+
+    /**
      * 大气捕集单元。
      *
      * <p>结构来自导出图，控制器位于最后一层底部中央；在默认朝向（主机面朝西）下，
@@ -870,6 +909,30 @@ public class VividMachines {
                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
                 .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
                 .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1));
+    }
+
+    /**
+     * 原子重构器外壳：钛稳定机械方块，或能源/物品/流体/维护/消声/并行仓。
+     * 能源仓最多 4 个。
+     */
+    private static TraceabilityPredicate atomicReconstructorCasing() {
+        return Predicates.blocks(GTBlocks.CASING_TITANIUM_STABLE.get())
+                .or(Predicates.abilities(PartAbility.INPUT_ENERGY)
+                        .setMinGlobalLimited(1).setMaxGlobalLimited(4).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                .or(Predicates.abilities(PartAbility.PARALLEL_HATCH).setMaxGlobalLimited(1));
+    }
+
+    private static Component[] atomicReconstructorTooltips() {
+        Component[] tooltips = new Component[6];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.atomic_reconstructor.tooltip." + i);
+        }
+        return tooltips;
     }
 
     public static final MachineDefinition[] COMPRESSED_PRIMITIVE_MAGIC_ENERGY = GTMachines.registerTieredMachines(

@@ -70,6 +70,15 @@ public class VividRecipeTypes {
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
             .setSound(GTSoundEntries.COOLING);
 
+    /** 物质重塑：原子重构器的配方类型。 */
+    public static final GTRecipeType MATTER_RESHAPING_RECIPES = GTRecipeTypes.register("matter_reshaping",
+            GTRecipeTypes.MULTIBLOCK)
+            .setEUIO(IO.IN)
+            .setMaxIOSize(9, 9, 4, 2)
+            .setIconSupplier(VividRecipeTypes::matterReshapingIcon)
+            .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
+            .setSound(GTSoundEntries.CHEMICAL);
+
     /**
      * 大气捕集：无物品/流体输入，只按当前维度输出对应的空气。
      * 图标使用大气捕集单元主机方块；维度由配方条件在 EMI 中显示。
@@ -84,6 +93,11 @@ public class VividRecipeTypes {
 
     private static ItemStack atmosphericCollectionIcon() {
         Item item = BuiltInRegistries.ITEM.get(new ResourceLocation("gtceu", "atmospheric_collection_unit"));
+        return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+    }
+
+    private static ItemStack matterReshapingIcon() {
+        Item item = BuiltInRegistries.ITEM.get(new ResourceLocation("gtceu", "atomic_reconstructor"));
         return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
     }
 }

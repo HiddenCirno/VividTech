@@ -4,6 +4,8 @@ import com.vividtech.VividTech;
 import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
 import com.vividtech.common.recipe.condition.AvaritiaPersonalDimensionCondition;
 
+import com.hepdd.gtmthings.data.CustomItems;
+
 import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLMaterials;
 import org.gtlcore.gtlcore.common.data.machines.MultiBlockMachineA;
@@ -159,6 +161,224 @@ public class VividGTAddon implements IGTAddon {
         addAutoclaveRecipes(provider);
         addCrystalAggregationRecipes(provider);
         addAtmosphericCollectionRecipes(provider);
+        addAtomicReconstructorRecipes(provider);
+    }
+
+    private static void addAtomicReconstructorRecipes(Consumer<FinishedRecipe> provider) {
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("atomic_reconstructor")
+                .inputItems(TagPrefix.frameGt, GTMaterials.Titanium, 32)
+                .inputItems(GTItems.EMITTER_EV, 32)
+                .inputItems(GTItems.ELECTRIC_MOTOR_EV, 32)
+                .inputItems(CustomItems.WIRELESS_ENERGY_RECEIVE_COVER_EV_4A.get(), 16)
+                .inputItems(GTItems.FIELD_GENERATOR_HV, 16)
+                .inputItems(CustomTags.IV_CIRCUITS, 16)
+                .inputFluids(GTMaterials.SolderingAlloy.getFluid(5184))
+                .outputItems(VividMachines.ATOMIC_RECONSTRUCTOR.asStack())
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(20 * 90)
+                .save(provider);
+
+        var type = VividRecipeTypes.MATTER_RESHAPING_RECIPES;
+
+        type.recipeBuilder("vividtech_matter_reshaping_platinum_group")
+                .inputItems(TagPrefix.dust, GTMaterials.Platinum, 4)
+                .inputItems(TagPrefix.dust, GTMaterials.Iron, 2)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(8000))
+                .outputItems(TagPrefix.dust, GTMaterials.Osmium, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Iridium, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Ruthenium, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Rhodium, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Palladium, 3)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_rutile")
+                .inputItems(TagPrefix.dust, GTMaterials.Rutile, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Titanium, 1)
+                .outputFluids(GTMaterials.Oxygen.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_uraninite")
+                .inputItems(TagPrefix.dust, GTMaterials.Uraninite, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Uranium238, 1)
+                .outputFluids(GTMaterials.Oxygen.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_scheelite")
+                .inputItems(TagPrefix.dust, GTMaterials.Scheelite, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Calcium, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Tungsten, 1)
+                .outputFluids(GTMaterials.Oxygen.getFluid(2000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_tungstate")
+                .inputItems(TagPrefix.dust, GTMaterials.Tungstate, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Lithium, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Tungsten, 1)
+                .outputFluids(GTMaterials.Oxygen.getFluid(2000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_sulfuric_acid")
+                .inputItems(TagPrefix.dust, GTMaterials.Sulfur, 1)
+                .inputFluids(GTMaterials.DistilledWater.getFluid(4000))
+                .outputFluids(GTMaterials.SulfuricAcid.getFluid(1000))
+                .outputFluids(GTMaterials.Hydrogen.getFluid(3000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_hydrochloric_acid")
+                .inputFluids(GTMaterials.SaltWater.getFluid(1000))
+                .outputFluids(GTMaterials.HydrochloricAcid.getFluid(1000))
+                .outputItems(TagPrefix.dust, GTMaterials.SodiumHydroxide, 3)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_iron_iii_chloride")
+                .inputItems(TagPrefix.dust, GTMaterials.Iron, 2)
+                .inputFluids(GTMaterials.Chlorine.getFluid(3000))
+                .outputFluids(GTMaterials.Iron3Chloride.getFluid(2000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_polyethylene")
+                .circuitMeta(1)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 2)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(2000))
+                .outputFluids(GTMaterials.Polyethylene.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_ptfe")
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 2)
+                .inputFluids(GTMaterials.Fluorine.getFluid(2000))
+                .outputFluids(GTMaterials.Polytetrafluoroethylene.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_pvc")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 2)
+                .inputFluids(GTMaterials.HydrochloricAcid.getFluid(1000))
+                .inputFluids(GTMaterials.Hydrogen.getFluid(1000))
+                .outputFluids(GTMaterials.PolyvinylChloride.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_nitric_acid")
+                .circuitMeta(1)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(1000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(1000))
+                .inputFluids(GTMaterials.Oxygen.getFluid(3000))
+                .outputFluids(GTMaterials.NitricAcid.getFluid(2000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_polycaprolactam")
+                .circuitMeta(1)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 24)
+                .inputFluids(GTMaterials.DistilledWater.getFluid(22000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(2000))
+                .outputFluids(GTMaterials.Polycaprolactam.getFluid(4000))
+                .outputFluids(GTMaterials.Oxygen.getFluid(9000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_pvb")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 16)
+                .inputFluids(GTMaterials.DistilledWater.getFluid(14000))
+                .outputFluids(GTMaterials.PolyvinylButyral.getFluid(2000))
+                .outputFluids(GTMaterials.Oxygen.getFluid(4000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_polybenzimidazole")
+                .circuitMeta(5)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 20)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(6000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(2000))
+                .outputFluids(GTMaterials.Polybenzimidazole.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_dimethylhydrazine")
+                .circuitMeta(4)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 2)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(4000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(1000))
+                .outputFluids(GTMaterials.Dimethylhydrazine.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_monomethylhydrazine")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 1)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(3000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(1000))
+                .outputFluids(GTLMaterials.Monomethylhydrazine.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_hydrazine")
+                .circuitMeta(3)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(2000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(1000))
+                .outputFluids(GTLMaterials.Hydrazine.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_nitroglycerin")
+                .circuitMeta(3)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 6)
+                .inputFluids(GTMaterials.DistilledWater.getFluid(18000))
+                .inputFluids(GTMaterials.Nitrogen.getFluid(3000))
+                .outputFluids(GTMaterials.GlycerylTrinitrate.getFluid(2000))
+                .outputFluids(GTMaterials.Hydrogen.getFluid(13000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_epoxy")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 42)
+                .inputFluids(GTMaterials.HydrochloricAcid.getFluid(50000))
+                .inputFluids(GTMaterials.Oxygen.getFluid(5000))
+                .outputFluids(GTMaterials.Epoxy.getFluid(2000))
+                .outputFluids(GTMaterials.Chlorine.getFluid(24000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_kerosene")
+                .circuitMeta(3)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 12)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(12000))
+                .outputFluids(GTLMaterials.Kerosene.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
