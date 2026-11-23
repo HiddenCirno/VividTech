@@ -21,8 +21,11 @@ import com.gregtechceu.gtceu.common.machine.multiblock.part.SteamHatchPartMachin
 
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
+import com.vividtech.common.machine.multiblock.part.DreamElevatorExtremePressureSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 
+import com.lowdragmc.lowdraglib.gui.util.ClickData;
+import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
@@ -32,6 +35,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -81,6 +85,8 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     /** 内环槽位固定 12 个，按到结构中心的距离识别。 */
     private static final int INNER_MODULE_SLOTS = 12;
+    /** 极限加压模式的并行倍率上限；x4 时 T5 内环 512、外环 256。 */
+    private static final int MAX_EXTREME_PARALLEL_MULTIPLIER = 4;
 
     private static final int HOST_CHECK_INTERVAL_TICKS = 20;
     /** 定期重建 parts，让成型后才放置的重力/超净子系统也能被 getParts() 识别。 */
@@ -118,6 +124,19 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     @DescSynced
     private boolean hasLargeSteamHatch;
+
+    /** 极限加压子系统安装后，主机 GUI 控制的全局极限超频等级。 */
+    @Persisted
+    @DescSynced
+    private int extremeOverclockLevel;
+
+    @DescSynced
+    private boolean extremePressureSubsystemInstalled;
+
+    /** 极限加压模式下的模块并行倍率，1 = 原始基础并行，4 = T5 内环 512 / 外环 256。 */
+    @Persisted
+    @DescSynced
+    private int extremeParallelMultiplier = 1;
 
     private final Set<IModularMachineModule<DreamElevatorMachine, ?>> modules = new ReferenceOpenHashSet<>();
     private final Map<SteamProcessingModuleMachine, Integer> parallelReservations = new HashMap<>();
@@ -180,6 +199,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         resolveGravitySubsystem();
         safeClearModules();
         scanAndConnectModules();
+        updateExtremePressureSubsystem();
         updateHostSubscription();
     }
 
@@ -200,6 +220,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         resolvedGravityPos = null;
         railTier = 0;
         hasLargeSteamHatch = false;
+        extremePressureSubsystemInstalled = false;
         stopHostSubscription();
         super.onStructureInvalid();
     }
@@ -278,6 +299,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         collectSteamTanks();
         installSteamHandler();
         resolveGravitySubsystem();
+        updateExtremePressureSubsystem();
         markDirty();
         notifyBlockUpdate();
     }
@@ -435,7 +457,7 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         for (IMultiPart part : getParts()) {
             for (IRecipeHandlerTrait<?> trait : part.getRecipeHandlers()) {
                 if (trait instanceof NotifiableFluidTank tank && isSteamHatchTank(tank)) {
-                    stored += tank.getFluidInTank(0).getAmount();
+                    stored = saturatedAdd(stored, tank.getFluidInTank(0).getAmount());
                 }
             }
         }
@@ -447,11 +469,22 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         for (IMultiPart part : getParts()) {
             for (IRecipeHandlerTrait<?> trait : part.getRecipeHandlers()) {
                 if (trait instanceof NotifiableFluidTank tank && isSteamHatchTank(tank)) {
-                    capacity += tank.getTankCapacity(0);
+                    capacity = saturatedAdd(capacity, tank.getTankCapacity(0));
                 }
             }
         }
         return capacity;
+    }
+
+    /**
+     * 创造模式蒸汽仓容量已接近 long 上限；多个仓室相加时必须避免回绕成负数。
+     * 显示值达到 Long.MAX_VALUE 即可，实际抽汽仍按每个仓室独立处理。
+     */
+    private static long saturatedAdd(long a, long b) {
+        if (b > 0 && a > Long.MAX_VALUE - b) {
+            return Long.MAX_VALUE;
+        }
+        return a + b;
     }
 
     @Override
@@ -521,6 +554,14 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
 
     /** 全机允许执行的最高配方电压等级：T1/T2 = LV，T3 = MV，T4 = HV，T5 = EV。 */
     public int getMaxRecipeTier() {
+        int tier = getBaseMaxRecipeTier();
+        if (extremePressureSubsystemInstalled) {
+            tier += getExtremeOverclockLevel();
+        }
+        return Math.min(GTValues.MAX, tier);
+    }
+
+    private int getBaseMaxRecipeTier() {
         int base;
         if (railTier >= 5) {
             base = GTValues.EV;
@@ -532,6 +573,72 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
             base = GTValues.LV;
         }
         return Math.min(GTValues.MAX, base + getPressurizationTierBonus());
+    }
+
+    public int getMaxExtremeOverclockLevel() {
+        if (!extremePressureSubsystemInstalled) {
+            return 0;
+        }
+        return Math.max(0, GTValues.MAX - getBaseMaxRecipeTier());
+    }
+
+    public int getExtremeOverclockLevel() {
+        if (!extremePressureSubsystemInstalled) {
+            return 0;
+        }
+        return Mth.clamp(extremeOverclockLevel, 0, getMaxExtremeOverclockLevel());
+    }
+
+    public void setExtremeOverclockLevel(int level) {
+        if (isRemote()) {
+            return;
+        }
+        int clamped = Mth.clamp(level, 0, getMaxExtremeOverclockLevel());
+        if (extremeOverclockLevel == clamped) {
+            return;
+        }
+        extremeOverclockLevel = clamped;
+        markDirty();
+        notifyBlockUpdate();
+        markModulesRecipeDirty();
+    }
+
+    public int getMaxExtremeParallelMultiplier() {
+        return MAX_EXTREME_PARALLEL_MULTIPLIER;
+    }
+
+    /** 极限加压模式的并行倍率；未安装子系统时强制为 1。 */
+    public int getExtremeParallelMultiplier() {
+        if (!extremePressureSubsystemInstalled) {
+            return 1;
+        }
+        return Mth.clamp(extremeParallelMultiplier, 1, MAX_EXTREME_PARALLEL_MULTIPLIER);
+    }
+
+    public void setExtremeParallelMultiplier(int multiplier) {
+        if (isRemote() || !extremePressureSubsystemInstalled) {
+            return;
+        }
+        int clamped = Mth.clamp(multiplier, 1, MAX_EXTREME_PARALLEL_MULTIPLIER);
+        if (extremeParallelMultiplier == clamped) {
+            return;
+        }
+        extremeParallelMultiplier = clamped;
+        markDirty();
+        notifyBlockUpdate();
+        markModulesRecipeDirty();
+    }
+
+    /** 每级极限超频：EU/t ×4，也就是每 tick 功耗 ×4。 */
+    public double getExtremeOverclockPowerMultiplier() {
+        int level = getExtremeOverclockLevel();
+        return level <= 0 ? 1.0D : Math.pow(4.0D, level);
+    }
+
+    /** 每级极限超频：工作速度/效率 ×2。 */
+    public double getExtremeOverclockSpeedMultiplier() {
+        int level = getExtremeOverclockLevel();
+        return level <= 0 ? 1.0D : Math.pow(2.0D, level);
     }
 
     public double getProductionSpeedMultiplier() {
@@ -611,9 +718,49 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         return false;
     }
 
+    public boolean hasExtremePressureSubsystem() {
+        return extremePressureSubsystemInstalled;
+    }
+
+    private boolean detectExtremePressureSubsystem() {
+        for (IMultiPart part : getParts()) {
+            if (part.self() instanceof DreamElevatorExtremePressureSubsystemMachine) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateExtremePressureSubsystem() {
+        boolean installed = detectExtremePressureSubsystem();
+        if (extremePressureSubsystemInstalled == installed) {
+            return;
+        }
+        extremePressureSubsystemInstalled = installed;
+        markDirty();
+        notifyBlockUpdate();
+        markModulesRecipeDirty();
+    }
+
+    private void markModulesRecipeDirty() {
+        for (IModularMachineModule<DreamElevatorMachine, ?> module : modules) {
+            if (module instanceof SteamProcessingModuleMachine steamModule) {
+                steamModule.releaseParallelReservation();
+                steamModule.getRecipeLogic().markLastRecipeDirty();
+            } else if (module instanceof AbstractSteamResourceModuleMachine resourceModule &&
+                    resourceModule.getRecipeLogic() instanceof ResourceModuleRecipeLogic logic) {
+                logic.refreshDuration();
+            }
+        }
+        getRecipeLogic().markLastRecipeDirty();
+    }
+
     /** 模块实际可申请的并行：T5 动力模块让内环模块翻倍。 */
     public int getMaxModuleParallel(SteamProcessingModuleMachine module) {
         int base = module.getModuleParallel();
+        if (extremePressureSubsystemInstalled) {
+            base *= getExtremeParallelMultiplier();
+        }
         if (railTier >= 5 && isInnerModule(module.getPos())) {
             return base * 2;
         }
@@ -683,9 +830,13 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         parallelReservations.remove(module);
     }
 
-    /** 全机并行池。 */
+    /** 全机并行池；极限加压并行倍率会同步放大池子，保证所有模块都能吃满自己的并行。 */
     public int getParallelPool() {
-        return railTier > 0 ? POWER_PARALLELS[railTier - 1] : 0;
+        int pool = railTier > 0 ? POWER_PARALLELS[railTier - 1] : 0;
+        if (extremePressureSubsystemInstalled) {
+            pool *= getExtremeParallelMultiplier();
+        }
+        return pool;
     }
 
     public int getRailTier() {
@@ -748,6 +899,23 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
         textList.add(Component.translatable("vividtech.machine.dream_elevator.pressurization_level",
                 Component.literal(Integer.toString(pressurizationLevel)).withStyle(pressurizationColor)));
 
+        if (extremePressureSubsystemInstalled) {
+            int extremeLevel = getExtremeOverclockLevel();
+            int extremeMax = getMaxExtremeOverclockLevel();
+            ChatFormatting extremeColor = extremeLevel > 0 ? ChatFormatting.RED : ChatFormatting.GRAY;
+            textList.add(Component.translatable("vividtech.machine.dream_elevator.extreme_overclock",
+                    Component.literal(Integer.toString(extremeLevel)).withStyle(extremeColor)));
+            textList.add(Component.translatable("vividtech.machine.dream_elevator.extreme_overclock_limit",
+                            Component.literal(Integer.toString(extremeMax)))
+                    .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "extreme_overclock_sub"))
+                    .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "extreme_overclock_add")));
+            textList.add(Component.translatable("vividtech.machine.dream_elevator.extreme_parallel",
+                            Component.literal("x" + getExtremeParallelMultiplier()),
+                            Component.literal("x" + getMaxExtremeParallelMultiplier()))
+                    .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "extreme_parallel_sub"))
+                    .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "extreme_parallel_add")));
+        }
+
         textList.add(Component.translatable("vividtech.machine.dream_elevator.cleanroom_subsystem",
                 Component.translatable(hasCleanroomSubsystem() ?
                         "vividtech.machine.dream_elevator.online" :
@@ -760,6 +928,22 @@ public class DreamElevatorMachine extends LargeSteamParallelMultiblockMachine
                 Component.translatable(isAnimationEnabled() ?
                         "vividtech.machine.dream_elevator.online" :
                         "vividtech.machine.dream_elevator.offline")));
+    }
+
+    @Override
+    public void handleDisplayClick(String componentData, ClickData clickData) {
+        if (clickData.isRemote || !extremePressureSubsystemInstalled) {
+            return;
+        }
+        if ("extreme_overclock_add".equals(componentData)) {
+            setExtremeOverclockLevel(getExtremeOverclockLevel() + 1);
+        } else if ("extreme_overclock_sub".equals(componentData)) {
+            setExtremeOverclockLevel(getExtremeOverclockLevel() - 1);
+        } else if ("extreme_parallel_add".equals(componentData)) {
+            setExtremeParallelMultiplier(getExtremeParallelMultiplier() + 1);
+        } else if ("extreme_parallel_sub".equals(componentData)) {
+            setExtremeParallelMultiplier(getExtremeParallelMultiplier() - 1);
+        }
     }
 
     private static ChatFormatting railColor(int tier) {

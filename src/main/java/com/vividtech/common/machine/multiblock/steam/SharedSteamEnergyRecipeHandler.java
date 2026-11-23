@@ -39,7 +39,9 @@ public class SharedSteamEnergyRecipeHandler implements IRecipeHandler<Long> {
         if (io != IO.IN) {
             return left;
         }
-        long totalEUt = left.stream().mapToLong(Long::longValue).sum();
+        long totalEUt = left.stream()
+                .mapToLong(Long::longValue)
+                .reduce(0L, SharedSteamEnergyRecipeHandler::saturatedAdd);
         if (totalEUt <= 0) {
             return left;
         }
@@ -87,13 +89,21 @@ public class SharedSteamEnergyRecipeHandler implements IRecipeHandler<Long> {
 
     @Override
     public double getTotalContentAmount() {
-        long amount = 0L;
+        // 创造模式蒸汽仓的容量接近 long 上限，多个仓室相加会回绕；这里直接用 double 累加。
+        double amount = 0.0D;
         for (NotifiableFluidTank tank : tanks.get()) {
             for (int i = 0; i < tank.getTanks(); i++) {
                 amount += tank.getFluidInTank(i).getAmount();
             }
         }
         return amount;
+    }
+
+    private static long saturatedAdd(long a, long b) {
+        if (b > 0 && a > Long.MAX_VALUE - b) {
+            return Long.MAX_VALUE;
+        }
+        return a + b;
     }
 
     @Override

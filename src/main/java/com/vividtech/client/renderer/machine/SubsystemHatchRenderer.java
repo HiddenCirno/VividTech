@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.client.renderer.machine.MachineRenderer;
 
+import com.lowdragmc.lowdraglib.client.bakedpipeline.Quad;
 import com.lowdragmc.lowdraglib.client.renderer.impl.IModelRenderer;
 
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -24,6 +25,12 @@ public class SubsystemHatchRenderer extends MachineRenderer {
 
     private static final ResourceLocation BASE_TEXTURE =
             GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks");
+    /**
+     * 正面覆盖层与外壳正面是共面的。GT 的 maintenance 覆盖模型自带 -0.001 的微小偏移，
+     * 但 GTMThings 的无线能源仓模型没有，直接叠上去会 z-fighting，正面看起来仍是青铜外壳。
+     * 与 GTCEu OverlayTieredMachineRenderer / CreativeWirelessGridRenderer 使用相同的偏移量。
+     */
+    private static final float OVERLAY_OFFSET = 0.002F;
 
     private final IModelRenderer overlayModel;
 
@@ -42,6 +49,9 @@ public class SubsystemHatchRenderer extends MachineRenderer {
                               ModelState modelState) {
         super.renderMachine(list, definition, machine, frontFacing, side, random, facing, modelState);
         list.addAll(overlayModel.getRotatedModel(frontFacing)
-                .getQuads(definition.defaultBlockState(), side, random));
+                .getQuads(definition.defaultBlockState(), side, random)
+                .stream()
+                .map(quad -> Quad.from(quad, OVERLAY_OFFSET).rebake())
+                .toList());
     }
 }

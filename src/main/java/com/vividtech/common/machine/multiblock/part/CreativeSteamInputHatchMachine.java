@@ -17,13 +17,13 @@ import net.minecraft.world.phys.BlockHitResult;
  * 创造模式蒸汽输入仓。
  *
  * <p>
- * 容量 2,147,483,647 mB，仅接受蒸汽，不提供 GUI，也不提供任何超频能力。
+ * 容量 9.2e18 mB，仅接受蒸汽，不提供 GUI，也不提供任何超频能力。
  * </p>
  */
 public class CreativeSteamInputHatchMachine extends FluidHatchPartMachine {
 
-    /** Integer.MAX_VALUE mB。 */
-    public static final long CAPACITY = Integer.MAX_VALUE;
+    /** 9.2e18 mB，给极限超频后的蒸汽消耗留出足够余量。 */
+    public static final long CAPACITY = 9_200_000_000_000_000_000L;
 
     private TickableSubscription fillSubscription;
 

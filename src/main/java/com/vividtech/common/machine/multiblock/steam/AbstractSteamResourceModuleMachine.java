@@ -132,11 +132,22 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         return CYCLE_DURATIONS[moduleTier - 1];
     }
 
+    private boolean isExtremePressureMode() {
+        DreamElevatorMachine currentHost = getHost();
+        return currentHost != null && currentHost.isFormed() && currentHost.hasExtremePressureSubsystem();
+    }
+
     public int getOverclockLevel() {
+        if (isExtremePressureMode()) {
+            return 0;
+        }
         return Mth.clamp(overclockLevel, 0, MAX_OVERCLOCK);
     }
 
     public void setOverclockLevel(int level) {
+        if (isExtremePressureMode()) {
+            return;
+        }
         int clamped = Mth.clamp(level, 0, MAX_OVERCLOCK);
         if (overclockLevel == clamped) {
             return;
@@ -149,15 +160,18 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         }
     }
 
-    /** 每级超频让工作速度翻倍。 */
+    /** 每级超频让工作速度翻倍；极限加压子系统会接管。 */
     public double getOverclockSpeedMultiplier() {
-        return 1L << getOverclockLevel();
+        return isExtremePressureMode() ? 1.0D : (1L << getOverclockLevel());
     }
 
-    /** 受轨道速度与超频加成后的实际周期。 */
+    /** 受轨道速度、超频与极限超频加成后的实际周期。 */
     public int getEffectiveCycleDuration() {
         DreamElevatorMachine currentHost = getHost();
         double speed = currentHost != null ? currentHost.getProductionSpeedMultiplier() : 1.0D;
+        if (currentHost != null && currentHost.hasExtremePressureSubsystem()) {
+            speed *= currentHost.getExtremeOverclockSpeedMultiplier();
+        }
         speed *= getOverclockSpeedMultiplier();
         return Math.max(1, (int) Math.round(getCycleDuration() / speed));
     }
@@ -169,7 +183,11 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
             return 0.0D;
         }
         double multiplier = (0.8D / currentHost.getRailTier()) * moduleTier + moduleTier / 10.0D;
-        return moduleTier * 200.0D * multiplier * currentHost.getPressurizationConsumptionMultiplier();
+        multiplier *= currentHost.getPressurizationConsumptionMultiplier();
+        if (currentHost.hasExtremePressureSubsystem()) {
+            multiplier *= currentHost.getExtremeOverclockPowerMultiplier();
+        }
+        return moduleTier * 200.0D * multiplier;
     }
 
     public long getRecipeEUt() {
@@ -465,7 +483,7 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
 
     @Override
     public void handleDisplayClick(String componentData, ClickData clickData) {
-        if (clickData.isRemote) {
+        if (clickData.isRemote || isExtremePressureMode()) {
             return;
         }
         if ("overclock_add".equals(componentData)) {
@@ -488,14 +506,24 @@ public abstract class AbstractSteamResourceModuleMachine extends WorkableMultibl
         textList.add(Component.translatable(connectedToHost ?
                 "vividtech.machine.resource_module.connected" :
                 "vividtech.machine.resource_module.disconnected"));
-        textList.add(Component.translatable("vividtech.machine.resource_module.overclock",
-                Component.literal(Integer.toString(getOverclockLevel()))
-                        .withStyle(overclockColor(getOverclockLevel()))));
-        textList.add(Component.translatable("vividtech.machine.resource_module.overclock_limit",
-                        Component.literal(Integer.toString(getOverclockLevel()))
-                                .withStyle(overclockColor(getOverclockLevel())))
-                .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "overclock_sub"))
-                .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "overclock_add")));
+        if (isExtremePressureMode()) {
+            DreamElevatorMachine currentHost = getHost();
+            int extremeLevel = currentHost != null ? currentHost.getExtremeOverclockLevel() : 0;
+            int extremeMax = currentHost != null ? currentHost.getMaxExtremeOverclockLevel() : 0;
+            textList.add(Component.translatable("vividtech.machine.resource_module.extreme_overclock",
+                    Component.literal(Integer.toString(extremeLevel)).withStyle(overclockColor(extremeLevel))));
+            textList.add(Component.translatable("vividtech.machine.resource_module.extreme_overclock_hint",
+                    Component.literal(Integer.toString(extremeMax))));
+        } else {
+            textList.add(Component.translatable("vividtech.machine.resource_module.overclock",
+                    Component.literal(Integer.toString(getOverclockLevel()))
+                            .withStyle(overclockColor(getOverclockLevel()))));
+            textList.add(Component.translatable("vividtech.machine.resource_module.overclock_limit",
+                            Component.literal(Integer.toString(getOverclockLevel()))
+                                    .withStyle(overclockColor(getOverclockLevel())))
+                    .append(ComponentPanelWidget.withButton(Component.literal(" [-]"), "overclock_sub"))
+                    .append(ComponentPanelWidget.withButton(Component.literal("[+]"), "overclock_add")));
+        }
     }
 
     private static ChatFormatting overclockColor(int level) {

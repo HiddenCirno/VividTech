@@ -140,6 +140,16 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(480).duration(20 * 30)
                 .save(provider);
 
+        GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("dream_elevator_extreme_pressure_subsystem")
+                .inputItems(VividMachines.PRESSURIZATION_MODULE.asStack(64))
+                .inputItems(VividMachines.CREATIVE_STEAM_INPUT_HATCH.asStack())
+                .inputItems(GTItems.FIELD_GENERATOR_EV, 16)
+                .inputFluids(GTMaterials.Tungsten.getFluid(2592))
+                .outputItems(VividMachines.EXTREME_PRESSURE_SUBSYSTEM.asStack())
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(20 * 120)
+                .save(provider);
+
         VanillaRecipeHelper.addShapelessRecipe(provider, "dream_elevator_cleanroom_subsystem",
                 VividMachines.CLEANROOM_SUBSYSTEM.asStack(),
                 GTMachines.CLEANING_MAINTENANCE_HATCH.asStack());
@@ -396,6 +406,33 @@ public class VividGTAddon implements IGTAddon {
                 .inputItems(TagPrefix.dust, GTMaterials.Carbon, 12)
                 .inputFluids(GTMaterials.Hydrogen.getFluid(12000))
                 .outputFluids(GTLMaterials.Kerosene.getFluid(1000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_nether_air")
+                .inputFluids(GTMaterials.CarbonMonoxide.getFluid(156_000))
+                .inputFluids(GTMaterials.HydrogenSulfide.getFluid(42_000))
+                .inputFluids(GTMaterials.Helium.getFluid(9_000))
+                .outputFluids(GTMaterials.NetherAir.getFluid(2_000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_ender_air")
+                .inputFluids(GTMaterials.NitrogenDioxide.getFluid(156_000))
+                .inputFluids(GTMaterials.Deuterium.getFluid(42_000))
+                .inputFluids(GTMaterials.Xenon.getFluid(9_000))
+                .outputFluids(GTMaterials.EnderAir.getFluid(2_000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_styrene_butadiene_rubber")
+                .circuitMeta(5)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 20)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(13_000))
+                .outputFluids(GTMaterials.StyreneButadieneRubber.getFluid(1_000))
                 .EUt(GTValues.VA[GTValues.EV])
                 .duration(200)
                 .save(provider);

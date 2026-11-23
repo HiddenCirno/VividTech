@@ -15,6 +15,7 @@ import com.vividtech.common.machine.multiblock.part.CastingInputHatchPartMachine
 import com.vividtech.common.machine.multiblock.part.CreativeSteamInputHatchMachine;
 import com.vividtech.common.machine.multiblock.part.CreativeWirelessGridHatchPartMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsystemMachine;
+import com.vividtech.common.machine.multiblock.part.DreamElevatorExtremePressureSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
 import com.vividtech.common.machine.multiblock.electric.AdvancedSlaughterhouseMachine;
@@ -458,6 +459,21 @@ public class VividMachines {
             .tooltipBuilder(VIVID_ADD)
             .register();
 
+    /**
+     * 梦想电梯极限加压子系统：安装在电梯本体上的非模块仓室。
+     * 解锁主机 GUI 的极限超频选项，并把模块手动超频改为有损超频。
+     */
+    public static final MachineDefinition EXTREME_PRESSURE_SUBSYSTEM = REGISTRATE
+            .machine("dream_elevator_extreme_pressure_subsystem",
+                    DreamElevatorExtremePressureSubsystemMachine::new)
+            .langValue("Dream Elevator Extreme Pressure Subsystem")
+            .rotationState(RotationState.ALL)
+            .renderer(() -> new SubsystemHatchRenderer(
+                    new ResourceLocation("gtmthings", "block/machine/part/wireless_energy_hatch")))
+            .tooltips(extremePressureSubsystemTooltips())
+            .tooltipBuilder(VIVID_ADD)
+            .register();
+
     private static Component[] cleanroomSubsystemTooltips() {
         Component[] tooltips = new Component[5];
         for (int i = 0; i < tooltips.length; i++) {
@@ -470,6 +486,14 @@ public class VividMachines {
         Component[] tooltips = new Component[4];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.gravity_subsystem.tooltip." + i);
+        }
+        return tooltips;
+    }
+
+    private static Component[] extremePressureSubsystemTooltips() {
+        Component[] tooltips = new Component[4];
+        for (int i = 0; i < tooltips.length; i++) {
+            tooltips[i] = Component.translatable("vividtech.machine.extreme_pressure_subsystem.tooltip." + i);
         }
         return tooltips;
     }
@@ -608,9 +632,10 @@ public class VividMachines {
                 .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(4))
                 .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setMaxGlobalLimited(4))
-                // 两个非模块子系统仓室：超净维护 / 重力控制。
+                // 非模块子系统仓室：超净维护 / 重力控制 / 极限加压。
                 .or(Predicates.blocks(CLEANROOM_SUBSYSTEM.getBlock(), GRAVITY_SUBSYSTEM.getBlock())
-                        .setMaxGlobalLimited(2));
+                        .setMaxGlobalLimited(2))
+                .or(Predicates.blocks(EXTREME_PRESSURE_SUBSYSTEM.getBlock()).setMaxGlobalLimited(1));
     }
 
     private static TraceabilityPredicate dreamModuleShell() {
@@ -715,7 +740,6 @@ public class VividMachines {
                     .where('E', Predicates.blocks(Blocks.LAPIS_BLOCK))
                     .where('F', Predicates.blocks(Blocks.BOOKSHELF))
                     .where('G', Predicates.blocks(Blocks.CHISELED_STONE_BRICKS))
-                    .where(" ", Predicates.any())
                     .build())
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_bronze_plated_bricks"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
@@ -756,7 +780,6 @@ public class VividMachines {
                     .where("e", Predicates.blocks(GTBlocks.CASING_STEEL_GEARBOX.get()))
                     .where("f", Predicates.blocks(GTBlocks.CASING_STEEL_PIPE.get()))
                     .where("g", Predicates.abilities(PartAbility.MUFFLER))
-                    .where(" ", Predicates.any())
                     .build())
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_solid_steel"),
                     GTCEu.id("block/multiblock/gcym/large_maceration_tower"))
@@ -833,7 +856,7 @@ public class VividMachines {
                             ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.Titanium)))
                     .where("F", Predicates.blocks(GTBlocks.CASING_STAINLESS_STEEL_GEARBOX.get()))
                     .where("G", Predicates.blocks(GTBlocks.CASING_TITANIUM_PIPE.get()))
-                    .where(" ", Predicates.air())
+                    // 空格/占位符不映射，内部空气不参与结构检测。
                     .build())
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_stable_titanium"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
@@ -871,7 +894,6 @@ public class VividMachines {
                     .where("C", Predicates.blocks(GTBlocks.CASING_TITANIUM_GEARBOX.get()))
                     .where("D", Predicates.blocks(Blocks.IRON_BARS))
                     .where("E", Predicates.blocks(GTBlocks.FIREBOX_TITANIUM.get()))
-                    .where(" ", Predicates.air())
                     .build())
             .workableCasingRenderer(GTCEu.id("block/casings/solid/machine_casing_stable_titanium"),
                     GTCEu.id("block/multiblock/fusion_reactor"))
@@ -1041,8 +1063,8 @@ public class VividMachines {
                     .where("X", dreamSteamCasing())
                     .where("G", dreamModuleShell())
                     .where("I", dreamModuleSlot())
-                    .where("-", Predicates.air())
-                    .where(" ", Predicates.any())
+                    // 内部空位不做空气要求；"-" 仍需显式映射，否则 FactoryBlockPattern 会报 missing predicate。
+                    .where("-", Predicates.any())
                     .build())
             .renderer(DreamElevatorRenderer::new)
             .hasTESR(true)

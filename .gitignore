@@ -16,6 +16,7 @@ bin/
 
 *.DS_Store
 *.bak-*
+build-*.log
 _tmp_*
 libs/
 dev/
