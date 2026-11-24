@@ -436,6 +436,26 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(GTValues.VA[GTValues.EV])
                 .duration(200)
                 .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_polychlorinated_biphenyl")
+                .circuitMeta(1)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 12)
+                .inputFluids(GTMaterials.HydrochloricAcid.getFluid(8_000))
+                .outputFluids(GTMaterials.PolychlorinatedBiphenyl.getFluid(1_000))
+                .outputFluids(GTMaterials.Chlorine.getFluid(3_000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_polyphenylene_sulfide")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 6)
+                .inputItems(TagPrefix.dust, GTMaterials.Sulfur, 1)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(2_000))
+                .outputFluids(GTMaterials.PolyphenyleneSulfide.getFluid(1_000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {

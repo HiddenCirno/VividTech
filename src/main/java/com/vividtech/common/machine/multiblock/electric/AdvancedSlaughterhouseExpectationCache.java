@@ -13,6 +13,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.MagmaCube;
+import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -60,7 +62,8 @@ public final class AdvancedSlaughterhouseExpectationCache {
     };
     public static final String[] FALLBACK_HOSTILE = {
             "ghast", "zombie", "pillager", "zombie_villager", "skeleton", "drowned", "witch", "spider",
-            "creeper", "husk", "wither_skeleton", "blaze", "zombified_piglin", "slime", "vindicator", "enderman"
+            "creeper", "husk", "wither_skeleton", "blaze", "zombified_piglin", "slime", "magma_cube",
+            "phantom", "hoglin", "vindicator", "enderman"
     };
 
     private static volatile GlobalTables current;
@@ -192,6 +195,16 @@ public final class AdvancedSlaughterhouseExpectationCache {
         Entity created = type.create(level);
         if (!(created instanceof LivingEntity mob)) {
             return null;
+        }
+
+        // 原版尺寸相关的战利品条件：
+        // - 史莱姆只有最小尺寸（size 1）才掉粘液球，默认就是 1；
+        // - 岩浆怪只有 size >= 2 才掉岩浆膏，默认 1 会采样出 0 掉落。
+        // MagmaCube 是 Slime 的子类，判断顺序不能反。
+        if (mob instanceof MagmaCube magmaCube) {
+            magmaCube.setSize(4, true);
+        } else if (mob instanceof Slime slime) {
+            slime.setSize(1, true);
         }
 
         mob.moveTo(0.5D, 64.0D, 0.5D, 0.0F, 0.0F);
