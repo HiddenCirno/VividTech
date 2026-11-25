@@ -463,6 +463,13 @@ public class VividGTAddon implements IGTAddon {
                 .EUt(GTValues.VA[GTValues.EV])
                 .duration(200)
                 .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_trinium")
+                .inputItems(TagPrefix.dust, GTMaterials.NaquadahEnriched, 16)
+                .outputItems(TagPrefix.dust, GTMaterials.Trinium, 2)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
     }
 
     private static void addPrimitiveMagicEnergyRecipes(Consumer<FinishedRecipe> provider) {
@@ -916,17 +923,42 @@ public class VividGTAddon implements IGTAddon {
                 GTMaterials.Tin.getFluid(2304));
 
         var type = VividRecipeTypes.ATMOSPHERIC_COLLECTION_RECIPES;
+        // 自动冷凝：液态空气
         addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_OVERWORLD,
-                new ResourceLocation("minecraft", "overworld"), GTMaterials.LiquidAir.getFluid(10_000));
+                new ResourceLocation("minecraft", "overworld"), GTMaterials.LiquidAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_CONDENSE);
         addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_ANCIENT_WORLD,
-                new ResourceLocation("kubejs", "ancient_world"), GTMaterials.LiquidAir.getFluid(10_000));
-        addAtmosphericPersonalCollectionRecipe(type, provider, GTMaterials.LiquidAir.getFluid(10_000));
+                new ResourceLocation("kubejs", "ancient_world"), GTMaterials.LiquidAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_CONDENSE);
+        addAtmosphericPersonalCollectionRecipe(type, provider, GTMaterials.LiquidAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_CONDENSE);
         addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_NETHER,
-                new ResourceLocation("minecraft", "the_nether"), GTMaterials.LiquidNetherAir.getFluid(10_000));
+                new ResourceLocation("minecraft", "the_nether"), GTMaterials.LiquidNetherAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_CONDENSE);
         addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_END,
-                new ResourceLocation("minecraft", "the_end"), GTMaterials.LiquidEnderAir.getFluid(10_000));
+                new ResourceLocation("minecraft", "the_end"), GTMaterials.LiquidEnderAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_CONDENSE);
+
+        // 普通集气：气态空气
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_OVERWORLD,
+                new ResourceLocation("minecraft", "overworld"), GTMaterials.Air.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_COLLECT);
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_ANCIENT_WORLD,
+                new ResourceLocation("kubejs", "ancient_world"), GTMaterials.Air.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_COLLECT);
+        addAtmosphericPersonalCollectionRecipe(type, provider, GTMaterials.Air.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_COLLECT);
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_NETHER,
+                new ResourceLocation("minecraft", "the_nether"), GTMaterials.NetherAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_COLLECT);
+        addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_END,
+                new ResourceLocation("minecraft", "the_end"), GTMaterials.EnderAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_COLLECT);
+
+        // BarnardaAir 只有气态，两种模式通用
         addAtmosphericCollectionRecipe(type, provider, AtmosphericCollectionUnitMachine.SOURCE_BARNARDA,
-                new ResourceLocation("kubejs", "barnarda"), GTLMaterials.BarnardaAir.getFluid(10_000));
+                new ResourceLocation("kubejs", "barnarda"), GTLMaterials.BarnardaAir.getFluid(10_000),
+                AtmosphericCollectionUnitMachine.MODE_ANY);
     }
 
     private static void addAtmosphericCollectionUnitRecipe(Consumer<FinishedRecipe> provider, String solderType,
@@ -947,26 +979,34 @@ public class VividGTAddon implements IGTAddon {
 
     private static void addAtmosphericCollectionRecipe(com.gregtechceu.gtceu.api.recipe.GTRecipeType type,
                                                        Consumer<FinishedRecipe> provider, String source,
-                                                       ResourceLocation dimension, FluidStack output) {
-        type.recipeBuilder("atmospheric_collection_" + source)
+                                                       ResourceLocation dimension, FluidStack output,
+                                                       String mode) {
+        type.recipeBuilder("atmospheric_collection_" + source + recipeModeSuffix(mode))
                 .EUt(GTValues.VA[GTValues.MV])
                 .duration(20 * 10)
                 .outputFluids(output)
                 .addData(AtmosphericCollectionUnitMachine.SOURCE_KEY, source)
+                .addData(AtmosphericCollectionUnitMachine.MODE_KEY, mode)
                 .dimension(dimension)
                 .save(provider);
     }
 
     private static void addAtmosphericPersonalCollectionRecipe(com.gregtechceu.gtceu.api.recipe.GTRecipeType type,
-                                                               Consumer<FinishedRecipe> provider, FluidStack output) {
-        type.recipeBuilder("atmospheric_collection_personal")
+                                                               Consumer<FinishedRecipe> provider, FluidStack output,
+                                                               String mode) {
+        type.recipeBuilder("atmospheric_collection_personal" + recipeModeSuffix(mode))
                 .EUt(GTValues.VA[GTValues.MV])
                 .duration(20 * 10)
                 .outputFluids(output)
                 .addData(AtmosphericCollectionUnitMachine.SOURCE_KEY,
                         AtmosphericCollectionUnitMachine.SOURCE_PERSONAL)
+                .addData(AtmosphericCollectionUnitMachine.MODE_KEY, mode)
                 .addCondition(new AvaritiaPersonalDimensionCondition())
                 .save(provider);
+    }
+
+    private static String recipeModeSuffix(String mode) {
+        return AtmosphericCollectionUnitMachine.MODE_CONDENSE.equals(mode) ? "" : "_" + mode;
     }
 
     private static ItemStack item(String namespace, String path) {

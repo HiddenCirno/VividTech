@@ -55,6 +55,11 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
 
     /** 配方数据中标记大气来源的键。 */
     public static final String SOURCE_KEY = "vividtech_atmosphere_source";
+    /** 配方数据中标记工作模式的键。 */
+    public static final String MODE_KEY = "vividtech_atmosphere_mode";
+    public static final String MODE_CONDENSE = "condense";
+    public static final String MODE_COLLECT = "collect";
+    public static final String MODE_ANY = "any";
 
     public static final String SOURCE_OVERWORLD = "overworld";
     public static final String SOURCE_ANCIENT_WORLD = "ancient_world";
@@ -217,9 +222,14 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
      * 找不到时再退回运行时构造，避免配方表异常导致机器彻底不工作。
      */
     @Nullable
-    private static GTRecipe findDataRecipe(Level level, GTRecipeType type, String source) {
+    private static GTRecipe findDataRecipe(Level level, GTRecipeType type, String source, boolean condense) {
+        String wantedMode = condense ? MODE_CONDENSE : MODE_COLLECT;
         for (GTRecipe recipe : level.getRecipeManager().getAllRecipesFor(type)) {
-            if (source.equals(recipe.data.getString(SOURCE_KEY))) {
+            if (!source.equals(recipe.data.getString(SOURCE_KEY))) {
+                continue;
+            }
+            String mode = recipe.data.getString(MODE_KEY);
+            if (wantedMode.equals(mode) || MODE_ANY.equals(mode)) {
                 return recipe;
             }
         }
@@ -235,6 +245,7 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
                 .duration(200)
                 .outputFluids(outputFor(source, condense))
                 .addData(SOURCE_KEY, source)
+                .addData(MODE_KEY, condense ? MODE_CONDENSE : MODE_COLLECT)
                 .buildRawRecipe());
     }
 
@@ -281,8 +292,8 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
 
             boolean condense = !(this.machine instanceof AtmosphericCollectionUnitMachine unit) ||
                     unit.isCondenseAir();
-            // 数据配方只定义了冷凝产物；普通集气模式使用对应气态产物的运行时配方。
-            GTRecipe origin = condense ? findDataRecipe(level, type, source) : null;
+            // 数据配方按来源+工作模式区分；找不到时退回运行时配方。
+            GTRecipe origin = findDataRecipe(level, type, source, condense);
             if (origin == null) {
                 origin = runtimeRecipe(type, source, condense);
             }

@@ -1,6 +1,7 @@
 package com.vividtech.common.data;
 
 import com.vividtech.common.machine.multiblock.electric.AdvancedSlaughterhouseMachine;
+import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
 
 import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.block.ICoilType;
@@ -90,6 +91,18 @@ public class VividRecipeTypes {
             GTRecipeTypes.MULTIBLOCK)
             .setEUIO(IO.IN)
             .setMaxIOSize(0, 0, 0, 1)
+            .addDataInfo(data -> {
+                String mode = data.getString(AtmosphericCollectionUnitMachine.MODE_KEY);
+                return switch (mode) {
+                    case AtmosphericCollectionUnitMachine.MODE_CONDENSE ->
+                            LocalizationUtils.format("vividtech.recipe.atmospheric_collection.mode.condense");
+                    case AtmosphericCollectionUnitMachine.MODE_COLLECT ->
+                            LocalizationUtils.format("vividtech.recipe.atmospheric_collection.mode.collect");
+                    case AtmosphericCollectionUnitMachine.MODE_ANY ->
+                            LocalizationUtils.format("vividtech.recipe.atmospheric_collection.mode.any");
+                    default -> "";
+                };
+            })
             .setIconSupplier(VividRecipeTypes::atmosphericCollectionIcon)
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, LEFT_TO_RIGHT)
             .setSound(GTSoundEntries.COOLING);
