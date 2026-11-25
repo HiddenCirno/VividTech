@@ -1,6 +1,7 @@
 package com.vividtech.common.machine.multiblock.steam;
 
 import org.gtlcore.gtlcore.api.machine.multiblock.IModularMachineModule;
+import org.gtlcore.gtlcore.api.machine.trait.IRecipeCapabilityMachine;
 
 import com.vividtech.VividTech;
 
@@ -9,10 +10,16 @@ import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.capability.recipe.IRecipeHandler;
+import com.gregtechceu.gtceu.api.gui.GuiTextures;
+import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
+import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
+import com.gregtechceu.gtceu.api.gui.fancy.IFancyConfiguratorButton;
+import com.gregtechceu.gtceu.api.gui.fancy.IFancyUIProvider;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.TickableSubscription;
 import com.gregtechceu.gtceu.api.machine.feature.ICleanroomProvider;
+import com.gregtechceu.gtceu.api.machine.feature.IFancyUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IDisplayUIMachine;
 import com.gregtechceu.gtceu.api.machine.feature.multiblock.IMultiPart;
@@ -35,8 +42,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.util.ClickData;
 import com.lowdragmc.lowdraglib.gui.widget.ComponentPanelWidget;
+import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
@@ -46,6 +58,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -54,6 +67,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 蒸汽加工模块。
@@ -65,7 +79,7 @@ import java.util.List;
  */
 public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
                                                    implements IModularMachineModule<DreamElevatorMachine, SteamProcessingModuleMachine>,
-                                                   IMachineLife, IDisplayUIMachine {
+                                                   IMachineLife, IFancyUIMachine, IDisplayUIMachine {
 
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             SteamProcessingModuleMachine.class, WorkableMultiblockMachine.MANAGED_FIELD_HOLDER);
@@ -119,6 +133,54 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
     @Override
     public ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
+    }
+
+    @Override
+    public ModularUI createUI(Player entityPlayer) {
+        return new ModularUI(198, 208, this, entityPlayer)
+                .widget(new FancyMachineUIWidget(this, 198, 208));
+    }
+
+    @Override
+    public Widget createUIWidget() {
+        var group = new WidgetGroup(0, 0, 182 + 8, 117 + 8);
+        group.addWidget(new DraggableScrollableWidgetGroup(4, 4, 182, 117)
+                .setBackground(getScreenTexture())
+                .addWidget(new LabelWidget(4, 5, self().getBlockState().getBlock().getDescriptionId()))
+                .addWidget(new ComponentPanelWidget(4, 17, this::addDisplayText)
+                        .textSupplier(this.getLevel().isClientSide ? null : this::addDisplayText)
+                        .setMaxWidthLimit(150)
+                        .clickHandler(this::handleDisplayClick)));
+        group.setBackground(GuiTextures.BACKGROUND_INVERSE);
+        return group;
+    }
+
+    @Override
+    public List<IFancyUIProvider> getSubTabs() {
+        return getParts().stream()
+                .filter(Objects::nonNull)
+                .filter(IFancyUIProvider.class::isInstance)
+                .map(IFancyUIProvider.class::cast)
+                .toList();
+    }
+
+    /**
+     * 原版 GT 多方块的严格隔离按钮：按部件隔离物品和流体输入。
+     */
+    @Override
+    public void attachConfigurators(ConfiguratorPanel configuratorPanel) {
+        IFancyUIMachine.super.attachConfigurators(configuratorPanel);
+        configuratorPanel.attachConfigurators(new IFancyConfiguratorButton.Toggle(
+                GuiTextures.BUTTON_DISTINCT_BUSES.getSubTexture(0, 0.5, 1, 0.5),
+                GuiTextures.BUTTON_DISTINCT_BUSES.getSubTexture(0, 0, 1, 0.5),
+                this::isStrictIsolation,
+                (clickData, pressed) -> toggleStrictIsolation())
+                .setTooltipsSupplier(pressed -> List.of(
+                        Component.translatable("gtceu.multiblock.universal.distinct.all")
+                                .withStyle(ChatFormatting.YELLOW)
+                                .append(Component.translatable(pressed ?
+                                        "gtceu.multiblock.universal.distinct.yes" :
+                                        "gtceu.multiblock.universal.distinct.no")))));
     }
 
     @Override
@@ -233,6 +295,22 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         } else if ("overclock_sub".equals(componentData)) {
             setOverclockLevel(getOverclockLevel() - 1);
         }
+    }
+
+    /** 模块控制器级的 GT 严格隔离：每个输入仓的物品和流体各自独立成组。 */
+    private boolean isStrictIsolation() {
+        return this instanceof IRecipeCapabilityMachine machine && machine.isDistinct();
+    }
+
+    private void toggleStrictIsolation() {
+        if (isRemote() || !(this instanceof IRecipeCapabilityMachine machine) || !isFormed()) {
+            return;
+        }
+        machine.setDistinct(!machine.isDistinct());
+        machine.upDate();
+        getRecipeLogic().resetRecipeLogic();
+        markDirty();
+        notifyBlockUpdate();
     }
 
     /**
