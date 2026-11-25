@@ -4,6 +4,7 @@ import com.vividtech.VividTech;
 import com.vividtech.client.renderer.machine.CreativeSteamInputHatchRenderer;
 import com.vividtech.client.renderer.machine.CreativeWirelessGridRenderer;
 import com.vividtech.client.renderer.machine.DreamElevatorRenderer;
+import com.vividtech.client.renderer.machine.MEUltimateExtendedPatternBufferRenderer;
 import com.vividtech.client.renderer.machine.SubsystemHatchRenderer;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
@@ -18,10 +19,12 @@ import com.vividtech.common.machine.multiblock.part.DreamElevatorCleanroomSubsys
 import com.vividtech.common.machine.multiblock.part.DreamElevatorExtremePressureSubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.DreamElevatorGravitySubsystemMachine;
 import com.vividtech.common.machine.multiblock.part.ForgingInputBusPartMachine;
+import com.vividtech.common.machine.multiblock.part.MEUltimateExtendedPatternBufferPartMachine;
 import com.vividtech.common.machine.multiblock.electric.AdvancedSlaughterhouseMachine;
 import com.vividtech.common.machine.multiblock.electric.AtomicReconstructorMachine;
 import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUnitMachine;
 import com.vividtech.common.machine.multiblock.electric.BasicIntegratedOreProcessorMachine;
+import com.vividtech.common.machine.multiblock.electric.ElectricNeutronActivatorMachine;
 import com.vividtech.common.command.PatternKind;
 import com.vividtech.common.item.PatternIngredientReplacerItem;
 import com.vividtech.common.machine.multiblock.electric.CrystalAggregationFactoryMachine;
@@ -32,10 +35,12 @@ import com.vividtech.common.machine.multiblock.steam.SteamStratumDrillingModuleM
 import com.vividtech.common.machine.multiblock.steam.SteamStratumMiningModuleMachine;
 
 import org.gtlcore.gtlcore.api.pattern.GTLPredicates;
+import org.gtlcore.gtlcore.common.data.GTLBlocks;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLRecipeTypes;
 import org.gtlcore.gtlcore.common.data.machines.structure.MultiBlockMachineAStructureA;
 import org.gtlcore.gtlcore.common.machine.generator.MagicEnergyMachine;
+import org.gtlcore.gtlcore.utils.Registries;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
@@ -1073,5 +1078,118 @@ public class VividMachines {
     static {
         // 恢复 GTCEu 的默认标签页，避免影响之后加载的其他附属模组。
         REGISTRATE.creativeModeTab(() -> GTCreativeModeTabs.MACHINE);
+    }
+
+    public static final MachineDefinition ME_ULTIMATE_EXTENDED_PATTERN_BUFFER = REGISTRATE
+            .machine("me_ultimate_extended_pattern_buffer", MEUltimateExtendedPatternBufferPartMachine::new)
+            .tier(10)
+            .rotationState(RotationState.ALL)
+            .abilities(PartAbility.IMPORT_ITEMS, PartAbility.IMPORT_FLUIDS,
+                    PartAbility.EXPORT_ITEMS, PartAbility.EXPORT_FLUIDS)
+            .renderer(MEUltimateExtendedPatternBufferRenderer::new)
+            .langValue("ME Ultimate Extended Pattern Buffer")
+            .tooltips(Component.translatable("vividtech.machine.me_ultimate_extended_pattern_buffer.tooltip.0"),
+                    Component.translatable("block.gtceu.pattern_buffer.desc.0"),
+                    Component.translatable("gtceu.machine.me_pattern_buffer.desc.0"),
+                    Component.translatable("gtceu.machine.me_pattern_buffer.desc.1"),
+                    Component.translatable("gtceu.machine.me_pattern_buffer.desc.2"),
+                    Component.translatable("gtceu.machine.me_pattern_buffer.desc.3"),
+                    Component.translatable("gtceu.machine.me_pattern_buffer.desc.4"),
+                    Component.translatable("gtceu.machine.me_pattern_buffer.desc.5"),
+                    Component.translatable("gtlcore.machine.pattern_quick_upload.tooltip"),
+                    Component.translatable("tooltip.gtlcore.wireless_bookmark.quick_connect"),
+                    Component.translatable("block.gtceu.pattern_buffer.desc.2"),
+                    Component.translatable("gtceu.universal.enabled"))
+            .tooltipBuilder(VIVID_ADD)
+            .register();
+
+    static {
+        // 电力中子活化器属于“潜能无限”标签页。
+        REGISTRATE.creativeModeTab(() -> POTENTIAL_TAB);
+    }
+
+    /**
+     * 电力中子活化器。
+     *
+     * <p>结构来自玩家导出图，H 是主机占位，位于宽度中央、高度底部、北面最外侧。
+     * 导出顺序为 C:BACK / S:UP / A:RIGHT：
+     * char 轴是前后（BACK，北面为 char=0），string 轴是高度（UP），aisle 轴是宽度（RIGHT）。
+     * 主机面朝北时结构向南、向上展开；H 位于北面底边中央。</p>
+     */
+    public static final MultiblockMachineDefinition ELECTRIC_NEUTRON_ACTIVATOR = REGISTRATE
+            .multiblock("electric_neutron_activator", ElectricNeutronActivatorMachine::new)
+            .langValue("Electric Neutron Activator")
+            .tier(GTValues.LuV)
+            .rotationState(RotationState.NON_Y_AXIS)
+            .allowExtendedFacing(false)
+            .recipeType(GTLRecipeTypes.NEUTRON_ACTIVATOR_RECIPES)
+            .recipeModifier(ElectricNeutronActivatorMachine::modifyRecipe)
+            .appearanceBlock(GTBlocks.CASING_STAINLESS_CLEAN)
+            .tooltips(Component.translatable("vividtech.machine.electric_neutron_activator.tooltip.0"),
+                    Component.translatable("vividtech.machine.electric_neutron_activator.tooltip.1"),
+                    Component.translatable("vividtech.machine.electric_neutron_activator.tooltip.2"),
+                    Component.translatable("vividtech.machine.electric_neutron_activator.tooltip.3"))
+            .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> FactoryBlockPattern.start(
+                    RelativeDirection.BACK, RelativeDirection.UP, RelativeDirection.RIGHT)
+                    .aisle("  AAAAA  ", "  BBBBB  ", "  BBBBB  ", "  BBBBB  ", "  BBBBB  ", "  BBBBB  ",
+                            "  BBBBB  ", "  BBBBB  ", "  AAAAA  ")
+                    .aisle(" ACCCCCA ", " B     B ", " B     B ", " B     B ", " B     B ", " B     B ",
+                            " B     B ", " B     B ", " ACCCCCA ")
+                    .aisle("ACCCCCCCA", "B DEEED B", "B DFFFD B", "B DEEED B", "B DFFFD B", "B DEEED B",
+                            "B DFFFD B", "B DEEED B", "ACCCCCCCA")
+                    .aisle("ACCCCCCCA", "B EG GE B", "B FG GF B", "B EG GE B", "B FG GF B", "B EG GE B",
+                            "B FG GF B", "B EG GE B", "ACCCCCCCA")
+                    .aisle("HCCCCCCCA", "B E   E B", "B F   F B", "B E   E B", "B F   F B", "B E   E B",
+                            "B F   F B", "B E   E B", "ACCCCCCCA")
+                    .aisle("ACCCCCCCA", "B EG GE B", "B FG GF B", "B EG GE B", "B FG GF B", "B EG GE B",
+                            "B FG GF B", "B EG GE B", "ACCCCCCCA")
+                    .aisle("ACCCCCCCA", "B DEEED B", "B DFFFD B", "B DEEED B", "B DFFFD B", "B DEEED B",
+                            "B DFFFD B", "B DEEED B", "ACCCCCCCA")
+                    .aisle(" ACCCCCA ", " B     B ", " B     B ", " B     B ", " B     B ", " B     B ",
+                            " B     B ", " B     B ", " ACCCCCA ")
+                    .aisle("  AAAAA  ", "  BBBBB  ", "  BBBBB  ", "  BBBBB  ", "  BBBBB  ", "  BBBBB  ",
+                            "  BBBBB  ", "  BBBBB  ", "  AAAAA  ")
+                    .where("H", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("A", electricNeutronActivatorCasing())
+                    .where("B", Predicates.blocks(GTBlocks.FUSION_GLASS.get()))
+                    .where("C", electricNeutronActivatorProcessCasing())
+                    .where("D", Predicates.blocks(
+                            ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.Tungsten)))
+                    .where("E", Predicates.blocks(GTBlocks.CASING_LAMINATED_GLASS.get()))
+                    .where("F", Predicates.blocks(GTBlocks.SUPERCONDUCTING_COIL.get()))
+                    .where("G", Predicates.blocks(Registries.getBlock("kubejs:speeding_pipe")))
+                    .build())
+            .workableCasingRenderer(
+                    GTCEu.id("block/casings/solid/machine_casing_clean_stainless_steel"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
+            .register();
+
+    static {
+        // 恢复 GTCEu 的默认标签页，避免影响之后加载的其他附属模组。
+        REGISTRATE.creativeModeTab(() -> GTCreativeModeTabs.MACHINE);
+    }
+
+    /**
+     * A 位：清洁机械方块。能源仓最多 4 个；必须维护仓；可选并行控制仓。
+     * 不包含 INPUT_LASER，因此激光靶仓无法装入。
+     */
+    private static TraceabilityPredicate electricNeutronActivatorCasing() {
+        return Predicates.blocks(GTBlocks.CASING_STAINLESS_CLEAN.get())
+                .or(Predicates.abilities(PartAbility.INPUT_ENERGY)
+                        .setMinGlobalLimited(1).setMaxGlobalLimited(4).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                .or(Predicates.abilities(PartAbility.PARALLEL_HATCH).setMaxGlobalLimited(1));
+    }
+
+    /**
+     * C 位：进程机械方块。可选的物品/流体输入输出仓。
+     */
+    private static TraceabilityPredicate electricNeutronActivatorProcessCasing() {
+        return Predicates.blocks(GTLBlocks.PROCESS_MACHINE_CASING.get())
+                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1));
     }
 }

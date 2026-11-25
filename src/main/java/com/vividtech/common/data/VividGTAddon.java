@@ -154,6 +154,11 @@ public class VividGTAddon implements IGTAddon {
                 VividMachines.CLEANROOM_SUBSYSTEM.asStack(),
                 GTMachines.CLEANING_MAINTENANCE_HATCH.asStack());
 
+        VanillaRecipeHelper.addShapelessRecipe(provider,
+                VividTech.id("me_ultimate_extended_pattern_buffer"),
+                VividMachines.ME_ULTIMATE_EXTENDED_PATTERN_BUFFER.asStack(),
+                GTLMachines.GTAEMachines.ME_FINAL_PATTERN_BUFFER.asStack());
+
         VanillaRecipeHelper.addShapedRecipe(provider, "dream_elevator_gravity_subsystem",
                 VividMachines.GRAVITY_SUBSYSTEM.asStack(),
                 "ABA", "CDC", "EFE",
@@ -174,6 +179,30 @@ public class VividGTAddon implements IGTAddon {
         addAtmosphericCollectionRecipes(provider);
         addAtomicReconstructorRecipes(provider);
         addAdvancedSlaughterhouseRecipes(provider);
+        addElectricNeutronActivatorRecipe(provider);
+    }
+
+    private static void addElectricNeutronActivatorRecipe(Consumer<FinishedRecipe> provider) {
+        GTRecipeTypes.ASSEMBLY_LINE_RECIPES.recipeBuilder("electric_neutron_activator")
+                .inputItems(TagPrefix.frameGt, GTMaterials.TungstenSteel, 32)
+                .inputItems(AdvancedMultiBlockMachineB.NEUTRON_ACTIVATOR.asStack(4))
+                .inputItems(GTLMachines.NEUTRON_ACCELERATOR[GTValues.EV].asStack(4))
+                .inputItems(GTLMachines.NEUTRON_ACCELERATOR[GTValues.IV].asStack(4))
+                .inputItems(GTLMachines.NEUTRON_ACCELERATOR[GTValues.LuV].asStack(4))
+                .inputItems(CustomTags.LuV_CIRCUITS, 16)
+                .inputItems(CustomTags.ZPM_CIRCUITS, 8)
+                .inputFluids(GTMaterials.SolderingAlloy.getFluid(10368))
+                .inputFluids(GTMaterials.NiobiumTitanium.getFluid(5184))
+                .inputFluids(GTMaterials.PCBCoolant.getFluid(12000))
+                .outputItems(VividMachines.ELECTRIC_NEUTRON_ACTIVATOR.asStack())
+                .stationResearch(b -> b.researchId("vividtech_electric_neutron_activator")
+                        .researchStack(AdvancedMultiBlockMachineB.NEUTRON_ACTIVATOR.asStack())
+                        .dataStack(GTItems.TOOL_DATA_ORB.asStack())
+                        .EUt(VA[GTValues.LuV])
+                        .CWUt(32))
+                .duration(20 * 60)
+                .EUt(GTValues.V[GTValues.LuV])
+                .save(provider);
     }
 
     private static void addAdvancedSlaughterhouseRecipes(Consumer<FinishedRecipe> provider) {
