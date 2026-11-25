@@ -972,7 +972,7 @@ public class VividMachines {
     }
 
     private static Component[] atmosphericCollectionTooltips() {
-        Component[] tooltips = new Component[3];
+        Component[] tooltips = new Component[4];
         for (int i = 0; i < tooltips.length; i++) {
             tooltips[i] = Component.translatable("vividtech.machine.atmospheric_collection_unit.tooltip." + i);
         }

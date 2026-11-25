@@ -429,7 +429,7 @@ public class VividGTAddon implements IGTAddon {
                 .save(provider);
 
         type.recipeBuilder("vividtech_matter_reshaping_styrene_butadiene_rubber")
-                .circuitMeta(5)
+                .circuitMeta(6)
                 .inputItems(TagPrefix.dust, GTMaterials.Carbon, 20)
                 .inputFluids(GTMaterials.Hydrogen.getFluid(13_000))
                 .outputFluids(GTMaterials.StyreneButadieneRubber.getFluid(1_000))
@@ -453,6 +453,13 @@ public class VividGTAddon implements IGTAddon {
                 .inputItems(TagPrefix.dust, GTMaterials.Sulfur, 1)
                 .inputFluids(GTMaterials.Hydrogen.getFluid(2_000))
                 .outputFluids(GTMaterials.PolyphenyleneSulfide.getFluid(1_000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_samarium")
+                .inputItems(TagPrefix.dust, GTLMaterials.SamariumRefinedPowder, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Samarium, 1)
                 .EUt(GTValues.VA[GTValues.EV])
                 .duration(200)
                 .save(provider);

@@ -21,13 +21,24 @@ import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,6 +49,9 @@ import java.util.Map;
  * 运行时也不会被无序的配方查找结果干扰。</p>
  */
 public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblockMachine {
+
+    public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
+            AtmosphericCollectionUnitMachine.class, WorkableElectricMultiblockMachine.MANAGED_FIELD_HOLDER);
 
     /** 配方数据中标记大气来源的键。 */
     public static final String SOURCE_KEY = "vividtech_atmosphere_source";
@@ -58,13 +72,60 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
     /** 运行时配方。数据配方只负责 EMI 展示，实际运行不依赖配方索引。 */
     private static final Map<String, GTRecipe> RUNTIME_RECIPES = new HashMap<>();
 
+    /** true = 自动冷凝（液态空气），false = 普通集气（气态空气）。 */
+    @Persisted
+    @DescSynced
+    private boolean condenseAir = true;
+
     public AtmosphericCollectionUnitMachine(IMachineBlockEntity holder) {
         super(holder);
     }
 
     @Override
+    public ManagedFieldHolder getFieldHolder() {
+        return MANAGED_FIELD_HOLDER;
+    }
+
+    @Override
     protected RecipeLogic createRecipeLogic(Object... args) {
         return new AtmosphericCollectionRecipeLogic(this);
+    }
+
+    public boolean isCondenseAir() {
+        return condenseAir;
+    }
+
+    /**
+     * 潜行 + 螺丝刀右击切换工作模式：自动冷凝 ↔ 普通集气。
+     */
+    @Override
+    protected InteractionResult onScrewdriverClick(Player playerIn, InteractionHand hand, Direction gridSide,
+                                                   BlockHitResult hitResult) {
+        if (isRemote() || !playerIn.isShiftKeyDown()) {
+            return super.onScrewdriverClick(playerIn, hand, gridSide, hitResult);
+        }
+
+        condenseAir = !condenseAir;
+        markDirty();
+        notifyBlockUpdate();
+        getRecipeLogic().resetRecipeLogic();
+        playerIn.displayClientMessage(Component.translatable(condenseAir ?
+                "vividtech.machine.atmospheric_collection.mode.changed.condense" :
+                "vividtech.machine.atmospheric_collection.mode.changed.collect"), true);
+        playerIn.swing(hand);
+        return InteractionResult.CONSUME;
+    }
+
+    @Override
+    public void addDisplayText(@NotNull List<Component> textList) {
+        super.addDisplayText(textList);
+        if (!isFormed()) {
+            return;
+        }
+        textList.add(Component.translatable("vividtech.machine.atmospheric_collection.mode",
+                Component.translatable(condenseAir ?
+                        "vividtech.machine.atmospheric_collection.mode.condense" :
+                        "vividtech.machine.atmospheric_collection.mode.collect")));
     }
 
     /**
@@ -165,21 +226,27 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
         return null;
     }
 
-    private static GTRecipe runtimeRecipe(GTRecipeType type, String source) {
-        return RUNTIME_RECIPES.computeIfAbsent(source, key -> GTRecipeBuilder
-                .of(new ResourceLocation("vividtech", "atmospheric_collection_runtime_" + key), type)
+    private static GTRecipe runtimeRecipe(GTRecipeType type, String source, boolean condense) {
+        String key = source + (condense ? ":condense" : ":collect");
+        return RUNTIME_RECIPES.computeIfAbsent(key, ignored -> GTRecipeBuilder
+                .of(new ResourceLocation("vividtech", "atmospheric_collection_runtime_" +
+                        source + (condense ? "_condense" : "_collect")), type)
                 .EUt(120)
                 .duration(200)
-                .outputFluids(outputFor(key))
-                .addData(SOURCE_KEY, key)
+                .outputFluids(outputFor(source, condense))
+                .addData(SOURCE_KEY, source)
                 .buildRawRecipe());
     }
 
-    private static FluidStack outputFor(String source) {
+    private static FluidStack outputFor(String source, boolean condense) {
         return switch (source) {
-            case SOURCE_OVERWORLD, SOURCE_ANCIENT_WORLD, SOURCE_PERSONAL -> GTMaterials.LiquidAir.getFluid(10_000);
-            case SOURCE_NETHER -> GTMaterials.LiquidNetherAir.getFluid(10_000);
-            case SOURCE_END -> GTMaterials.LiquidEnderAir.getFluid(10_000);
+            case SOURCE_OVERWORLD, SOURCE_ANCIENT_WORLD, SOURCE_PERSONAL -> (condense ?
+                    GTMaterials.LiquidAir : GTMaterials.Air).getFluid(10_000);
+            case SOURCE_NETHER -> (condense ?
+                    GTMaterials.LiquidNetherAir : GTMaterials.NetherAir).getFluid(10_000);
+            case SOURCE_END -> (condense ?
+                    GTMaterials.LiquidEnderAir : GTMaterials.EnderAir).getFluid(10_000);
+            // BarnardaAir 只有气态材料，两种模式都输出同一种气体。
             case SOURCE_BARNARDA -> GTLMaterials.BarnardaAir.getFluid(10_000);
             default -> FluidStack.empty();
         };
@@ -212,9 +279,12 @@ public class AtmosphericCollectionUnitMachine extends WorkableElectricMultiblock
                 return;
             }
 
-            GTRecipe origin = findDataRecipe(level, type, source);
+            boolean condense = !(this.machine instanceof AtmosphericCollectionUnitMachine unit) ||
+                    unit.isCondenseAir();
+            // 数据配方只定义了冷凝产物；普通集气模式使用对应气态产物的运行时配方。
+            GTRecipe origin = condense ? findDataRecipe(level, type, source) : null;
             if (origin == null) {
-                origin = runtimeRecipe(type, source);
+                origin = runtimeRecipe(type, source, condense);
             }
             GTRecipe modified = this.machine.fullModifyRecipe(origin.copy(), this.ocParams, this.ocResult);
             if (modified != null &&
