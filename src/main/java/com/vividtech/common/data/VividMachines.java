@@ -387,7 +387,7 @@ public class VividMachines {
             .onRegister(GTItems.attach(PatternBoxAdvancedBehavior.INSTANCE, new TooltipBehavior(lines -> {
                 lines.add(Component.translatable("tooltip.gtlcore.pattern_box_open",
                         PatternBoxAdvancedBehavior.getSlotCount()).withStyle(ChatFormatting.GRAY));
-                lines.add(Component.translatable("tooltip.vividtech.pattern_box_advanced_circuit")
+                lines.add(Component.translatable("tooltip.gtlcore.pattern_buffer_circuit_config")
                         .withStyle(ChatFormatting.GRAY));
                 lines.add(Component.translatable("tooltip.gtlcore.pattern_box_extract")
                         .withStyle(ChatFormatting.GRAY));

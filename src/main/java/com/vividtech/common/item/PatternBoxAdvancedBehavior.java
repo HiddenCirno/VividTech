@@ -43,8 +43,8 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
     private static final int WIDTH = 176;
     private static final int HEIGHT = INV_TOP + 82;
     private static final int SIDE_WIDTH = 132;
+    private static final int COLLAPSED_WIDTH = 22;
     private static final int SIDE_PANEL_WIDTH = SIDE_WIDTH - 4;
-    private static final int UI_WIDTH = WIDTH + SIDE_WIDTH;
     private static final int PAGE_BUTTON_Y = 24;
     private static final int PREVIOUS_PAGE_BUTTON_X = 136;
     private static final int PAGE_LABEL_X = 104;
@@ -61,22 +61,24 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
             holder.markAsDirty();
         });
 
-        WidgetGroup group = new WidgetGroup(0, 0, UI_WIDTH, HEIGHT);
-        group.addWidget(new LabelWidget(LEFT, 6,
+        WidgetGroup group = new WidgetGroup(0, 0, WIDTH + COLLAPSED_WIDTH, HEIGHT);
+
+        WidgetGroup mainPage = new WidgetGroup(COLLAPSED_WIDTH, 0, WIDTH, HEIGHT);
+        mainPage.addWidget(new LabelWidget(LEFT, 6,
                 () -> Component.translatable("item.vividtech.pattern_box_advanced").getString()));
 
         // One page of pattern slots: 4 rows x 9 columns.
         int[] page = { 0 };
         WidgetGroup patternPage = new WidgetGroup(0, 0, WIDTH, PATTERN_TOP + ROWS * SLOT_SIZE);
         rebuildPatternPage(patternPage, inventory, page);
-        group.addWidget(patternPage);
+        mainPage.addWidget(patternPage);
 
         Inventory playerInv = player.getInventory();
         int heldSlot = holder.getHand() == InteractionHand.MAIN_HAND ? playerInv.selected : -1;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < COLS; col++) {
                 int index = col + (row + 1) * COLS;
-                group.addWidget(new SlotWidget(playerInv, index,
+                mainPage.addWidget(new SlotWidget(playerInv, index,
                         LEFT + col * SLOT_SIZE, INV_TOP + row * SLOT_SIZE, true, true)
                         .setLocationInfo(true, false)
                         .setBackgroundTexture(GuiTextures.SLOT));
@@ -85,21 +87,23 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
         int hotbarY = INV_TOP + 3 * SLOT_SIZE + 4;
         for (int col = 0; col < COLS; col++) {
             boolean locked = col == heldSlot;
-            group.addWidget(new SlotWidget(playerInv, col,
+            mainPage.addWidget(new SlotWidget(playerInv, col,
                     LEFT + col * SLOT_SIZE, hotbarY, !locked, !locked)
                     .setLocationInfo(true, true)
                     .setBackgroundTexture(GuiTextures.SLOT));
         }
+        group.addWidget(mainPage);
 
-        addCircuitWidgets(group, inventory, player);
-
-        return new ModularUI(UI_WIDTH, HEIGHT, holder, player)
+        ModularUI ui = new ModularUI(WIDTH + COLLAPSED_WIDTH, HEIGHT, holder, player)
                 .widget(group)
                 .background(GuiTextures.BACKGROUND);
+        addCircuitWidgets(ui, group, mainPage, inventory, player);
+        return ui;
     }
 
-    private void addCircuitWidgets(WidgetGroup group, ItemStackTransfer inventory, Player player) {
-        WidgetGroup circuitPanel = new WidgetGroup(WIDTH + 2, 0, SIDE_PANEL_WIDTH, HEIGHT);
+    private void addCircuitWidgets(ModularUI ui, WidgetGroup group, WidgetGroup mainPage,
+                                   ItemStackTransfer inventory, Player player) {
+        WidgetGroup circuitPanel = new WidgetGroup(0, 0, SIDE_PANEL_WIDTH, HEIGHT);
         circuitPanel.setBackground(GuiTextures.BACKGROUND);
         group.addWidget(circuitPanel);
         circuitPanel.setVisible(false).setActive(false);
@@ -108,18 +112,18 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
         boolean[] skipExisting = { true };
 
         circuitPanel.addWidget(new LabelWidget(4, 28,
-                "gui.vividtech.pattern_box_advanced_circuit_title").setTextColor(0xFAF9F6));
+                "gui.gtlcore.pattern_buffer_circuit_config").setTextColor(0xFAF9F6));
         circuitPanel.addWidget(new LabelWidget(4, 48,
-                "gui.vividtech.pattern_box_advanced_circuit_number"));
+                "gui.gtlcore.pattern_buffer_circuit_number"));
         circuitPanel.addWidget(new IntInputWidget(4, 60, SIDE_PANEL_WIDTH - 8, 14,
                 () -> circuitConfig[0], value -> circuitConfig[0] = value)
                 .setMin(0)
                 .setMax(IntCircuitBehaviour.CIRCUIT_MAX)
-                .setHoverTooltips(Component.translatable("tooltip.vividtech.pattern_box_advanced_circuit_number",
+                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_circuit_number",
                         IntCircuitBehaviour.CIRCUIT_MAX)));
 
         circuitPanel.addWidget(new LabelWidget(4, 82,
-                "gui.vividtech.pattern_box_advanced_skip_existing"));
+                "gui.gtlcore.pattern_buffer_skip_existing_circuit"));
         circuitPanel.addWidget(new SwitchWidget(SIDE_PANEL_WIDTH - 40, 79, 36, 14,
                 (clickData, pressed) -> skipExisting[0] = pressed)
                 .setSupplier(() -> skipExisting[0])
@@ -127,26 +131,32 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
                 .setTexture(
                         new GuiTextureGroup(GuiTextures.BUTTON, new TextTexture("OFF")),
                         new GuiTextureGroup(GuiTextures.BUTTON, new TextTexture("ON")))
-                .setHoverTooltips(Component.translatable("tooltip.vividtech.pattern_box_advanced_skip_existing")));
+                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_skip_existing_circuit")));
 
         circuitPanel.addWidget(new ButtonWidget(4, 104, SIDE_PANEL_WIDTH / 2 - 6, 18,
                 new GuiTextureGroup(GuiTextures.BUTTON,
-                        new TextTexture(() -> Component.translatable("gui.vividtech.pattern_box_advanced_apply_circuit").getString())),
+                        new TextTexture(() -> Component.translatable("gui.gtlcore.pattern_buffer_apply_circuit").getString())),
                 clickData -> applyCircuit(inventory, circuitConfig[0], !skipExisting[0], player))
-                .setHoverTooltips(Component.translatable("tooltip.vividtech.pattern_box_advanced_apply_circuit")));
+                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_apply_circuit")));
         circuitPanel.addWidget(new ButtonWidget(SIDE_PANEL_WIDTH / 2 + 2, 104, SIDE_PANEL_WIDTH / 2 - 6, 18,
                 new GuiTextureGroup(GuiTextures.BUTTON,
-                        new TextTexture(() -> Component.translatable("gui.vividtech.pattern_box_advanced_clear_circuits").getString())),
+                        new TextTexture(() -> Component.translatable("gui.gtlcore.pattern_buffer_clear_circuits").getString())),
                 clickData -> clearCircuits(inventory, player))
-                .setHoverTooltips(Component.translatable("tooltip.vividtech.pattern_box_advanced_clear_circuits")));
+                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_clear_circuits")));
 
-        group.addWidget(new ButtonWidget(WIDTH + 2, 6, 18, 18,
+        group.addWidget(new ButtonWidget(2, 6, 18, 18,
                 new GuiTextureGroup(GuiTextures.BUTTON, GuiTextures.INT_CIRCUIT_OVERLAY),
                 clickData -> {
                     boolean show = !circuitPanel.isVisible();
                     circuitPanel.setVisible(show).setActive(show);
+                    int width = WIDTH + (show ? SIDE_WIDTH : COLLAPSED_WIDTH);
+                    mainPage.setSelfPosition(show ? SIDE_WIDTH : COLLAPSED_WIDTH, 0);
+                    group.setSizeWidth(width);
+                    if (player.level().isClientSide) {
+                        ui.setSize(width, HEIGHT);
+                    }
                 })
-                .setHoverTooltips(Component.translatable("tooltip.vividtech.pattern_box_advanced_open_circuit")));
+                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_circuit_config")));
     }
 
     private static void applyCircuit(ItemStackTransfer inventory, int circuitConfig, boolean replaceExisting,
