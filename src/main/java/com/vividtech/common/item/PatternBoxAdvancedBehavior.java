@@ -2,6 +2,7 @@ package com.vividtech.common.item;
 
 import org.gtlcore.gtlcore.api.gui.PatternCircuitConfigurator;
 import org.gtlcore.gtlcore.common.item.PatternBoxBehavior;
+import org.gtlcore.gtlcore.integration.ae2.pattern.PatternEncoderMetadata;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
 import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
@@ -133,6 +134,7 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
             ItemStack after = PatternCircuitHelper.applyCircuit(stack, safeCircuitConfig, replaceExisting,
                     player.level());
             if (!after.isEmpty() && !ItemStack.matches(stack, after)) {
+                PatternEncoderMetadata.touchModified(after, player.getName().getString());
                 inventory.setStackInSlot(slot, after);
                 changed++;
             }
@@ -154,6 +156,7 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
 
             ItemStack after = PatternCircuitHelper.clearCircuit(stack, player.level());
             if (!after.isEmpty() && !ItemStack.matches(stack, after)) {
+                PatternEncoderMetadata.touchModified(after, player.getName().getString());
                 inventory.setStackInSlot(slot, after);
                 changed++;
             }

@@ -3,6 +3,8 @@ package com.vividtech.common.item;
 import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 
+import org.gtlcore.gtlcore.integration.ae2.pattern.PatternEncoderMetadata;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -67,7 +69,9 @@ public final class PatternCircuitHelper {
             filteredInputs.add(0, GenericStack.fromItemStack(IntCircuitBehaviour.stack(circuitConfig)));
         }
 
-        return PatternDetailsHelper.encodeProcessingPattern(
+        ItemStack rebuilt = PatternDetailsHelper.encodeProcessingPattern(
                 filteredInputs.toArray(new GenericStack[0]), processingPattern.getSparseOutputs());
+        PatternEncoderMetadata.copyMetadata(originalPatternStack, rebuilt);
+        return rebuilt;
     }
 }
