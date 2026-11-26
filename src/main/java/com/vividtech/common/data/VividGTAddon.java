@@ -6,6 +6,7 @@ import com.vividtech.common.recipe.condition.AvaritiaPersonalDimensionCondition;
 
 import com.hepdd.gtmthings.data.CustomItems;
 
+import org.gtlcore.gtlcore.common.data.GTLItems;
 import org.gtlcore.gtlcore.common.data.GTLMachines;
 import org.gtlcore.gtlcore.common.data.GTLMaterials;
 import org.gtlcore.gtlcore.common.data.machines.AdvancedMultiBlockMachineB;
@@ -27,6 +28,7 @@ import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
+import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 import com.gregtechceu.gtceu.data.recipe.VanillaRecipeHelper;
 
@@ -73,6 +75,10 @@ public class VividGTAddon implements IGTAddon {
 
     @Override
     public void addRecipes(Consumer<FinishedRecipe> provider) {
+        VanillaRecipeHelper.addShapelessRecipe(provider, VividTech.id("pattern_box_advanced"),
+                VividMachines.PATTERN_BOX_ADVANCED.asStack(),
+                GTLItems.PATTERN_BOX.asStack(), IntCircuitBehaviour.stack(0));
+
         GTRecipeTypes.ASSEMBLER_RECIPES.recipeBuilder("eye_of_wood")
                 .inputItems(new ItemStack(Blocks.BRICKS, 32))
                 .inputItems(GTBlocks.CASING_BRONZE_BRICKS.asStack(32))

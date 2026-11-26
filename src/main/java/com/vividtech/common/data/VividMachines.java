@@ -26,6 +26,7 @@ import com.vividtech.common.machine.multiblock.electric.AtmosphericCollectionUni
 import com.vividtech.common.machine.multiblock.electric.BasicIntegratedOreProcessorMachine;
 import com.vividtech.common.machine.multiblock.electric.ElectricNeutronActivatorMachine;
 import com.vividtech.common.command.PatternKind;
+import com.vividtech.common.item.PatternBoxAdvancedBehavior;
 import com.vividtech.common.item.PatternIngredientReplacerItem;
 import com.vividtech.common.machine.multiblock.electric.CrystalAggregationFactoryMachine;
 import com.vividtech.common.machine.multiblock.steam.DreamElevatorMachine;
@@ -47,6 +48,7 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.data.RotationState;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.item.ComponentItem;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
@@ -60,16 +62,19 @@ import com.gregtechceu.gtceu.api.recipe.OverclockingLogic;
 import com.gregtechceu.gtceu.client.renderer.machine.SimpleGeneratorMachineRenderer;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.gregtechceu.gtceu.common.data.GTBlocks;
+import com.gregtechceu.gtceu.common.data.GTItems;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import com.gregtechceu.gtceu.common.data.GTMaterials;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
+import com.gregtechceu.gtceu.common.item.TooltipBehavior;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -82,6 +87,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 import com.tterrag.registrate.util.entry.ItemEntry;
+import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 
 import java.util.ArrayList;
@@ -371,6 +377,23 @@ public class VividMachines {
             .item("crafting_pattern_ingredient_replacer",
                     properties -> new PatternIngredientReplacerItem(properties, PatternKind.CRAFTING))
             .lang("Crafting Pattern Ingredient Replacer")
+            .register();
+
+    /** 带批量电路写入的高级样板包装箱。 */
+    public static final ItemEntry<ComponentItem> PATTERN_BOX_ADVANCED = REGISTRATE
+            .item("pattern_box_advanced", ComponentItem::create)
+            .properties(properties -> properties.stacksTo(1))
+            .model(NonNullBiConsumer.noop())
+            .onRegister(GTItems.attach(PatternBoxAdvancedBehavior.INSTANCE, new TooltipBehavior(lines -> {
+                lines.add(Component.translatable("tooltip.gtlcore.pattern_box_open",
+                        PatternBoxAdvancedBehavior.getSlotCount()).withStyle(ChatFormatting.GRAY));
+                lines.add(Component.translatable("tooltip.vividtech.pattern_box_advanced_circuit")
+                        .withStyle(ChatFormatting.GRAY));
+                lines.add(Component.translatable("tooltip.gtlcore.pattern_box_extract")
+                        .withStyle(ChatFormatting.GRAY));
+                lines.add(Component.translatable("tooltip.gtlcore.pattern_box_insert")
+                        .withStyle(ChatFormatting.GRAY));
+            })))
             .register();
 
     public static final MachineDefinition CREATIVE_STEAM_INPUT_HATCH = REGISTRATE
