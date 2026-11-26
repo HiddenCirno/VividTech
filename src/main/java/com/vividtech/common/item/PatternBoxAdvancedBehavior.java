@@ -1,9 +1,10 @@
 package com.vividtech.common.item;
 
+import org.gtlcore.gtlcore.api.gui.PatternCircuitConfigurator;
 import org.gtlcore.gtlcore.common.item.PatternBoxBehavior;
 
 import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.IntInputWidget;
+import com.gregtechceu.gtceu.api.gui.fancy.ConfiguratorPanel;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 
 import com.lowdragmc.lowdraglib.gui.factory.HeldItemUIFactory;
@@ -13,10 +14,10 @@ import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
-import com.lowdragmc.lowdraglib.gui.widget.SwitchWidget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.jei.IngredientIO;
 import com.lowdragmc.lowdraglib.misc.ItemStackTransfer;
+import com.lowdragmc.lowdraglib.utils.Position;
 
 
 import net.minecraft.network.chat.Component;
@@ -42,9 +43,6 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
     private static final int INV_TOP = PATTERN_TOP + ROWS * SLOT_SIZE + 8;
     private static final int WIDTH = 176;
     private static final int HEIGHT = INV_TOP + 82;
-    private static final int SIDE_WIDTH = 132;
-    private static final int COLLAPSED_WIDTH = 22;
-    private static final int SIDE_PANEL_WIDTH = SIDE_WIDTH - 4;
     private static final int PAGE_BUTTON_Y = 24;
     private static final int PREVIOUS_PAGE_BUTTON_X = 136;
     private static final int PAGE_LABEL_X = 104;
@@ -61,24 +59,22 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
             holder.markAsDirty();
         });
 
-        WidgetGroup group = new WidgetGroup(0, 0, WIDTH + COLLAPSED_WIDTH, HEIGHT);
-
-        WidgetGroup mainPage = new WidgetGroup(COLLAPSED_WIDTH, 0, WIDTH, HEIGHT);
-        mainPage.addWidget(new LabelWidget(LEFT, 6,
+        WidgetGroup group = new WidgetGroup(0, 0, WIDTH, HEIGHT);
+        group.addWidget(new LabelWidget(LEFT, 6,
                 () -> Component.translatable("item.vividtech.pattern_box_advanced").getString()));
 
         // One page of pattern slots: 4 rows x 9 columns.
         int[] page = { 0 };
         WidgetGroup patternPage = new WidgetGroup(0, 0, WIDTH, PATTERN_TOP + ROWS * SLOT_SIZE);
         rebuildPatternPage(patternPage, inventory, page);
-        mainPage.addWidget(patternPage);
+        group.addWidget(patternPage);
 
         Inventory playerInv = player.getInventory();
         int heldSlot = holder.getHand() == InteractionHand.MAIN_HAND ? playerInv.selected : -1;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < COLS; col++) {
                 int index = col + (row + 1) * COLS;
-                mainPage.addWidget(new SlotWidget(playerInv, index,
+                group.addWidget(new SlotWidget(playerInv, index,
                         LEFT + col * SLOT_SIZE, INV_TOP + row * SLOT_SIZE, true, true)
                         .setLocationInfo(true, false)
                         .setBackgroundTexture(GuiTextures.SLOT));
@@ -87,76 +83,43 @@ public class PatternBoxAdvancedBehavior extends PatternBoxBehavior {
         int hotbarY = INV_TOP + 3 * SLOT_SIZE + 4;
         for (int col = 0; col < COLS; col++) {
             boolean locked = col == heldSlot;
-            mainPage.addWidget(new SlotWidget(playerInv, col,
+            group.addWidget(new SlotWidget(playerInv, col,
                     LEFT + col * SLOT_SIZE, hotbarY, !locked, !locked)
                     .setLocationInfo(true, true)
                     .setBackgroundTexture(GuiTextures.SLOT));
         }
-        group.addWidget(mainPage);
 
-        ModularUI ui = new ModularUI(WIDTH + COLLAPSED_WIDTH, HEIGHT, holder, player)
+        addCircuitConfigurator(group, inventory, player);
+
+        return new ModularUI(WIDTH, HEIGHT, holder, player)
                 .widget(group)
                 .background(GuiTextures.BACKGROUND);
-        addCircuitWidgets(ui, group, mainPage, inventory, player);
-        return ui;
     }
 
-    private void addCircuitWidgets(ModularUI ui, WidgetGroup group, WidgetGroup mainPage,
-                                   ItemStackTransfer inventory, Player player) {
-        WidgetGroup circuitPanel = new WidgetGroup(0, 0, SIDE_PANEL_WIDTH, HEIGHT);
-        circuitPanel.setBackground(GuiTextures.BACKGROUND);
-        group.addWidget(circuitPanel);
-        circuitPanel.setVisible(false).setActive(false);
-
+    private void addCircuitConfigurator(WidgetGroup group, ItemStackTransfer inventory, Player player) {
         int[] circuitConfig = { 1 };
         boolean[] skipExisting = { true };
 
-        circuitPanel.addWidget(new LabelWidget(4, 28,
-                "gui.gtlcore.pattern_buffer_circuit_config").setTextColor(0xFAF9F6));
-        circuitPanel.addWidget(new LabelWidget(4, 48,
-                "gui.gtlcore.pattern_buffer_circuit_number"));
-        circuitPanel.addWidget(new IntInputWidget(4, 60, SIDE_PANEL_WIDTH - 8, 14,
-                () -> circuitConfig[0], value -> circuitConfig[0] = value)
-                .setMin(0)
-                .setMax(IntCircuitBehaviour.CIRCUIT_MAX)
-                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_circuit_number",
-                        IntCircuitBehaviour.CIRCUIT_MAX)));
-
-        circuitPanel.addWidget(new LabelWidget(4, 82,
-                "gui.gtlcore.pattern_buffer_skip_existing_circuit"));
-        circuitPanel.addWidget(new SwitchWidget(SIDE_PANEL_WIDTH - 40, 79, 36, 14,
-                (clickData, pressed) -> skipExisting[0] = pressed)
-                .setSupplier(() -> skipExisting[0])
-                .setPressed(skipExisting[0])
-                .setTexture(
-                        new GuiTextureGroup(GuiTextures.BUTTON, new TextTexture("OFF")),
-                        new GuiTextureGroup(GuiTextures.BUTTON, new TextTexture("ON")))
-                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_skip_existing_circuit")));
-
-        circuitPanel.addWidget(new ButtonWidget(4, 104, SIDE_PANEL_WIDTH / 2 - 6, 18,
-                new GuiTextureGroup(GuiTextures.BUTTON,
-                        new TextTexture(() -> Component.translatable("gui.gtlcore.pattern_buffer_apply_circuit").getString())),
-                clickData -> applyCircuit(inventory, circuitConfig[0], !skipExisting[0], player))
-                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_apply_circuit")));
-        circuitPanel.addWidget(new ButtonWidget(SIDE_PANEL_WIDTH / 2 + 2, 104, SIDE_PANEL_WIDTH / 2 - 6, 18,
-                new GuiTextureGroup(GuiTextures.BUTTON,
-                        new TextTexture(() -> Component.translatable("gui.gtlcore.pattern_buffer_clear_circuits").getString())),
-                clickData -> clearCircuits(inventory, player))
-                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_clear_circuits")));
-
-        group.addWidget(new ButtonWidget(2, 6, 18, 18,
-                new GuiTextureGroup(GuiTextures.BUTTON, GuiTextures.INT_CIRCUIT_OVERLAY),
+        ConfiguratorPanel configuratorPanel = new ConfiguratorPanel(-(24 + 2), 0);
+        configuratorPanel.attachConfigurators(new PatternCircuitConfigurator(
+                () -> circuitConfig[0],
+                value -> circuitConfig[0] = value,
+                () -> skipExisting[0],
+                (clickData, pressed) -> skipExisting[0] = pressed,
                 clickData -> {
-                    boolean show = !circuitPanel.isVisible();
-                    circuitPanel.setVisible(show).setActive(show);
-                    int width = WIDTH + (show ? SIDE_WIDTH : COLLAPSED_WIDTH);
-                    mainPage.setSelfPosition(show ? SIDE_WIDTH : COLLAPSED_WIDTH, 0);
-                    group.setSizeWidth(width);
-                    if (player.level().isClientSide) {
-                        ui.setSize(width, HEIGHT);
+                    if (!clickData.isRemote) {
+                        applyCircuit(inventory, circuitConfig[0], !skipExisting[0], player);
                     }
-                })
-                .setHoverTooltips(Component.translatable("tooltip.gtlcore.pattern_buffer_circuit_config")));
+                },
+                clickData -> {
+                    if (!clickData.isRemote) {
+                        clearCircuits(inventory, player);
+                    }
+                }));
+        group.addWidget(configuratorPanel);
+        // Same left-side placement as FancyMachineUIWidget's configurator panel.
+        configuratorPanel.setSelfPosition(new Position(
+                -(24 + 2), HEIGHT - configuratorPanel.getSize().height - 4));
     }
 
     private static void applyCircuit(ItemStackTransfer inventory, int circuitConfig, boolean replaceExisting,
