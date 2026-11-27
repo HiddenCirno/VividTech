@@ -6,6 +6,7 @@ import com.vividtech.client.renderer.machine.CreativeWirelessGridRenderer;
 import com.vividtech.client.renderer.machine.DreamElevatorRenderer;
 import com.vividtech.client.renderer.machine.MEUltimateExtendedPatternBufferRenderer;
 import com.vividtech.client.renderer.machine.SubsystemHatchRenderer;
+import com.vividtech.common.data.machines.structure.CelestialAssemblyPlantStructure;
 import com.vividtech.common.data.machines.structure.DreamElevatorStructure;
 import com.vividtech.common.data.machines.structure.EyeOfWoodStructure;
 import com.vividtech.common.data.machines.structure.SteamProcessingModuleStructure;
@@ -69,6 +70,7 @@ import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.common.data.GTRecipeModifiers;
 import com.gregtechceu.gtceu.common.item.TooltipBehavior;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.FluidHatchPartMachine;
+import com.gregtechceu.gtceu.config.ConfigHolder;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.utils.BlockInfo;
@@ -1188,6 +1190,43 @@ public class VividMachines {
                     GTCEu.id("block/multiblock/fusion_reactor"))
             .register();
 
+    public static final MultiblockMachineDefinition CELESTIAL_ASSEMBLY_PLANT = REGISTRATE
+            .multiblock("celestial_assembly_plant", WorkableElectricMultiblockMachine::new)
+            .langValue("Celestial Assembly Plant")
+            .tier(GTValues.UV)
+            .rotationState(RotationState.NON_Y_AXIS)
+            .allowExtendedFacing(false)
+            .recipeType(GTRecipeTypes.ASSEMBLY_LINE_RECIPES)
+            .recipeModifiers(GTRecipeModifiers.PARALLEL_HATCH,
+                    GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.PERFECT_OVERCLOCK_SUBTICK))
+            .appearanceBlock(GTLBlocks.PIKYONIUM_MACHINE_CASING)
+            .tooltips(Component.translatable("vividtech.machine.celestial_assembly_plant.tooltip.0"),
+                    Component.translatable("vividtech.machine.celestial_assembly_plant.tooltip.1"),
+                    Component.translatable("vividtech.machine.celestial_assembly_plant.tooltip.2"),
+                    Component.translatable("vividtech.machine.celestial_assembly_plant.tooltip.3"),
+                    Component.translatable("vividtech.machine.celestial_assembly_plant.tooltip.4"),
+                    Component.translatable("vividtech.machine.celestial_assembly_plant.tooltip.5"))
+            .tooltipBuilder(VIVID_ADD)
+            .pattern(definition -> CelestialAssemblyPlantStructure.CELESTIAL_ASSEMBLY_PLANT
+                    .where("M", Predicates.controller(Predicates.blocks(definition.get())))
+                    .where("A", Predicates.blocks(Registries.getBlock("kubejs:high_strength_concrete")))
+                    .where("B", celestialAssemblyPlantCasing())
+                    .where("C", Predicates.blocks(ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.TungstenSteel)))
+                    .where("D", Predicates.blocks(GTLBlocks.PIKYONIUM_MACHINE_CASING.get()))
+                    .where("E", Predicates.blocks(GTBlocks.CASING_GRATE.get()))
+                    .where("F", Predicates.blocks(GTBlocks.CASING_POLYTETRAFLUOROETHYLENE_PIPE.get()))
+                    .where("G", Predicates.blocks(ChemicalHelper.getBlock(TagPrefix.frameGt, GTMaterials.NaquadahAlloy)))
+                    .where("H", Predicates.blocks(Registries.getBlock("kubejs:machine_casing_circuit_assembly_line")))
+                    .where("I", Predicates.blocks(GTBlocks.CASING_STEEL_SOLID.get()))
+                    .where("J", Predicates.blocks(Registries.getBlock("kubejs:space_elevator_internal_support")))
+                    .where("K", Predicates.blocks(GTBlocks.CASING_ASSEMBLY_LINE.get()))
+                    .where("L", Predicates.blocks(GTBlocks.SUPERCONDUCTING_COIL.get()))
+                    .build())
+            .workableCasingRenderer(
+                    new ResourceLocation("gtlcore", "block/casings/pikyonium_machine_casing"),
+                    GTCEu.id("block/multiblock/fusion_reactor"))
+            .register();
+
     static {
         // 恢复 GTCEu 的默认标签页，避免影响之后加载的其他附属模组。
         REGISTRATE.creativeModeTab(() -> GTCreativeModeTabs.MACHINE);
@@ -1214,5 +1253,26 @@ public class VividMachines {
                 .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setPreviewCount(1))
                 .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
                 .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1));
+    }
+
+    /**
+     * 天穹装配厂的 B 位：洁净不锈钢机械方块，可替换为维护仓、能源仓、并行仓、
+     * 可选输入/输出仓以及数据仓。不包含 INPUT_LASER，因此无法安装激光靶仓。
+     */
+    private static TraceabilityPredicate celestialAssemblyPlantCasing() {
+        TraceabilityPredicate casing = Predicates.blocks(GTBlocks.CASING_STAINLESS_CLEAN.get())
+                .or(Predicates.abilities(PartAbility.INPUT_ENERGY)
+                        .setMinGlobalLimited(1).setMaxGlobalLimited(16).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                .or(Predicates.abilities(PartAbility.PARALLEL_HATCH).setMaxGlobalLimited(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_ITEMS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1));
+        if (ConfigHolder.INSTANCE.machines.enableResearch) {
+            return casing.or(Predicates.abilities(PartAbility.DATA_ACCESS, PartAbility.OPTICAL_DATA_RECEPTION)
+                    .setExactLimit(1));
+        }
+        return casing;
     }
 }

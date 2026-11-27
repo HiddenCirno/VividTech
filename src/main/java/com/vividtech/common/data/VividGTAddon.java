@@ -186,6 +186,37 @@ public class VividGTAddon implements IGTAddon {
         addAtomicReconstructorRecipes(provider);
         addAdvancedSlaughterhouseRecipes(provider);
         addElectricNeutronActivatorRecipe(provider);
+        addCelestialAssemblyPlantRecipe(provider);
+    }
+
+    private static void addCelestialAssemblyPlantRecipe(Consumer<FinishedRecipe> provider) {
+        GTRecipeTypes.ASSEMBLY_LINE_RECIPES.recipeBuilder("celestial_assembly_plant")
+                .inputItems(GTMachines.ASSEMBLY_LINE.asStack(16))
+                .inputItems(TagPrefix.frameGt, GTMaterials.NaquadahAlloy, 32)
+                .inputItems(CustomTags.IV_CIRCUITS, 64)
+                .inputItems(CustomTags.LuV_CIRCUITS, 32)
+                .inputItems(CustomTags.ZPM_CIRCUITS, 16)
+                .inputItems(CustomTags.UV_CIRCUITS, 8)
+                .inputItems(CustomTags.UHV_CIRCUITS, 4)
+                .inputItems(GTItems.CONVEYOR_MODULE_IV, 64)
+                .inputItems(GTItems.CONVEYOR_MODULE_LuV, 32)
+                .inputItems(GTItems.CONVEYOR_MODULE_ZPM, 16)
+                .inputItems(GTItems.ROBOT_ARM_IV, 64)
+                .inputItems(GTItems.ROBOT_ARM_LuV, 32)
+                .inputItems(GTItems.ROBOT_ARM_ZPM, 16)
+                .inputItems(GTItems.ENERGY_MODULE, 4)
+                .inputFluids(GTMaterials.Duranium.getFluid(2880))
+                .inputFluids(GTMaterials.SolderingAlloy.getFluid(2592))
+                .inputFluids(GTMaterials.Trinium.getFluid(2304))
+                .outputItems(VividMachines.CELESTIAL_ASSEMBLY_PLANT.asStack())
+                .stationResearch(b -> b.researchId("vividtech_celestial_assembly_plant")
+                        .researchStack(GTMachines.ASSEMBLY_LINE.asStack())
+                        .dataStack(GTItems.TOOL_DATA_MODULE.asStack())
+                        .EUt(VA[GTValues.UV])
+                        .CWUt(256))
+                .duration(20 * 120)
+                .EUt(VA[GTValues.UV])
+                .save(provider);
     }
 
     private static void addElectricNeutronActivatorRecipe(Consumer<FinishedRecipe> provider) {
