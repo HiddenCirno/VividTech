@@ -274,6 +274,28 @@ public class VividGTAddon implements IGTAddon {
                 .duration(200)
                 .save(provider);
 
+        type.recipeBuilder("vividtech_matter_reshaping_uranium_235")
+                .inputItems(TagPrefix.dust, GTMaterials.Uranium238, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Uranium235, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_polonium")
+                .circuitMeta(1)
+                .inputItems(TagPrefix.dust, GTMaterials.Uranium238, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Polonium, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_plutonium_241")
+                .inputItems(TagPrefix.dust, GTMaterials.Plutonium239, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Plutonium241, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
         type.recipeBuilder("vividtech_matter_reshaping_scheelite")
                 .inputItems(TagPrefix.dust, GTMaterials.Scheelite, 1)
                 .outputItems(TagPrefix.dust, GTMaterials.Calcium, 1)
@@ -432,6 +454,17 @@ public class VividGTAddon implements IGTAddon {
                 .inputFluids(GTMaterials.Oxygen.getFluid(5000))
                 .outputFluids(GTMaterials.Epoxy.getFluid(2000))
                 .outputFluids(GTMaterials.Chlorine.getFluid(24000))
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_silicone_rubber")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Carbon, 4)
+                .inputItems(TagPrefix.dust, GTMaterials.Silicon, 2)
+                .inputFluids(GTMaterials.Hydrogen.getFluid(6000))
+                .inputFluids(GTMaterials.Oxygen.getFluid(1000))
+                .outputFluids(GTMaterials.SiliconeRubber.getFluid(2000))
                 .EUt(GTValues.VA[GTValues.EV])
                 .duration(200)
                 .save(provider);
