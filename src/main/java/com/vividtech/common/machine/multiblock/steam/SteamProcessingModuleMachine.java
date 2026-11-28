@@ -244,6 +244,16 @@ public class SteamProcessingModuleMachine extends WorkableMultiblockMachine
         return currentHost != null && currentHost.isFormed() && currentHost.hasExtremePressureSubsystem();
     }
 
+    /**
+     * 蒸汽模块本身没有 GT 电压等级，概率加成默认会按 definition tier = ULV 计算。
+     * 这里改为使用梦想电梯解锁的最高配方等级，让高压釜等概率配方正常享受电压提升。
+     */
+    @Override
+    public int getChanceTier() {
+        DreamElevatorMachine currentHost = getHost();
+        return currentHost != null && currentHost.isFormed() ? currentHost.getMaxRecipeTier() : 0;
+    }
+
     /** 当前配方最多能吃到几次超频：上限等级 - 配方等级。 */
     public int getAvailableOverclock(@Nullable GTRecipe recipe) {
         if (recipe == null || isExtremePressureMode()) {
