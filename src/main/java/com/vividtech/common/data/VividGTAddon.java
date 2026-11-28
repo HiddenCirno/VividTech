@@ -327,6 +327,38 @@ public class VividGTAddon implements IGTAddon {
                 .duration(200)
                 .save(provider);
 
+        type.recipeBuilder("vividtech_matter_reshaping_bastnasite_lanthanum")
+                .circuitMeta(1)
+                .inputItems(TagPrefix.dust, GTMaterials.Bastnasite, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Lanthanum, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_bastnasite_cerium")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Bastnasite, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Cerium, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_monazite_erbium")
+                .circuitMeta(1)
+                .inputItems(TagPrefix.dust, GTMaterials.Monazite, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Erbium, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
+        type.recipeBuilder("vividtech_matter_reshaping_monazite_lutetium")
+                .circuitMeta(2)
+                .inputItems(TagPrefix.dust, GTMaterials.Monazite, 1)
+                .outputItems(TagPrefix.dust, GTMaterials.Lutetium, 1)
+                .EUt(GTValues.VA[GTValues.EV])
+                .duration(200)
+                .save(provider);
+
         type.recipeBuilder("vividtech_matter_reshaping_scheelite")
                 .inputItems(TagPrefix.dust, GTMaterials.Scheelite, 1)
                 .outputItems(TagPrefix.dust, GTMaterials.Calcium, 1)
